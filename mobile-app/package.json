@@ -1,0 +1,25 @@
+{
+  "name": "survey-mobile",
+  "version": "1.0.0",
+  "description": "青泓项目勘查系统 - 移动端",
+  "type": "module",
+  "scripts": {
+    "dev:h5": "vite",
+    "build:h5": "vite build",
+    "dev:mp-weixin": "vite build --mode mp-weixin",
+    "build:mp-weixin": "vite build --mode mp-weixin"
+  },
+  "dependencies": {
+    "@dcloudio/uni-app": "^3.0.0-alpha-5000720260416001",
+    "@dcloudio/uni-components": "^3.0.0-alpha-5000720260416001",
+    "@vitejs/plugin-vue": "^6.0.6",
+    "cookie": "^1.1.1",
+    "path-to-regexp": "^8.4.2",
+    "qs": "^6.15.1",
+    "vue": "^3.3.11"
+  },
+  "devDependencies": {
+    "@dcloudio/vite-plugin-uni": "^3.0.0-alpha-5000720260416001",
+    "vite": "^5.2.8"
+  }
+}

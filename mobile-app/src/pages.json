@@ -1,0 +1,83 @@
+{
+  "pages": [
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录"
+      }
+    },
+    {
+      "path": "pages/home/home",
+      "style": {
+        "navigationBarTitleText": "首页"
+      }
+    },
+    {
+      "path": "pages/survey/survey",
+      "style": {
+        "navigationBarTitleText": "勘查填报"
+      }
+    },
+    {
+      "path": "pages/point-list/point-list",
+      "style": {
+        "navigationBarTitleText": "点位列表"
+      }
+    },
+    {
+      "path": "pages/point-detail/point-detail",
+      "style": {
+        "navigationBarTitleText": "点位详情"
+      }
+    },
+    {
+      "path": "pages/my/my",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    }
+  ],
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#409EFF",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/home/home",
+        "text": "首页",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-active.png"
+      },
+      {
+        "pagePath": "pages/point-list/point-list",
+        "text": "点位",
+        "iconPath": "static/tabbar/point.png",
+        "selectedIconPath": "static/tabbar/point-active.png"
+      },
+      {
+        "pagePath": "pages/my/my",
+        "text": "我的",
+        "iconPath": "static/tabbar/my.png",
+        "selectedIconPath": "static/tabbar/my-active.png"
+      }
+    ]
+  },
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "青泓项目勘查",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8"
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于点位定位"
+    },
+    "scope.camera": {
+      "desc": "相机权限用于拍摄现场照片"
+    },
+    "scope.writePhotosAlbum": {
+      "desc": "相册权限用于保存照片"
+    }
+  }
+}

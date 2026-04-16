@@ -1,0 +1,33 @@
+# node_modules
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Maven
+target/
+admin-backend/apache-maven-3.9.6/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+
+# Build
+dist/
+build/
+
+# Temp
+*.tmp
+*.temp
+
+# Mobile app node_modules
+mobile-app/node_modules/
