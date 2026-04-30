@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "error": "#ba1a1a",
+                    "on-secondary-fixed": "#0d1c2e",
+                    "on-error": "#ffffff",
+                    "surface-variant": "#e0e3e5",
+                    "tertiary-container": "#003779",
+                    "secondary-fixed-dim": "#b9c7df",
+                    "secondary": "#515f74",
+                    "on-tertiary-container": "#70a2ff",
+                    "on-background": "#191c1e",
+                    "inverse-surface": "#2d3133",
+                    "on-primary-fixed": "#001c39",
+                    "on-error-container": "#93000a",
+                    "on-secondary-fixed-variant": "#3a485b",
+                    "surface-container": "#eceef0",
+                    "primary": "#002446",
+                    "secondary-container": "#d5e3fc",
+                    "error-container": "#ffdad6",
+                    "surface": "#f7f9fb",
+                    "primary-fixed-dim": "#abc8f5",
+                    "primary-container": "#1a3a5f",
+                    "on-tertiary": "#ffffff",
+                    "outline": "#73777f",
+                    "on-secondary-container": "#57657a",
+                    "inverse-on-surface": "#eff1f3",
+                    "on-primary-fixed-variant": "#2a486e",
+                    "on-tertiary-fixed-variant": "#004493",
+                    "on-tertiary-fixed": "#001a41",
+                    "tertiary-fixed-dim": "#adc7ff",
+                    "on-surface": "#191c1e",
+                    "tertiary-fixed": "#d8e2ff",
+                    "surface-container-high": "#e6e8ea",
+                    "secondary-fixed": "#d5e3fc",
+                    "tertiary": "#002250",
+                    "surface-dim": "#d8dadc",
+                    "on-primary-container": "#87a4cf",
+                    "on-primary": "#ffffff",
+                    "outline-variant": "#c3c6cf",
+                    "primary-fixed": "#d3e3ff",
+                    "on-surface-variant": "#43474e",
+                    "surface-tint": "#426087",
+                    "surface-container-highest": "#e0e3e5",
+                    "inverse-primary": "#abc8f5",
+                    "surface-bright": "#f7f9fb",
+                    "on-secondary": "#ffffff",
+                    "background": "#f7f9fb",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-low": "#f2f4f6",
+                    "glacial-blue": "#00A3FF"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "display": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 z-40 bg-white flex flex-col p-4 gap-2 border-r border-transparent bg-slate-200 shadow-sm">
+<div class="px-4 py-6 mb-4">
+<h1 class="font-headline font-extrabold text-xl text-slate-900">SurveyOps</h1>
+<p class="text-xs text-secondary font-medium tracking-wide">精准外业管理系统</p>
+</div>
+<nav class="flex flex-col gap-1 flex-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-100 rounded-lg transition-all cursor-pointer">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-label text-sm font-medium">概览工作台</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-100 rounded-lg transition-all cursor-pointer">
+<span class="material-symbols-outlined">map</span>
+<span class="font-label text-sm font-medium">地图视图</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-100 rounded-lg transition-all cursor-pointer">
+<span class="material-symbols-outlined">assignment</span>
+<span class="font-label text-sm font-medium">项目管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-100 rounded-lg transition-all cursor-pointer">
+<span class="material-symbols-outlined">task</span>
+<span class="font-label text-sm font-medium">任务中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-slate-100 text-primary rounded-lg shadow-sm font-semibold transition-all cursor-pointer">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">group</span>
+<span class="font-label text-sm">团队管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-100 rounded-lg transition-all cursor-pointer">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-label text-sm font-medium">模板引擎</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-100 rounded-lg transition-all cursor-pointer">
+<span class="material-symbols-outlined">verified_user</span>
+<span class="font-label text-sm font-medium">审核中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-100 rounded-lg transition-all cursor-pointer">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label text-sm font-medium">系统管理</span>
+</a>
+</nav>
+<div class="mt-auto pt-4 border-t border-slate-100 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-100 rounded-lg transition-all cursor-pointer">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label text-sm font-medium">帮助支持</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-500 hover:bg-slate-100 rounded-lg transition-all cursor-pointer">
+<span class="material-symbols-outlined text-error">logout</span>
+<span class="font-label text-sm font-medium">退出登录</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Wrapper -->
+<main class="flex-1 ml-64 flex flex-col">
+<!-- TopAppBar -->
+<header class="w-full sticky top-0 z-50 bg-slate-50/70 backdrop-blur-md flex justify-between items-center px-8 py-4 shadow-sm">
+<div class="flex items-center flex-1 max-w-xl">
+<div class="relative w-full group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-glacial-blue transition-colors">search</span>
+<input class="w-full bg-surface-container-low border-none rounded-xl py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-glacial-blue focus:bg-white transition-all" placeholder="搜索项目、任务或团队成员..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-5">
+<button class="p-2 text-slate-500 hover:bg-slate-200/50 rounded-lg transition-all active:scale-95">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="h-8 w-[1px] bg-slate-200"></div>
+<div class="flex items-center gap-3 cursor-pointer">
+<div class="text-right">
+<p class="text-sm font-bold text-slate-900 leading-none">管理员</p>
+<p class="text-[10px] text-slate-500 mt-1">系统中心</p>
+</div>
+<img alt="User profile avatar" class="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm" data-alt="Professional profile headshot of a middle-aged male manager in a clean white office setting with soft natural lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCU6PLw0i5XQXf055jdjlo23m_Jf2CcnAZgnDEjazUHFftWyGuUh66zXALxwSVVofxpeHcGI-D23uAWN0b1awZV0c71s3v1zSF2gWk2Y2J6-pQBlf-iYtCwRU9fN046CJXw_1vf_eYVMIDFkIGDW0_nKrfXmOatYCid_h4LwyDVehWQGEsFabYIcu4rhuFJ4pAX4CjNrdiJhXCo8LKRdqqlFdxpLfkOXVKMCCVPQJ23TmZvosc82UvM-JRpKL4yU5blQ5E4rlyylF8"/>
+</div>
+</div>
+</header>
+<!-- Canvas -->
+<div class="p-8 space-y-8">
+<!-- Section 1: Personal Profile Header (Bento Style) -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 glass-card p-8 rounded-xl flex items-center gap-8 shadow-sm">
+<div class="relative">
+<img alt="Sarah Chen" class="w-32 h-32 rounded-full object-cover ring-4 ring-white shadow-lg" data-alt="Modern professional portrait of a confident Asian female project manager named Sarah Chen in a bright minimalist office" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAZ2On3Dv7ktA8_DC-CTpqsKXAyE5hcLbCh3X4C2___0lVvif2-lPfyAKhD2NCEshuHW-EFlJHdNIQj1-S96pBz2v63dr1DhiWqxhms0nmbAZ6UNIlL23hED3BOOgYLu3KEg_BHIQcgfGjFhZgZCQv7BqwyIya-y7LeRsBqSHc5NAUTgvUOqyVH3WYQiONYTyVDA_GT3wiMmyGdcr29Qt9Bcga8yBMCclV2-fg39LG2lQ3GzA5IoeNzVbDdrin37AtdyhcFqwg-uc"/>
+<div class="absolute bottom-1 right-1 w-6 h-6 bg-green-500 border-4 border-white rounded-full"></div>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="font-headline text-3xl font-extrabold text-primary">Sarah Chen</h2>
+<p class="text-glacial-blue font-semibold mt-1">高级项目经理</p>
+</div>
+<div class="flex gap-2">
+<button class="p-2.5 bg-surface-container-low text-primary rounded-xl hover:bg-glacial-blue hover:text-white transition-all duration-300">
+<span class="material-symbols-outlined">mail</span>
+</button>
+<button class="p-2.5 bg-surface-container-low text-primary rounded-xl hover:bg-glacial-blue hover:text-white transition-all duration-300">
+<span class="material-symbols-outlined">call</span>
+</button>
+<button class="p-2.5 bg-surface-container-low text-primary rounded-xl hover:bg-glacial-blue hover:text-white transition-all duration-300">
+<span class="material-symbols-outlined">chat</span>
+</button>
+</div>
+</div>
+<div class="mt-6 flex flex-wrap gap-4">
+<div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container-low rounded-full">
+<span class="material-symbols-outlined text-[18px] text-slate-500">location_on</span>
+<span class="text-xs font-medium text-on-surface-variant">北京总部 / 朝阳区</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container-low rounded-full">
+<span class="material-symbols-outlined text-[18px] text-slate-500">calendar_month</span>
+<span class="text-xs font-medium text-on-surface-variant">入职时间: 2021-03-12</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 bg-surface-container-low rounded-full">
+<span class="material-symbols-outlined text-[18px] text-slate-500">badge</span>
+<span class="text-xs font-medium text-on-surface-variant">员工工号: FP-8092</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Credential Card (Section 3 Mini) -->
+<div class="glass-card p-8 rounded-xl shadow-sm flex flex-col justify-center">
+<h3 class="text-sm font-bold text-slate-400 mb-4 tracking-widest uppercase">核心资质</h3>
+<div class="space-y-4">
+<div class="flex items-center gap-4 group cursor-pointer">
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed flex items-center justify-center group-hover:bg-glacial-blue transition-colors">
+<span class="material-symbols-outlined text-primary group-hover:text-white">workspace_premium</span>
+</div>
+<div>
+<p class="text-sm font-bold">三级测绘专家证书</p>
+<p class="text-[11px] text-on-surface-variant">由国家测绘局认证</p>
+</div>
+</div>
+<div class="flex items-center gap-4 group cursor-pointer">
+<div class="w-10 h-10 rounded-lg bg-secondary-container flex items-center justify-center group-hover:bg-glacial-blue transition-colors">
+<span class="material-symbols-outlined text-primary group-hover:text-white">engineering</span>
+</div>
+<div>
+<p class="text-sm font-bold">高级工程监理资格</p>
+<p class="text-[11px] text-on-surface-variant">2023年通过复审</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: Performance Stats (Glassmorphism Rings) -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Stat 1 -->
+<div class="glass-card p-6 rounded-xl flex flex-col items-center justify-center gap-4 text-center group hover:translate-y-[-4px] transition-all duration-300">
+<div class="relative w-24 h-24 flex items-center justify-center">
+<svg class="w-full h-full -rotate-90">
+<circle class="text-slate-100" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-glacial-blue" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="62.8" stroke-width="8"></circle>
+</svg>
+<span class="absolute font-headline text-xl font-bold">142</span>
+</div>
+<div>
+<h4 class="font-bold text-lg">测绘积分 (Survey Points)</h4>
+<p class="text-sm text-on-surface-variant">本季度累计已获积分</p>
+</div>
+</div>
+<!-- Stat 2 -->
+<div class="glass-card p-6 rounded-xl flex flex-col items-center justify-center gap-4 text-center group hover:translate-y-[-4px] transition-all duration-300">
+<div class="relative w-24 h-24 flex items-center justify-center">
+<svg class="w-full h-full -rotate-90">
+<circle class="text-slate-100" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-glacial-blue" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="37.6" stroke-width="8"></circle>
+</svg>
+<span class="absolute font-headline text-xl font-bold">118</span>
+</div>
+<div>
+<h4 class="font-bold text-lg">效率指数 (Efficiency Index)</h4>
+<p class="text-sm text-on-surface-variant">高于团队平均水平 18%</p>
+</div>
+</div>
+<!-- Stat 3 -->
+<div class="glass-card p-6 rounded-xl flex flex-col items-center justify-center gap-4 text-center group hover:translate-y-[-4px] transition-all duration-300">
+<div class="relative w-24 h-24 flex items-center justify-center">
+<svg class="w-full h-full -rotate-90">
+<circle class="text-slate-100" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-glacial-blue" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="42.7" stroke-width="8"></circle>
+</svg>
+<span class="absolute font-headline text-xl font-bold">83%</span>
+</div>
+<div>
+<h4 class="font-bold text-lg">质检通过率 (Quality Rate)</h4>
+<p class="text-sm text-on-surface-variant">所有项目首检合格率</p>
+</div>
+</div>
+</section>
+<!-- Bottom Content (Credentials & Timeline) -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<!-- Section 3: Credentials Detail -->
+<section class="space-y-6">
+<div class="flex items-center justify-between">
+<h3 class="font-headline text-xl font-bold">专业资质与认证</h3>
+<button class="text-glacial-blue text-sm font-semibold hover:underline">管理全部</button>
+</div>
+<div class="bg-surface-container-low rounded-xl p-2 space-y-2">
+<div class="bg-white p-4 rounded-lg flex items-center justify-between shadow-sm border border-transparent hover:border-glacial-blue/20 transition-all">
+<div class="flex items-center gap-4">
+<div class="bg-primary-container/10 p-2 rounded-lg">
+<span class="material-symbols-outlined text-primary">verified</span>
+</div>
+<div>
+<p class="font-bold">三级测绘专家证书</p>
+<p class="text-xs text-on-surface-variant">编号: CS-2023-00982 | 有效期至 2026</p>
+</div>
+</div>
+<span class="px-2 py-1 bg-primary-fixed text-[10px] font-bold text-primary rounded uppercase tracking-wider">ACTIVE</span>
+</div>
+<div class="bg-white p-4 rounded-lg flex items-center justify-between shadow-sm border border-transparent hover:border-glacial-blue/20 transition-all">
+<div class="flex items-center gap-4">
+<div class="bg-tertiary-container/10 p-2 rounded-lg">
+<span class="material-symbols-outlined text-tertiary">military_tech</span>
+</div>
+<div>
+<p class="font-bold">GIS 系统架构师认证</p>
+<p class="text-xs text-on-surface-variant">由国际地理信息协会颁发</p>
+</div>
+</div>
+<span class="px-2 py-1 bg-primary-fixed text-[10px] font-bold text-primary rounded uppercase tracking-wider">ACTIVE</span>
+</div>
+<div class="bg-white p-4 rounded-lg flex items-center justify-between shadow-sm border border-transparent hover:border-glacial-blue/20 transition-all">
+<div class="flex items-center gap-4">
+<div class="bg-secondary-container/30 p-2 rounded-lg">
+<span class="material-symbols-outlined text-secondary">assignment_turned_in</span>
+</div>
+<div>
+<p class="font-bold">安全生产考核合格证 (B证)</p>
+<p class="text-xs text-on-surface-variant">住建厅核发</p>
+</div>
+</div>
+<span class="px-2 py-1 bg-surface-variant text-[10px] font-bold text-on-surface-variant rounded uppercase tracking-wider">LOCKED</span>
+</div>
+</div>
+</section>
+<!-- Section 4: Activity Timeline -->
+<section class="space-y-6">
+<div class="flex items-center justify-between">
+<h3 class="font-headline text-xl font-bold">工作动态</h3>
+<button class="p-2 bg-surface-container-low rounded-lg hover:bg-slate-200 transition-all">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+</button>
+</div>
+<div class="relative pl-6 border-l-2 border-slate-200 ml-3 space-y-8 py-2">
+<!-- Timeline Item 1 -->
+<div class="relative">
+<div class="absolute -left-[31px] top-0 w-4 h-4 rounded-full border-4 border-white bg-glacial-blue shadow-sm"></div>
+<div>
+<p class="text-xs font-bold text-slate-400 mb-1">今天 14:20</p>
+<p class="text-sm font-semibold text-primary">完成了测绘项目 #882 现场校准</p>
+<p class="text-xs text-on-surface-variant mt-1">项目: 云南大理水域资源普查</p>
+</div>
+</div>
+<!-- Timeline Item 2 -->
+<div class="relative">
+<div class="absolute -left-[31px] top-0 w-4 h-4 rounded-full border-4 border-white bg-slate-300 shadow-sm"></div>
+<div>
+<p class="text-xs font-bold text-slate-400 mb-1">昨天 09:45</p>
+<p class="text-sm font-semibold text-primary">提交了 Q3 季度生产质量总结报告</p>
+<div class="mt-2 flex items-center gap-2 p-2 bg-white rounded border border-slate-100 w-fit">
+<span class="material-symbols-outlined text-red-500 text-sm">picture_as_pdf</span>
+<span class="text-[11px] font-medium">Q3_Report_Final.pdf</span>
+</div>
+</div>
+</div>
+<!-- Timeline Item 3 -->
+<div class="relative">
+<div class="absolute -left-[31px] top-0 w-4 h-4 rounded-full border-4 border-white bg-slate-300 shadow-sm"></div>
+<div>
+<p class="text-xs font-bold text-slate-400 mb-1">2023-10-24</p>
+<p class="text-sm font-semibold text-primary">被授予 “月度优秀测绘之星” 称号</p>
+<p class="text-xs text-on-surface-variant mt-1">表彰在极端天气下的出色任务执行能力</p>
+</div>
+</div>
+<!-- Timeline Item 4 -->
+<div class="relative">
+<div class="absolute -left-[31px] top-0 w-4 h-4 rounded-full border-4 border-white bg-slate-300 shadow-sm"></div>
+<div>
+<p class="text-xs font-bold text-slate-400 mb-1">2023-10-22</p>
+<p class="text-sm font-semibold text-primary">发起了新的项目协作讨论</p>
+<p class="text-xs text-on-surface-variant mt-1">关于 2024 年无人机测绘设备的更新计划</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- FAB: Contextual Action (Only for Profile View in Team Context) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-gradient-to-br from-primary to-primary-container text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined text-2xl">edit</span>
+</button>
+</body></html>

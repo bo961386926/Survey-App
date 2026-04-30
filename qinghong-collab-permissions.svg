@@ -1,0 +1,68 @@
+﻿<svg width="1600" height="1120" viewBox="0 0 1600 1120" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1600" y2="1120" gradientUnits="userSpaceOnUse"><stop stop-color="#F4F8FC"/><stop offset="1" stop-color="#EAF2FF"/></linearGradient><filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#9BB7E680"/></filter></defs>
+<rect width="1600" height="1120" fill="url(#bg)"/>
+<rect x="0" y="0" width="96" height="1120" fill="#2C3E50"/>
+<rect x="24" y="28" width="48" height="48" rx="14" fill="#1664FF"/><text x="48" y="59" text-anchor="middle" fill="white" font-size="24" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">青</text>
+<rect x="24" y="456" width="48" height="48" rx="14" fill="#EEF4FF"/>
+<rect x="120" y="28" width="1452" height="84" rx="24" fill="#FFFFFF" filter="url(#shadow)"/>
+<text x="156" y="62" fill="#1F2D3D" font-size="30" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">第三方协作与权限配置</text>
+<text x="156" y="88" fill="#7B8794" font-size="15" font-family="Microsoft YaHei, PingFang SC, sans-serif">受限查看、协助填报、短期 Token、角色授权与敏感动作日志</text>
+<rect x="1392" y="40" width="116" height="44" rx="14" fill="#1664FF"/><text x="1450" y="67" text-anchor="middle" fill="white" font-size="15" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">创建协作入口</text>
+
+<rect x="120" y="136" width="540" height="920" rx="26" fill="white" filter="url(#shadow)"/>
+<text x="152" y="180" fill="#1F2D3D" font-size="24" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">协作入口</text>
+<text x="152" y="208" fill="#909399" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">面向第三方单位、临时协作人员或专项补采任务的受限入口</text>
+<rect x="152" y="240" width="476" height="126" rx="20" fill="#1664FF"/>
+<text x="180" y="276" fill="white" font-size="20" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">南岸补采协作入口</text>
+<text x="180" y="310" fill="#DCE9FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">适用项目：城区支流补采专项 · 权限：查看指定点位 + 协助填报</text>
+<text x="180" y="338" fill="#DCE9FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">Token 有效期：72 小时 · 过期自动失效</text>
+
+<rect x="152" y="394" width="476" height="102" rx="18" fill="#F7FAFE"/>
+<text x="180" y="428" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">访问方式</text>
+<text x="180" y="456" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">小程序码 / 链接地址 / 受限账号登录</text>
+
+<rect x="152" y="516" width="476" height="160" rx="18" fill="#F7FAFE"/>
+<text x="180" y="548" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">可见范围</text>
+<text x="180" y="580" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">仅可查看：南岸复核段 54 个点位</text>
+<text x="180" y="608" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">不可访问：全局项目列表 / 模板管理 / 导出中心</text>
+<text x="180" y="636" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">敏感动作：删除、批量导出均关闭</text>
+
+<rect x="152" y="700" width="476" height="324" rx="18" fill="#F9FBFF" stroke="#E7EDF4"/>
+<text x="180" y="734" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">协作成员</text>
+<circle cx="212" cy="780" r="18" fill="#E6A23C"/><text x="212" y="786" text-anchor="middle" fill="white" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">3P</text><text x="244" y="774" fill="#1F2D3D" font-size="15" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">安徽协测公司</text><text x="244" y="798" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">角色：协助填报 · 状态：在线</text>
+<circle cx="212" cy="844" r="18" fill="#67C23A"/><text x="212" y="850" text-anchor="middle" fill="white" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">WX</text><text x="244" y="838" fill="#1F2D3D" font-size="15" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">外协采集员 2 人</text><text x="244" y="862" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">仅提交草稿，不可审核</text>
+
+<rect x="688" y="136" width="420" height="920" rx="26" fill="white" filter="url(#shadow)"/>
+<text x="720" y="180" fill="#1F2D3D" font-size="24" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">权限矩阵</text>
+<text x="720" y="208" fill="#909399" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">角色可见性、操作能力和数据边界需要清楚分层</text>
+<rect x="720" y="238" width="356" height="112" rx="18" fill="#F7FAFE"/>
+<text x="748" y="272" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">管理员</text>
+<text x="748" y="300" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">项目创建 / 模板配置 / 全局导出 / 权限配置</text>
+<rect x="720" y="370" width="356" height="112" rx="18" fill="#F7FAFE"/>
+<text x="748" y="404" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">审核员</text>
+<text x="748" y="432" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">审核反馈 / 版本对比 / PDF 生成</text>
+<rect x="720" y="502" width="356" height="112" rx="18" fill="#F7FAFE"/>
+<text x="748" y="536" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">采集员</text>
+<text x="748" y="564" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">地图打点 / 表单填报 / 拍照上传 / 草稿保存</text>
+<rect x="720" y="634" width="356" height="148" rx="18" fill="#1664FF"/>
+<text x="748" y="668" fill="white" font-size="18" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">第三方角色</text>
+<text x="748" y="700" fill="#DCE9FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">仅限指定点位范围</text>
+<text x="748" y="730" fill="#DCE9FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">可查看 / 协助填报 / 上传图片</text>
+<text x="748" y="760" fill="#DCE9FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">不可审核 / 不可删除 / 不可全局导出</text>
+
+<rect x="1136" y="136" width="436" height="920" rx="26" fill="white" filter="url(#shadow)"/>
+<text x="1168" y="180" fill="#1F2D3D" font-size="24" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">访问日志与风控</text>
+<text x="1168" y="208" fill="#909399" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">敏感动作必须留痕，异常访问可快速收口</text>
+<rect x="1168" y="238" width="372" height="94" rx="18" fill="#F9FBFF" stroke="#E7EDF4"/>
+<text x="1194" y="272" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">2026.04.28 09:32</text><text x="1194" y="298" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">安徽协测公司 访问协作入口，查看南岸点位列表</text>
+<rect x="1168" y="348" width="372" height="94" rx="18" fill="#F9FBFF" stroke="#E7EDF4"/>
+<text x="1194" y="382" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">2026.04.28 10:08</text><text x="1194" y="408" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">外协采集员 上传现场照片 4 张</text>
+<rect x="1168" y="458" width="372" height="94" rx="18" fill="#FFF4E8" stroke="#F6D3A2"/>
+<text x="1194" y="492" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">风险事件</text><text x="1194" y="518" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">尝试访问全局导出中心，被权限系统阻断</text>
+<rect x="1168" y="584" width="372" height="200" rx="18" fill="#F7FAFE"/>
+<text x="1194" y="618" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">风控策略</text>
+<text x="1194" y="650" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">1. Token 默认 72 小时失效</text>
+<text x="1194" y="680" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">2. 超范围访问立即阻断并告警</text>
+<text x="1194" y="710" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">3. 删除点位等敏感操作仅管理员可见</text>
+<rect x="1168" y="810" width="372" height="180" rx="18" fill="#1664FF"/><text x="1194" y="844" fill="white" font-size="18" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">快速动作</text><text x="1194" y="878" fill="#DCE9FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">撤销分享链接</text><text x="1194" y="906" fill="#DCE9FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">重置 Token</text><text x="1194" y="934" fill="#DCE9FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">导出访问日志</text>
+</svg>

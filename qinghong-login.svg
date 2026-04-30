@@ -1,0 +1,53 @@
+﻿<svg width="1600" height="1120" viewBox="0 0 1600 1120" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1600" y2="1120" gradientUnits="userSpaceOnUse">
+<stop stop-color="#DCEBFF"/>
+<stop offset="1" stop-color="#F4F8FC"/>
+</linearGradient>
+<linearGradient id="panel" x1="0" y1="0" x2="1" y2="1">
+<stop stop-color="#1664FF"/>
+<stop offset="1" stop-color="#4D90FF"/>
+</linearGradient>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+<feDropShadow dx="0" dy="20" stdDeviation="26" flood-color="#7FA5E355"/>
+</filter>
+</defs>
+<rect width="1600" height="1120" fill="url(#bg)"/>
+<circle cx="254" cy="202" r="190" fill="#E7F0FF"/>
+<circle cx="1420" cy="930" r="220" fill="#EAF3FF"/>
+<rect x="120" y="124" width="1360" height="872" rx="40" fill="#FFFFFF" filter="url(#shadow)"/>
+<rect x="120" y="124" width="690" height="872" rx="40" fill="url(#panel)"/>
+<text x="188" y="230" fill="white" font-size="28" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">青泓项目勘察管理后台</text>
+<text x="188" y="274" fill="#DCE9FF" font-size="18" font-family="Microsoft YaHei, PingFang SC, sans-serif">围绕项目管理、动态模板、点位地图、审核闭环与报表导出的统一工作台</text>
+<rect x="188" y="340" width="554" height="178" rx="26" fill="#FFFFFF18" stroke="#FFFFFF2A"/>
+<text x="224" y="390" fill="white" font-size="22" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">进入系统后可直接处理的工作</text>
+<circle cx="236" cy="434" r="7" fill="#67C23A"/>
+<text x="254" y="440" fill="#EAF2FF" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif">项目台账与标段进度总览</text>
+<circle cx="236" cy="474" r="7" fill="#E6A23C"/>
+<text x="254" y="480" fill="#EAF2FF" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif">待审核点位队列与版本对比</text>
+<circle cx="236" cy="514" r="7" fill="#FFFFFF"/>
+<text x="254" y="520" fill="#EAF2FF" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif">地图纠偏、模板配置、PDF 报告导出</text>
+<rect x="188" y="620" width="554" height="250" rx="28" fill="#FFFFFF12" stroke="#FFFFFF24"/>
+<text x="224" y="668" fill="white" font-size="22" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">系统入口提示</text>
+<text x="224" y="716" fill="#DCE9FF" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif">管理员：项目、模板、权限与导出</text>
+<text x="224" y="758" fill="#DCE9FF" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif">审核员：审核反馈、版本对比、PDF 生成</text>
+<text x="224" y="800" fill="#DCE9FF" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif">采集协同：点位查看、协助填报、短期 Token</text>
+<rect x="922" y="230" width="438" height="570" rx="32" fill="#FFFFFF" stroke="#E4EAF3"/>
+<text x="970" y="302" fill="#1F2D3D" font-size="34" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">欢迎登录</text>
+<text x="970" y="340" fill="#7B8794" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif">输入账号信息后进入你的工作台</text>
+<rect x="970" y="392" width="342" height="62" rx="18" fill="#F5F7FA"/>
+<text x="1000" y="430" fill="#909399" font-size="15" font-family="Microsoft YaHei, PingFang SC, sans-serif">手机号 / 邮箱 / 用户名</text>
+<rect x="970" y="476" width="342" height="62" rx="18" fill="#F5F7FA"/>
+<text x="1000" y="514" fill="#909399" font-size="15" font-family="Microsoft YaHei, PingFang SC, sans-serif">登录密码</text>
+<rect x="970" y="560" width="164" height="62" rx="18" fill="#F5F7FA"/>
+<text x="1000" y="598" fill="#909399" font-size="15" font-family="Microsoft YaHei, PingFang SC, sans-serif">验证码</text>
+<rect x="1152" y="560" width="160" height="62" rx="18" fill="#E8F3FF"/>
+<text x="1232" y="598" text-anchor="middle" fill="#1664FF" font-size="15" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">获取验证码</text>
+<rect x="970" y="660" width="342" height="62" rx="20" fill="#1664FF"/>
+<text x="1141" y="699" text-anchor="middle" fill="white" font-size="18" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">登录系统</text>
+<text x="970" y="760" fill="#606266" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">支持账号密码登录与短信验证码登录</text>
+<text x="970" y="792" fill="#606266" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">第三方协作入口可使用受限链接或小程序码进入</text>
+<rect x="970" y="836" width="342" height="82" rx="20" fill="#F7FAFE"/>
+<text x="998" y="872" fill="#1F2D3D" font-size="15" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">安全提示</text>
+<text x="998" y="902" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">敏感导出、权限变更等操作均记录日志并支持风控拦截</text>
+</svg>

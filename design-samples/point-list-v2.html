@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>点位管理 - 青泓项目勘察信息采集与审核系统</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563EB;
+      --primary-light: #3B82F6;
+      --primary-lighter: #60A5FA;
+      --primary-dark: #1D4ED8;
+      --primary-glow: rgba(37, 99, 235, 0.25);
+      --accent: #F97316;
+      --success: #10B981;
+      --success-light: #34D399;
+      --warning: #F59E0B;
+      --warning-light: #FBBF24;
+      --danger: #EF4444;
+      --danger-light: #F87171;
+      --info: #8B5CF6;
+      --info-light: #A78BFA;
+      --bg-primary: #0A0E1A;
+      --bg-secondary: #111827;
+      --bg-tertiary: #1F2937;
+      --bg-card: rgba(17, 24, 39, 0.7);
+      --bg-card-hover: rgba(31, 41, 55, 0.8);
+      --bg-input: rgba(31, 41, 55, 0.6);
+      --text-primary: #F9FAFB;
+      --text-secondary: #D1D5DB;
+      --text-muted: #9CA3AF;
+      --text-subtle: #6B7280;
+      --border: rgba(75, 85, 99, 0.3);
+      --border-light: rgba(107, 114, 128, 0.2);
+      --border-focus: rgba(37, 99, 235, 0.5);
+      --glass-bg: rgba(17, 24, 39, 0.6);
+      --glass-border: rgba(75, 85, 99, 0.2);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --radius-2xl: 24px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .bg-effects {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .bg-effects::before {
+      content: '';
+      position: absolute;
+      top: -30%; left: -20%;
+      width: 80%; height: 80%;
+      background: radial-gradient(ellipse at center, rgba(37, 99, 235, 0.08) 0%, transparent 60%);
+      animation: float1 20s ease-in-out infinite;
+    }
+
+    .grid-pattern {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-image: 
+        linear-gradient(rgba(75, 85, 99, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(75, 85, 99, 0.05) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes float1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(10%, 10%) scale(1.1); }
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-right: 1px solid var(--glass-border);
+      padding: 28px 20px;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0; left: 0; bottom: 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 14px;
+      margin-bottom: 36px;
+    }
+
+    .logo-icon {
+      width: 44px; height: 44px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--info));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
+    }
+
+    .logo-text { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+    .logo-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+    .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+
+    .nav-section-title {
+      font-size: 10px; font-weight: 600;
+      color: var(--text-subtle);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 16px 14px 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 13px 16px;
+      border-radius: var(--radius-md);
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      position: relative;
+    }
+
+    .nav-item:hover { background: var(--bg-input); color: var(--text-primary); }
+
+    .nav-item.active {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(139, 92, 246, 0.1));
+      color: var(--primary-light);
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2);
+    }
+
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 50%;
+      transform: translateY(-50%);
+      width: 3px; height: 20px;
+      background: var(--primary);
+      border-radius: 0 3px 3px 0;
+    }
+
+    .nav-icon { font-size: 18px; width: 24px; text-align: center; opacity: 0.8; }
+    .nav-item:hover .nav-icon, .nav-item.active .nav-icon { opacity: 1; }
+
+    .nav-badge {
+      margin-left: auto;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      background: linear-gradient(135deg, var(--danger), #DC2626);
+      color: white;
+    }
+
+    .sidebar-footer {
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      margin-top: 16px;
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      background: var(--bg-input);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .user-card:hover { background: var(--bg-card-hover); }
+
+    .user-avatar {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--info));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+    .user-role { font-size: 11px; color: var(--text-muted); }
+
+    .main-content {
+      flex: 1;
+      margin-left: 280px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: var(--glass-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--glass-border);
+      padding: 18px 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-left { display: flex; align-items: center; gap: 20px; }
+    .page-title { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+
+    .header-right { display: flex; align-items: center; gap: 12px; }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      width: 280px;
+      transition: all 0.2s ease;
+    }
+
+    .search-box:focus-within {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .search-input {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .search-input::placeholder { color: var(--text-subtle); }
+
+    .search-shortcut {
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: var(--bg-tertiary);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .header-btn {
+      width: 40px; height: 40px;
+      border-radius: var(--radius-md);
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .header-btn:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+
+    .notification-dot {
+      position: absolute;
+      top: 8px; right: 8px;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--danger);
+      border: 2px solid var(--bg-primary);
+    }
+
+    .content { flex: 1; padding: 32px 36px; }
+
+    /* Page Header */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 28px;
+    }
+
+    .page-header-left h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+    }
+
+    .page-header-left p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .page-header-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: none;
+      outline: none;
+    }
+
+    .btn:active { transform: scale(0.97); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 6px 24px var(--primary-glow);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--success), #059669);
+      color: white;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25);
+    }
+
+    .btn-success:hover {
+      box-shadow: 0 6px 24px rgba(16, 185, 129, 0.35);
+      transform: translateY(-1px);
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .filter-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .filter-select {
+      padding: 8px 32px 8px 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      transition: all 0.2s ease;
+    }
+
+    .filter-select:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .filter-divider {
+      width: 1px;
+      height: 28px;
+      background: var(--border);
+    }
+
+    .filter-search {
+      flex: 1;
+      min-width: 200px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+    }
+
+    .filter-search:focus-within {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .filter-search input {
+      flex: 1;
+      background: none;
+      border: none;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+    }
+
+    .filter-search input::placeholder { color: var(--text-subtle); }
+
+    /* Stats Bar */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .stat-pill:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-focus);
+    }
+
+    .stat-pill.active {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    .stat-pill-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .stat-pill-dot.blue { background: var(--primary); }
+    .stat-pill-dot.green { background: var(--success); }
+    .stat-pill-dot.orange { background: var(--warning); }
+    .stat-pill-dot.red { background: var(--danger); }
+    .stat-pill-dot.purple { background: var(--info); }
+    .stat-pill-dot.gray { background: var(--text-muted); }
+
+    .stat-pill-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .stat-pill-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* Table Card */
+    .table-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+
+    .table-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .table-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .table-btn {
+      padding: 8px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      color: var(--text-secondary);
+    }
+
+    .table-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
+
+    /* Data Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table thead th {
+      padding: 14px 20px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(31, 41, 55, 0.3);
+      white-space: nowrap;
+    }
+
+    .data-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .data-table tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    .data-table tbody tr:hover {
+      background: var(--bg-card-hover);
+    }
+
+    .data-table tbody td {
+      padding: 16px 20px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .point-id {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      color: var(--primary-light);
+      font-weight: 500;
+    }
+
+    .point-name {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .point-type {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .point-type.rainwater {
+      background: rgba(37, 99, 235, 0.15);
+      color: var(--primary-light);
+    }
+
+    .point-type.sewage {
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--info-light);
+    }
+
+    .point-type.mixed {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning-light);
+    }
+
+    .point-type.unknown {
+      background: rgba(107, 114, 128, 0.15);
+      color: var(--text-muted);
+    }
+
+    .point-location {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .point-assignee {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .assignee-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .assignee-avatar.blue { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
+    .assignee-avatar.green { background: linear-gradient(135deg, var(--success), #059669); }
+    .assignee-avatar.orange { background: linear-gradient(135deg, var(--warning), #D97706); }
+
+    .assignee-name {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .status-badge {
+      padding: 5px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .status-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .status-badge.pending {
+      background: rgba(107, 114, 128, 0.15);
+      color: var(--text-muted);
+    }
+
+    .status-badge.pending::before { background: var(--text-muted); }
+
+    .status-badge.draft {
+      background: rgba(37, 99, 235, 0.15);
+      color: var(--primary-light);
+    }
+
+    .status-badge.draft::before { background: var(--primary-light); }
+
+    .status-badge.review {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning-light);
+    }
+
+    .status-badge.review::before { background: var(--warning-light); }
+
+    .status-badge.approved {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+
+    .status-badge.approved::before { background: var(--success); }
+
+    .status-badge.rejected {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger-light);
+    }
+
+    .status-badge.rejected::before { background: var(--danger-light); }
+
+    .status-badge.archived {
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--info-light);
+    }
+
+    .status-badge.archived::before { background: var(--info-light); }
+
+    .version-tag {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      background: var(--bg-tertiary);
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .table-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .table-info {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .page-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .page-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
+
+    .page-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* Checkbox */
+    .checkbox {
+      width: 18px;
+      height: 18px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox:hover {
+      border-color: var(--primary);
+    }
+
+    .checkbox.checked {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .checkbox.checked::after {
+      content: '✓';
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* Responsive */
+    @media (max-width: 1280px) {
+      .stats-bar {
+        flex-wrap: wrap;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .main-content { margin-left: 0; }
+    }
+
+    @media (max-width: 768px) {
+      .content { padding: 20px 16px; }
+      .page-header { flex-direction: column; gap: 16px; align-items: flex-start; }
+      .filter-bar { flex-direction: column; align-items: stretch; }
+      .filter-divider { width: 100%; height: 1px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-effects"></div>
+  <div class="grid-pattern"></div>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">🌊</div>
+        <div>
+          <div class="logo-text">青泓勘察</div>
+          <div class="logo-sub">Survey & Inspection System</div>
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-title">主要功能</div>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span>工作台</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">📋</span>
+          <span>项目管理</span>
+        </a>
+        <a href="#" class="nav-item active">
+          <span class="nav-icon">📍</span>
+          <span>点位管理</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">📝</span>
+          <span>模板管理</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">✅</span>
+          <span>数据审核</span>
+          <span class="nav-badge">12</span>
+        </a>
+
+        <div class="nav-section-title">数据分析</div>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">📈</span>
+          <span>统计分析</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">🗺️</span>
+          <span>地图中心</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">📁</span>
+          <span>报告管理</span>
+        </a>
+
+        <div class="nav-section-title">系统管理</div>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">👥</span>
+          <span>人员管理</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">🔗</span>
+          <span>协作入口</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">📜</span>
+          <span>日志中心</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          <span>系统设置</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-card">
+          <div class="user-avatar">管</div>
+          <div class="user-info">
+            <div class="user-name">管理员</div>
+            <div class="user-role">系统管理员</div>
+          </div>
+          <span style="color: var(--text-muted);">⋯</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <h1 class="page-title">点位管理</h1>
+        </div>
+        <div class="header-right">
+          <div class="search-box">
+            <span>🔍</span>
+            <input type="text" class="search-input" placeholder="搜索项目、点位、报告...">
+            <span class="search-shortcut">⌘K</span>
+          </div>
+          <button class="header-btn">
+            🔔
+            <span class="notification-dot"></span>
+          </button>
+          <button class="header-btn">❓</button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+        <!-- Page Header -->
+        <div class="page-header">
+          <div class="page-header-left">
+            <h1>点位管理</h1>
+            <p>管理所有勘察点位，包括导入、分配、状态跟踪</p>
+          </div>
+          <div class="page-header-actions">
+            <button class="btn btn-secondary">📥 导入点位</button>
+            <button class="btn btn-success">➕ 新增点位</button>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <div class="filter-group">
+            <span class="filter-label">项目</span>
+            <select class="filter-select">
+              <option>全部项目</option>
+              <option>河道勘察A标段</option>
+              <option>河道勘察B标段</option>
+              <option>排污口排查项目</option>
+            </select>
+          </div>
+          <div class="filter-divider"></div>
+          <div class="filter-group">
+            <span class="filter-label">标段</span>
+            <select class="filter-select">
+              <option>全部标段</option>
+              <option>A1标段</option>
+              <option>A2标段</option>
+              <option>B1标段</option>
+            </select>
+          </div>
+          <div class="filter-divider"></div>
+          <div class="filter-group">
+            <span class="filter-label">排口类型</span>
+            <select class="filter-select">
+              <option>全部类型</option>
+              <option>雨水排口</option>
+              <option>污水排口</option>
+              <option>雨污混流口</option>
+              <option>未知类型</option>
+            </select>
+          </div>
+          <div class="filter-divider"></div>
+          <div class="filter-group">
+            <span class="filter-label">采集人</span>
+            <select class="filter-select">
+              <option>全部人员</option>
+              <option>张工</option>
+              <option>李工</option>
+              <option>王工</option>
+            </select>
+          </div>
+          <div style="flex:1"></div>
+          <div class="filter-search">
+            <span>🔍</span>
+            <input type="text" placeholder="搜索点位编号、名称...">
+          </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+          <div class="stat-pill active">
+            <span class="stat-pill-dot gray"></span>
+            <span class="stat-pill-label">全部</span>
+            <span class="stat-pill-value">1,247</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-pill-dot blue"></span>
+            <span class="stat-pill-label">待采集</span>
+            <span class="stat-pill-value">391</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-pill-dot blue"></span>
+            <span class="stat-pill-label">草稿中</span>
+            <span class="stat-pill-value">86</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-pill-dot orange"></span>
+            <span class="stat-pill-label">待审核</span>
+            <span class="stat-pill-value">12</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-pill-dot green"></span>
+            <span class="stat-pill-label">审核通过</span>
+            <span class="stat-pill-value">712</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-pill-dot red"></span>
+            <span class="stat-pill-label">驳回待修改</span>
+            <span class="stat-pill-value">38</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-pill-dot purple"></span>
+            <span class="stat-pill-label">已归档</span>
+            <span class="stat-pill-value">856</span>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-card">
+          <div class="table-header">
+            <span class="table-title">点位列表</span>
+            <div class="table-actions">
+              <button class="table-btn">📤 导出</button>
+              <button class="table-btn">🔄 批量分配</button>
+              <button class="table-btn">🗺️ 地图视图</button>
+            </div>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 40px;">
+                  <div class="checkbox"></div>
+                </th>
+                <th>点位编号</th>
+                <th>点位名称</th>
+                <th>排口类型</th>
+                <th>位置信息</th>
+                <th>分配/采集人</th>
+                <th>状态</th>
+                <th>版本</th>
+                <th style="width: 80px;">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="checkbox"></div></td>
+                <td><span class="point-id">PTN-2024-001</span></td>
+                <td><span class="point-name">河道A-01号点</span></td>
+                <td><span class="point-type rainwater">💧 雨水排口</span></td>
+                <td><span class="point-location">116.4074°E, 39.9042°N</span></td>
+                <td>
+                  <div class="point-assignee">
+                    <div class="assignee-avatar blue">张</div>
+                    <span class="assignee-name">张工</span>
+                  </div>
+                </td>
+                <td><span class="status-badge approved">审核通过</span></td>
+                <td><span class="version-tag">v3</span></td>
+                <td><span style="color: var(--text-muted); cursor: pointer;">⋯</span></td>
+              </tr>
+              <tr>
+                <td><div class="checkbox"></div></td>
+                <td><span class="point-id">PTN-2024-002</span></td>
+                <td><span class="point-name">河道A-02号点</span></td>
+                <td><span class="point-type sewage">🏭 污水排口</span></td>
+                <td><span class="point-location">116.4123°E, 39.9087°N</span></td>
+                <td>
+                  <div class="point-assignee">
+                    <div class="assignee-avatar green">李</div>
+                    <span class="assignee-name">李工</span>
+                  </div>
+                </td>
+                <td><span class="status-badge review">待审核</span></td>
+                <td><span class="version-tag">v2</span></td>
+                <td><span style="color: var(--text-muted); cursor: pointer;">⋯</span></td>
+              </tr>
+              <tr>
+                <td><div class="checkbox"></div></td>
+                <td><span class="point-id">PTN-2024-003</span></td>
+                <td><span class="point-name">河道A-03号点</span></td>
+                <td><span class="point-type mixed">🔄 雨污混流口</span></td>
+                <td><span class="point-location">116.4156°E, 39.9123°N</span></td>
+                <td>
+                  <div class="point-assignee">
+                    <div class="assignee-avatar orange">王</div>
+                    <span class="assignee-name">王工</span>
+                  </div>
+                </td>
+                <td><span class="status-badge rejected">驳回待修改</span></td>
+                <td><span class="version-tag">v1</span></td>
+                <td><span style="color: var(--text-muted); cursor: pointer;">⋯</span></td>
+              </tr>
+              <tr>
+                <td><div class="checkbox"></div></td>
+                <td><span class="point-id">PTN-2024-004</span></td>
+                <td><span class="point-name">河道B-01号点</span></td>
+                <td><span class="point-type rainwater">💧 雨水排口</span></td>
+                <td><span class="point-location">116.4201°E, 39.9156°N</span></td>
+                <td>
+                  <div class="point-assignee">
+                    <div class="assignee-avatar blue">张</div>
+                    <span class="assignee-name">张工</span>
+                  </div>
+                </td>
+                <td><span class="status-badge draft">草稿中</span></td>
+                <td><span class="version-tag">v1</span></td>
+                <td><span style="color: var(--text-muted); cursor: pointer;">⋯</span></td>
+              </tr>
+              <tr>
+                <td><div class="checkbox"></div></td>
+                <td><span class="point-id">PTN-2024-005</span></td>
+                <td><span class="point-name">排污口-01号点</span></td>
+                <td><span class="point-type unknown">❓ 未知类型</span></td>
+                <td><span class="point-location">116.4234°E, 39.9189°N</span></td>
+                <td>
+                  <div class="point-assignee">
+                    <span class="assignee-name" style="color: var(--text-subtle);">未分配</span>
+                  </div>
+                </td>
+                <td><span class="status-badge pending">待采集</span></td>
+                <td><span class="version-tag">-</span></td>
+                <td><span style="color: var(--text-muted); cursor: pointer;">⋯</span></td>
+              </tr>
+              <tr>
+                <td><div class="checkbox"></div></td>
+                <td><span class="point-id">PTN-2024-006</span></td>
+                <td><span class="point-name">河道A-04号点</span></td>
+                <td><span class="point-type rainwater">💧 雨水排口</span></td>
+                <td><span class="point-location">116.4267°E, 39.9212°N</span></td>
+                <td>
+                  <div class="point-assignee">
+                    <div class="assignee-avatar green">李</div>
+                    <span class="assignee-name">李工</span>
+                  </div>
+                </td>
+                <td><span class="status-badge archived">已归档</span></td>
+                <td><span class="version-tag">v5</span></td>
+                <td><span style="color: var(--text-muted); cursor: pointer;">⋯</span></td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="table-footer">
+            <span class="table-info">显示 1-6 条，共 1,247 条记录</span>
+            <div class="pagination">
+              <button class="page-btn">‹</button>
+              <button class="page-btn active">1</button>
+              <button class="page-btn">2</button>
+              <button class="page-btn">3</button>
+              <button class="page-btn">...</button>
+              <button class="page-btn">208</button>
+              <button class="page-btn">›</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

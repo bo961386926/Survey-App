@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e2e8f9",
+                        "on-primary-fixed-variant": "#004493",
+                        "tertiary-container": "#bf551c",
+                        "on-secondary-fixed-variant": "#144d5f",
+                        "surface-bright": "#f9f9ff",
+                        "tertiary-fixed-dim": "#ffb595",
+                        "primary": "#0058bc",
+                        "on-background": "#151c28",
+                        "surface-variant": "#dde2f3",
+                        "primary-fixed-dim": "#adc6ff",
+                        "background": "#f9f9ff",
+                        "secondary": "#326578",
+                        "surface-container": "#e8eeff",
+                        "on-primary": "#ffffff",
+                        "outline": "#717786",
+                        "tertiary": "#9e3d00",
+                        "on-tertiary-fixed-variant": "#7c2e00",
+                        "inverse-on-surface": "#ecf0ff",
+                        "outline-variant": "#c1c6d7",
+                        "on-error-container": "#93000a",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#351000",
+                        "on-surface": "#151c28",
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#adc6ff",
+                        "secondary-fixed-dim": "#9ccee4",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-container-low": "#f1f3ff",
+                        "on-secondary-container": "#36697c",
+                        "surface-container-highest": "#dde2f3",
+                        "on-secondary-fixed": "#001f29",
+                        "inverse-surface": "#2a303d",
+                        "tertiary-fixed": "#ffdbcd",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed": "#001a41",
+                        "on-primary-container": "#fefcff",
+                        "surface-tint": "#005bc1",
+                        "surface-dim": "#d4daeb",
+                        "surface": "#f9f9ff",
+                        "secondary-fixed": "#baeaff",
+                        "primary-container": "#0070eb",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#b5e7fe",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#fffbff",
+                        "error-container": "#ffdad6",
+                        "on-surface-variant": "#414755"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "base": "8px",
+                        "margin-mobile": "20px",
+                        "md": "16px",
+                        "gutter-mobile": "12px",
+                        "sm": "12px",
+                        "lg": "24px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "h3": ["Manrope"],
+                        "metric-value": ["Manrope"],
+                        "body-sm": ["Manrope"],
+                        "h2": ["Manrope"],
+                        "tiny-label": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "h1": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "h3": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "metric-value": ["30px", {"lineHeight": "1", "fontWeight": "900"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "h2": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "tiny-label": ["10px", {"lineHeight": "1", "fontWeight": "500"}],
+                        "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h1": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(224, 240, 255, 0.5);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-sm overflow-hidden">
+<!-- SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-full w-[240px] bg-white dark:bg-slate-900 border-r border-[#E0F0FF] dark:border-slate-800 shadow-sm dark:shadow-none z-50">
+<div class="flex flex-col h-full py-6">
+<!-- Brand Header -->
+<div class="px-6 mb-10 flex items-center gap-3">
+<div class="w-10 h-10 bg-primary-container rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">ac_unit</span>
+</div>
+<div>
+<h1 class="text-blue-600 dark:text-blue-400 text-xl font-black tracking-tight leading-none">FrozenFlow</h1>
+<p class="text-[10px] font-medium text-slate-400 uppercase tracking-widest mt-1">V2.4.0 Professional</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 space-y-1 px-3">
+<div class="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer active:opacity-80 transition-colors duration-200 text-slate-600 dark:text-slate-400 hover:text-blue-500 hover:bg-slate-50 dark:hover:bg-slate-800 font-manrope text-sm font-medium">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>概览工作台</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer active:opacity-80 transition-colors duration-200 text-slate-600 dark:text-slate-400 hover:text-blue-500 hover:bg-slate-50 dark:hover:bg-slate-800 font-manrope text-sm font-medium">
+<span class="material-symbols-outlined" data-icon="map">map</span>
+<span>地图视图</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer active:opacity-80 transition-colors duration-200 text-slate-600 dark:text-slate-400 hover:text-blue-500 hover:bg-slate-50 dark:hover:bg-slate-800 font-manrope text-sm font-medium">
+<span class="material-symbols-outlined" data-icon="business_center">business_center</span>
+<span>项目管理</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer active:opacity-80 transition-colors duration-200 text-slate-600 dark:text-slate-400 hover:text-blue-500 hover:bg-slate-50 dark:hover:bg-slate-800 font-manrope text-sm font-medium">
+<span class="material-symbols-outlined" data-icon="assignment">assignment</span>
+<span>任务中心</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer active:opacity-80 transition-colors duration-200 text-slate-600 dark:text-slate-400 hover:text-blue-500 hover:bg-slate-50 dark:hover:bg-slate-800 font-manrope text-sm font-medium">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span>团队管理</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer active:opacity-80 transition-colors duration-200 text-slate-600 dark:text-slate-400 hover:text-blue-500 hover:bg-slate-50 dark:hover:bg-slate-800 font-manrope text-sm font-medium">
+<span class="material-symbols-outlined" data-icon="web_stories">web_stories</span>
+<span>模板引擎</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer active:opacity-80 transition-colors duration-200 text-slate-600 dark:text-slate-400 hover:text-blue-500 hover:bg-slate-50 dark:hover:bg-slate-800 font-manrope text-sm font-medium">
+<span class="material-symbols-outlined" data-icon="fact_check">fact_check</span>
+<span>审核中心</span>
+</div>
+<!-- Active Tab -->
+<div class="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer active:opacity-80 transition-colors duration-200 text-blue-600 dark:text-blue-400 font-bold border-r-2 border-blue-600 bg-blue-50/50 dark:bg-blue-900/20 font-manrope text-sm">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>系统管理</span>
+</div>
+</nav>
+<!-- Footer Tabs -->
+<div class="px-3 pt-6 border-t border-[#E0F0FF] dark:border-slate-800 space-y-1">
+<div class="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer active:opacity-80 transition-colors duration-200 text-slate-600 dark:text-slate-400 hover:text-blue-500 hover:bg-slate-50 dark:hover:bg-slate-800 font-manrope text-sm font-medium">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span>消息中心</span>
+</div>
+<div class="flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer active:opacity-80 transition-colors duration-200 text-slate-600 dark:text-slate-400 hover:text-blue-500 hover:bg-slate-50 dark:hover:bg-slate-800 font-manrope text-sm font-medium">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span>个人设置</span>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Shell -->
+<main class="fixed top-0 right-0 left-[240px] h-screen overflow-y-auto">
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 left-[240px] h-16 z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-[#E0F0FF] dark:border-slate-800 flex justify-between items-center px-8 w-full">
+<div class="flex items-center gap-4 flex-1">
+<div class="relative w-96 group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">search</span>
+<input class="w-full bg-[#F5F7FA] border-none rounded-full pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 transition-all outline-none" placeholder="搜索功能、日志或用户..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 border-r border-[#E0F0FF] pr-6">
+<button class="material-symbols-outlined text-slate-500 hover:text-blue-500 transition-all">notifications</button>
+<button class="material-symbols-outlined text-slate-500 hover:text-blue-500 transition-all">help</button>
+<button class="material-symbols-outlined text-slate-500 hover:text-blue-500 transition-all">language</button>
+</div>
+<div class="flex items-center gap-3 pl-2">
+<div class="text-right">
+<p class="text-sm font-bold text-slate-800">超级管理员</p>
+<p class="text-[10px] text-slate-400 font-medium">ID: 9527-AD</p>
+</div>
+<img alt="Administrator Profile" class="w-10 h-10 rounded-full border-2 border-white shadow-sm ring-1 ring-blue-100" data-alt="Close-up professional headshot of a middle-aged tech administrator in a minimalist office setting with soft professional lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwSY7sjvxtXZy7wI_0-kF2ARcHp3u3C24XBqT0ysnlAfmJsTWctkIqFo3B7QVEHPgZWLn52ytinLsPqTaoT9GpRwEFBbY0dqgdU4mxhoPbPf4AmE_6s8qfsuUzmuNOH-cL2fNv1KnyH654FDte4n08u5hGyxzbFe52g-ueXeBxmcCW3f8TY8n0_FCLSI39MN9cKPvJOvYyR2z2cVsoW9BNEO383plTD9dVBZy5Nmo1iMbgDeRlBH-N4U1pcyCxlByE1VqHxhAoOc0"/>
+</div>
+</div>
+</header>
+<!-- Canvas Area -->
+<div class="pt-24 px-10 pb-12 max-w-[1600px] mx-auto">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 mb-8 text-sm">
+<span class="text-slate-400">控制面板</span>
+<span class="material-symbols-outlined text-xs text-slate-300">chevron_right</span>
+<span class="text-blue-600 font-semibold">系统管理</span>
+</nav>
+<!-- Bento Grid Dashboard Layout -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Section: User & Role Management -->
+<section class="col-span-8 glass-card rounded-xl p-8 shadow-sm hover:shadow-md transition-shadow">
+<div class="flex justify-between items-center mb-8">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-blue-600" data-weight="fill">shield_person</span>
+</div>
+<div>
+<h2 class="font-h2 text-h2 text-on-surface">用户与权限管理</h2>
+<p class="text-body-sm text-slate-500">基于角色的访问控制 (RBAC) 体系配置</p>
+</div>
+</div>
+<button class="bg-primary text-white px-6 py-2.5 rounded-lg font-bold text-sm flex items-center gap-2 shadow-lg shadow-primary/20 hover:opacity-90 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-sm">person_add</span>
+                            添加成员
+                        </button>
+</div>
+<!-- User Table -->
+<div class="overflow-hidden">
+<table class="w-full text-left">
+<thead>
+<tr class="border-b border-[#E0F0FF] text-slate-400 text-[12px] uppercase tracking-wider font-bold">
+<th class="pb-4 pl-4 font-label-caps">用户名 / 账号</th>
+<th class="pb-4 font-label-caps">所属角色</th>
+<th class="pb-4 font-label-caps">状态</th>
+<th class="pb-4 font-label-caps text-right pr-4">操作</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#F0F8FF]">
+<tr class="group hover:bg-blue-50/30 transition-colors">
+<td class="py-5 pl-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center font-bold text-blue-600">A</div>
+<div>
+<div class="font-semibold text-slate-800">Admin_Zero</div>
+<div class="text-[11px] text-slate-400">admin@frozenflow.io</div>
+</div>
+</div>
+</td>
+<td class="py-5">
+<span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold uppercase tracking-tight">System Owner</span>
+</td>
+<td class="py-5">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="text-xs font-medium text-emerald-600">活跃</span>
+</div>
+</td>
+<td class="py-5 text-right pr-4">
+<button class="material-symbols-outlined text-slate-400 hover:text-blue-600 mr-3">edit</button>
+<button class="material-symbols-outlined text-slate-400 hover:text-error">delete</button>
+</td>
+</tr>
+<tr class="group hover:bg-blue-50/30 transition-colors">
+<td class="py-5 pl-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center font-bold text-blue-600">M</div>
+<div>
+<div class="font-semibold text-slate-800">Manager_Li</div>
+<div class="text-[11px] text-slate-400">li_sec@corp.com</div>
+</div>
+</div>
+</td>
+<td class="py-5">
+<span class="bg-blue-50 text-slate-600 px-3 py-1 rounded-full text-xs font-bold">部门负责人</span>
+</td>
+<td class="py-5">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="text-xs font-medium text-emerald-600">活跃</span>
+</div>
+</td>
+<td class="py-5 text-right pr-4">
+<button class="material-symbols-outlined text-slate-400 hover:text-blue-600 mr-3">edit</button>
+<button class="material-symbols-outlined text-slate-400 hover:text-error">delete</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Section: Organization Structure -->
+<section class="col-span-4 glass-card rounded-xl p-8">
+<div class="flex items-center gap-4 mb-8">
+<div class="w-12 h-12 bg-secondary-container/30 rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-weight="fill">account_tree</span>
+</div>
+<div>
+<h2 class="font-h2 text-h3 text-on-surface">组织架构</h2>
+<p class="text-[12px] text-slate-500">多级部门结构同步与管理</p>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex items-center justify-between p-4 bg-white rounded-lg border border-[#E0F0FF] hover:border-blue-300 transition-colors cursor-pointer group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-blue-500">corporate_fare</span>
+<span class="font-semibold text-slate-800">总经办</span>
+</div>
+<span class="text-[10px] bg-slate-100 px-2 py-1 rounded text-slate-500 font-bold">12人</span>
+</div>
+<div class="ml-6 flex items-center justify-between p-4 bg-white/50 rounded-lg border border-[#E0F0FF] border-dashed">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400 text-sm">subdirectory_arrow_right</span>
+<span class="font-medium text-slate-700">技术研发部</span>
+</div>
+<span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded font-bold">48人</span>
+</div>
+<div class="ml-6 flex items-center justify-between p-4 bg-white/50 rounded-lg border border-[#E0F0FF] border-dashed">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-slate-400 text-sm">subdirectory_arrow_right</span>
+<span class="font-medium text-slate-700">市场运营部</span>
+</div>
+<span class="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded font-bold">24人</span>
+</div>
+</div>
+</section>
+<!-- Section: System Parameters -->
+<section class="col-span-4 glass-card rounded-xl p-8">
+<div class="flex items-center gap-4 mb-8">
+<div class="w-12 h-12 bg-surface-container-high rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-600" data-weight="fill">tune</span>
+</div>
+<div>
+<h2 class="font-h3 text-on-surface">全局参数</h2>
+<p class="text-[12px] text-slate-500">动态调整系统核心配置</p>
+</div>
+</div>
+<div class="space-y-6">
+<div>
+<label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">默认工作区容量</label>
+<div class="flex items-center gap-4">
+<div class="h-1.5 flex-1 bg-slate-100 rounded-full overflow-hidden">
+<div class="h-full bg-primary w-3/4 rounded-full"></div>
+</div>
+<span class="text-sm font-bold text-slate-700">75%</span>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-sm text-slate-600 font-medium">双重身份验证</span>
+<div class="w-10 h-5 bg-primary rounded-full relative cursor-pointer">
+<div class="absolute right-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<span class="text-sm text-slate-600 font-medium">多终端登录限制</span>
+<div class="w-10 h-5 bg-slate-200 rounded-full relative cursor-pointer">
+<div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section: Audit Logs -->
+<section class="col-span-8 glass-card rounded-xl p-8">
+<div class="flex justify-between items-center mb-8">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-error-container/30 rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-error" data-weight="fill">history_edu</span>
+</div>
+<div>
+<h2 class="font-h2 text-h2 text-on-surface">审计日志</h2>
+<p class="text-body-sm text-slate-500">追踪系统安全与操作轨迹</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="bg-surface-container text-slate-600 px-4 py-2 rounded-lg font-bold text-sm border border-outline-variant hover:bg-slate-100 transition-colors">导出日志</button>
+<button class="bg-surface-container text-slate-600 px-4 py-2 rounded-lg font-bold text-sm border border-outline-variant hover:bg-slate-100 transition-colors">查看全部</button>
+</div>
+</div>
+<div class="relative">
+<!-- Vertical Timeline -->
+<div class="absolute left-[15px] top-4 bottom-4 w-px bg-[#F0F8FF]"></div>
+<div class="space-y-8">
+<div class="relative flex items-start gap-6 group">
+<div class="z-10 w-8 h-8 rounded-full bg-blue-500 border-4 border-white shadow-sm flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[14px]">login</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="text-sm font-bold text-slate-800">管理员 Admin_Zero 成功登录系统</p>
+<time class="text-[11px] text-slate-400 font-medium">2023-11-24 09:42:15</time>
+</div>
+<div class="mt-2 p-3 bg-surface-container-low rounded-lg text-[12px] text-slate-500 border border-slate-100">
+                                        IP: 192.168.1.104 | 地点: 上海市浦东新区 | 终端: Chrome (macOS)
+                                    </div>
+</div>
+</div>
+<div class="relative flex items-start gap-6 group">
+<div class="z-10 w-8 h-8 rounded-full bg-emerald-500 border-4 border-white shadow-sm flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[14px]">manage_accounts</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="text-sm font-bold text-slate-800">权限变更: 用户 Manager_Li 角色由 [访客] 升级为 [部门负责人]</p>
+<time class="text-[11px] text-slate-400 font-medium">2023-11-24 08:15:00</time>
+</div>
+<div class="mt-1 text-[12px] text-slate-400">操作人: Super_User (ID: 001)</div>
+</div>
+</div>
+<div class="relative flex items-start gap-6 group">
+<div class="z-10 w-8 h-8 rounded-full bg-amber-500 border-4 border-white shadow-sm flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-[14px]">warning</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<p class="text-sm font-bold text-slate-800">高危操作提示: 尝试导出系统敏感参数配置</p>
+<time class="text-[11px] text-slate-400 font-medium">2023-11-23 23:58:22</time>
+</div>
+<div class="mt-1 text-[12px] text-error font-medium">警告: 已被系统防火墙自动拦截</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</main>
+<!-- FAB (Suppressed on management pages but visible for quick actions) -->
+<button class="fixed bottom-10 right-10 w-14 h-14 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined" data-icon="support_agent">support_agent</span>
+</button>
+</body></html>

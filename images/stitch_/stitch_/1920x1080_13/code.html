@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #dde2f3;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #0058bc;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container-high": "#e2e8f9",
+                        "on-primary-fixed-variant": "#004493",
+                        "tertiary-container": "#bf551c",
+                        "on-secondary-fixed-variant": "#144d5f",
+                        "surface-bright": "#f9f9ff",
+                        "tertiary-fixed-dim": "#ffb595",
+                        "primary": "#0058bc",
+                        "on-background": "#151c28",
+                        "surface-variant": "#dde2f3",
+                        "primary-fixed-dim": "#adc6ff",
+                        "background": "#f9f9ff",
+                        "secondary": "#326578",
+                        "surface-container": "#e8eeff",
+                        "on-primary": "#ffffff",
+                        "outline": "#717786",
+                        "tertiary": "#9e3d00",
+                        "on-tertiary-fixed-variant": "#7c2e00",
+                        "inverse-on-surface": "#ecf0ff",
+                        "outline-variant": "#c1c6d7",
+                        "on-error-container": "#93000a",
+                        "on-error": "#ffffff",
+                        "on-tertiary-fixed": "#351000",
+                        "on-surface": "#151c28",
+                        "error": "#ba1a1a",
+                        "inverse-primary": "#adc6ff",
+                        "secondary-fixed-dim": "#9ccee4",
+                        "primary-fixed": "#d8e2ff",
+                        "surface-container-low": "#f1f3ff",
+                        "on-secondary-container": "#36697c",
+                        "surface-container-highest": "#dde2f3",
+                        "on-secondary-fixed": "#001f29",
+                        "inverse-surface": "#2a303d",
+                        "tertiary-fixed": "#ffdbcd",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed": "#001a41",
+                        "on-primary-container": "#fefcff",
+                        "surface-tint": "#005bc1",
+                        "surface-dim": "#d4daeb",
+                        "surface": "#f9f9ff",
+                        "secondary-fixed": "#baeaff",
+                        "primary-container": "#0070eb",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#b5e7fe",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#fffbff",
+                        "error-container": "#ffdad6",
+                        "on-surface-variant": "#414755"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "base": "8px",
+                        "margin-mobile": "20px",
+                        "md": "16px",
+                        "gutter-mobile": "12px",
+                        "sm": "12px",
+                        "lg": "24px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "h3": ["Manrope"],
+                        "metric-value": ["Manrope"],
+                        "body-sm": ["Manrope"],
+                        "h2": ["Manrope"],
+                        "tiny-label": ["Manrope"],
+                        "label-caps": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "h1": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "h3": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                        "metric-value": ["30px", {"lineHeight": "1", "fontWeight": "900"}],
+                        "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "h2": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                        "tiny-label": ["10px", {"lineHeight": "1", "fontWeight": "500"}],
+                        "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                        "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "h1": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-lg">
+<!-- SideNavBar Anchor Component -->
+<aside class="fixed left-0 top-0 h-full w-[240px] border-r border-[#E0F0FF] bg-white flex flex-col py-6 shadow-sm z-50">
+<div class="px-6 mb-10">
+<h1 class="text-blue-600 text-xl font-black tracking-tight font-h2">FrozenFlow</h1>
+<p class="text-[10px] text-slate-400 font-medium">V2.4.0 Professional</p>
+</div>
+<nav class="flex-1 space-y-1">
+<div class="px-4 py-2 flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors duration-200 cursor-pointer font-manrope text-sm font-medium">
+<span class="material-symbols-outlined">dashboard</span>
+<span>概览工作台</span>
+</div>
+<div class="px-4 py-2 flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors duration-200 cursor-pointer font-manrope text-sm font-medium">
+<span class="material-symbols-outlined">map</span>
+<span>地图视图</span>
+</div>
+<div class="px-4 py-2 flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors duration-200 cursor-pointer font-manrope text-sm font-medium">
+<span class="material-symbols-outlined">business_center</span>
+<span>项目管理</span>
+</div>
+<div class="px-4 py-2 flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors duration-200 cursor-pointer font-manrope text-sm font-medium">
+<span class="material-symbols-outlined">assignment</span>
+<span>任务中心</span>
+</div>
+<div class="px-4 py-2 flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors duration-200 cursor-pointer font-manrope text-sm font-medium">
+<span class="material-symbols-outlined">groups</span>
+<span>团队管理</span>
+</div>
+<div class="px-4 py-2 flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors duration-200 cursor-pointer font-manrope text-sm font-medium">
+<span class="material-symbols-outlined">web_stories</span>
+<span>模板引擎</span>
+</div>
+<div class="px-4 py-2 flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors duration-200 cursor-pointer font-manrope text-sm font-medium">
+<span class="material-symbols-outlined">fact_check</span>
+<span>审核中心</span>
+</div>
+<div class="px-4 py-2 flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors duration-200 cursor-pointer font-manrope text-sm font-medium">
+<span class="material-symbols-outlined">settings</span>
+<span>系统管理</span>
+</div>
+</nav>
+<div class="mt-auto border-t border-[#E0F0FF] pt-4">
+<div class="px-4 py-3 flex items-center gap-3 text-blue-600 font-bold border-r-2 border-blue-600 bg-blue-50/50 transition-colors duration-200 cursor-pointer font-manrope text-sm">
+<span class="material-symbols-outlined">notifications</span>
+<span>消息中心</span>
+</div>
+<div class="px-4 py-3 flex items-center gap-3 text-slate-600 hover:bg-slate-50 transition-colors duration-200 cursor-pointer font-manrope text-sm font-medium">
+<span class="material-symbols-outlined">account_circle</span>
+<span>个人设置</span>
+</div>
+</div>
+</aside>
+<!-- TopAppBar Anchor Component -->
+<header class="fixed top-0 right-0 left-[240px] h-16 bg-white/80 backdrop-blur-md border-b border-[#E0F0FF] z-40 flex justify-between items-center px-8">
+<div class="flex items-center flex-1 max-w-md">
+<div class="relative w-full group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">search</span>
+<input class="w-full bg-[#F5F7FA] border-none rounded-full pl-12 pr-4 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 transition-all outline-none" placeholder="搜索消息、任务或文档..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 text-slate-500">
+<button class="material-symbols-outlined hover:text-blue-500 transition-all">help</button>
+<button class="material-symbols-outlined hover:text-blue-500 transition-all">language</button>
+<div class="relative">
+<button class="material-symbols-outlined hover:text-blue-500 transition-all">notifications</button>
+<span class="absolute top-0 right-0 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
+</div>
+</div>
+<div class="h-8 w-[1px] bg-[#E0F0FF]"></div>
+<div class="flex items-center gap-3 cursor-pointer group">
+<div class="text-right">
+<p class="text-sm font-bold text-on-surface leading-tight">管理员</p>
+<p class="text-[10px] text-slate-400">超级权限</p>
+</div>
+<img alt="Administrator Profile" class="w-10 h-10 rounded-full border-2 border-white shadow-sm object-cover" data-alt="Close-up professional headshot of a corporate administrator in a clean modern studio setting with soft lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCawNMYVLFyNBM5_ILNWuq3kPbJc8rwT_2ycdOCQPnivJKYzgouRzykC53pFJbTy8n00mFK1FV-Zg7qxtq8t0H0_6VHWKiTZz-h-bRvpWRTPB8qwHhVDeSGVdugTLSRb-HyzBWWr9ae9XnWCsk6ZV5ZiAloTAROVK5hn6T5SWW_R_dZIf8q4lmiQ0FDBxaI7EpyWAIEXdJW7ZCuMPN3m_xCvy5Uj6l2gZv1sqTxzONI4QjfRxFX3wU51--FavrtGJlEhM90NU7OxqI"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[240px] pt-16 h-screen flex overflow-hidden">
+<!-- Message Category List (Left Side) -->
+<div class="w-80 border-r border-[#E0F0FF] bg-surface flex flex-col">
+<div class="p-6 border-b border-[#E0F0FF]">
+<h2 class="font-h2 text-on-surface mb-2">消息中心</h2>
+<div class="flex gap-2">
+<button class="px-3 py-1 bg-primary text-white rounded-full text-tiny-label">全部</button>
+<button class="px-3 py-1 bg-surface-container-high text-on-surface-variant rounded-full text-tiny-label hover:bg-blue-50 transition-all">未读 (12)</button>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 space-y-3">
+<!-- Notifications Category -->
+<div class="group cursor-pointer">
+<div class="flex items-center gap-3 p-4 rounded-xl bg-white/40 backdrop-blur-sm border border-[#E0F0FF] hover:border-primary/30 hover:shadow-sm transition-all relative overflow-hidden">
+<div class="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+<div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+<span class="material-symbols-outlined">notifications</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="text-sm font-bold text-on-surface">通知公告</h3>
+<span class="text-[10px] text-slate-400">10:45 AM</span>
+</div>
+<p class="text-xs text-slate-500 truncate">系统将于凌晨2点进行例行维护...</p>
+</div>
+<span class="w-2 h-2 bg-blue-600 rounded-full"></span>
+</div>
+</div>
+<!-- Task Assignments Category (Active) -->
+<div class="group cursor-pointer">
+<div class="flex items-center gap-3 p-4 rounded-xl bg-white border-2 border-primary/20 shadow-sm relative overflow-hidden">
+<div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+<span class="material-symbols-outlined">assignment</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="text-sm font-bold text-on-surface">任务分配</h3>
+<span class="text-[10px] text-slate-400">昨天</span>
+</div>
+<p class="text-xs text-primary font-medium truncate">您有3项新的项目审核任务待处理</p>
+</div>
+<span class="px-1.5 py-0.5 bg-error text-white text-[9px] rounded-full font-bold">3</span>
+</div>
+</div>
+<!-- System Announcements Category -->
+<div class="group cursor-pointer">
+<div class="flex items-center gap-3 p-4 rounded-xl bg-white/40 backdrop-blur-sm border border-[#E0F0FF] hover:border-primary/30 hover:shadow-sm transition-all relative overflow-hidden">
+<div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
+<span class="material-symbols-outlined">campaign</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="text-sm font-bold text-on-surface">系统简报</h3>
+<span class="text-[10px] text-slate-400">周一</span>
+</div>
+<p class="text-xs text-slate-500 truncate">上周项目完成率报告已生成...</p>
+</div>
+</div>
+</div>
+<div class="pt-4 px-2">
+<p class="text-tiny-label text-slate-400 font-bold uppercase tracking-widest mb-3">最近联系</p>
+<div class="space-y-4">
+<div class="flex items-center gap-3 hover:bg-blue-50/50 p-2 rounded-lg transition-colors cursor-pointer">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="Portrait of a smiling professional woman with organized workspace in soft blurred background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBkufCf-FkT994g3BVy49_z-HzpG1Kjq6pDSmk2fxj6A1PT0VUS_ZFiPpUsIJ4PbfSdj-zTuV8ED6CJnRxvxu3mCIiNqDcwC_snu_J9-N9mOQVlRiO8lKa2NCL8cJnbUhahmifP6Au79uCTIrK5Rd4mIK3l3lHK3TBmOKUaQn_r_9GpbGh-f893AbiJyxGjVwXdM_dJWkr3eDpd7dUHGysuclBB5qBs1gIMIV_XrrbLmnmnNuy41mQJUt3wKkYNelzWAxTVpqnTAxA"/>
+<div class="flex-1">
+<p class="text-xs font-bold">李思纯 (项目经理)</p>
+<p class="text-[10px] text-slate-500">文件已发送，请查收</p>
+</div>
+</div>
+<div class="flex items-center gap-3 hover:bg-blue-50/50 p-2 rounded-lg transition-colors cursor-pointer">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="Friendly young creative male designer headshot with soft daylight and minimal aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAICpN_8FmyLGPsiCEosJmk0t5Fpe_gtbuS3X2YoqOj6l123frJUGUZWrWCmmriNHVaMDtHKJZvk6eXqxEBqQGH8E5nFNdfBvfYqRRqFruI9ir7BwkquR518gg4JvTVyi_R0loEKFkrp6hMvpAEkLJoCxao8bmt2dVvn9yxvHtgSuJf8xNWoH8BdAW4W6H3pS24xNcdD4ifGw9zn-KB1-7nxTepP6QvlalO7z-GNtGC_cmEoF6QcVb-UXSL_IfnIScq1GIaSLlgcYw"/>
+<div class="flex-1">
+<p class="text-xs font-bold">张小凡 (开发工程师)</p>
+<p class="text-[10px] text-slate-500">接口文档已更新</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Message Detail View (Right Side) -->
+<div class="flex-1 flex flex-col bg-white">
+<!-- Detail Header -->
+<div class="h-16 px-8 border-b border-[#E0F0FF] flex justify-between items-center">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
+<span class="material-symbols-outlined">assignment</span>
+</div>
+<div>
+<h3 class="text-sm font-bold text-on-surface">任务分配 - 2024年Q3设计规范审核</h3>
+<p class="text-[10px] text-slate-400">来自：系统自动分派 • 2024年10月24日 14:30</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all">
+<span class="material-symbols-outlined">star</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-error hover:bg-error-container/20 rounded-lg transition-all">
+<span class="material-symbols-outlined">delete</span>
+</button>
+<button class="p-2 text-slate-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<!-- Detail Content -->
+<div class="flex-1 overflow-y-auto p-12 max-w-4xl mx-auto w-full">
+<div class="mb-8">
+<span class="px-3 py-1 bg-orange-100 text-orange-700 text-tiny-label rounded-full font-bold">待处理任务</span>
+</div>
+<h1 class="font-h1 text-on-surface mb-6 leading-tight">关于《FrozenFlow V2.4 全球设计规范》的最终审核通知</h1>
+<div class="space-y-6 text-on-surface-variant font-body-lg leading-relaxed">
+<p>尊敬的管理员：</p>
+<p>您好！系统已检测到新的项目提交，现为您分配以下审核任务。此任务属于年度核心升级计划的一部分，请在48小时内完成初步评估。</p>
+<div class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 my-8">
+<h4 class="font-bold text-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-blue-600">info</span>
+                            任务详情
+                        </h4>
+<div class="grid grid-cols-2 gap-y-4 gap-x-8">
+<div>
+<p class="text-tiny-label text-slate-400 uppercase font-bold">项目编号</p>
+<p class="text-sm font-medium">FF-2024-QX-092</p>
+</div>
+<div>
+<p class="text-tiny-label text-slate-400 uppercase font-bold">紧急程度</p>
+<p class="text-sm font-medium text-error">高优先级 (P1)</p>
+</div>
+<div>
+<p class="text-tiny-label text-slate-400 uppercase font-bold">所属团队</p>
+<p class="text-sm font-medium">核心UX设计组</p>
+</div>
+<div>
+<p class="text-tiny-label text-slate-400 uppercase font-bold">提交时间</p>
+<p class="text-sm font-medium">2024-10-24 14:22:10</p>
+</div>
+</div>
+</div>
+<p>本次更新重点涵盖了<strong>玻璃拟态组件库</strong>、<strong>响应式网格系统优化</strong>以及<strong>深色模式下的对比度增强</strong>。请重点关注设计资产的复用性及跨端兼容性建议。</p>
+<div class="flex items-center gap-4 p-4 border border-[#E0F0FF] rounded-xl hover:bg-slate-50 transition-colors cursor-pointer group">
+<div class="w-12 h-12 rounded bg-red-50 flex items-center justify-center text-red-600">
+<span class="material-symbols-outlined text-3xl">picture_as_pdf</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-bold text-on-surface">FrozenFlow_Design_Spec_v2.4.pdf</p>
+<p class="text-xs text-slate-400">12.4 MB • 点击下载</p>
+</div>
+<span class="material-symbols-outlined text-slate-300 group-hover:text-blue-500">download</span>
+</div>
+<p>如有任何疑问，请通过协作渠道联系项目经理 李思纯。</p>
+<div class="pt-10 flex gap-4">
+<button class="px-6 py-3 bg-primary text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 hover:scale-[1.02] active:opacity-80 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined">check_circle</span>
+                            立即开始处理
+                        </button>
+<button class="px-6 py-3 bg-surface-container text-on-surface font-bold rounded-xl hover:bg-surface-container-high transition-all flex items-center gap-2">
+<span class="material-symbols-outlined">schedule</span>
+                            稍后提醒我
+                        </button>
+</div>
+</div>
+<div class="mt-16 pt-8 border-t border-[#E0F0FF]">
+<div class="flex items-center justify-between text-slate-400 text-xs">
+<span>FrozenFlow 系统自动化邮件 - 请勿直接回复</span>
+<div class="flex gap-4">
+<a class="hover:text-blue-500" href="#">隐私协议</a>
+<a class="hover:text-blue-500" href="#">帮助中心</a>
+</div>
+</div>
+</div>
+</div>
+<!-- Interaction Input (Fixed Bottom) -->
+<div class="px-8 py-4 border-t border-[#E0F0FF] flex items-center gap-4 bg-white">
+<div class="w-8 h-8 rounded-full bg-slate-200">
+<img class="w-8 h-8 rounded-full object-cover" data-alt="Close-up professional headshot of a corporate administrator" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAflKHzHqkvQO0cs0ez2iYD_u0QtWDPZgTQBNAWW90AYrSbVmvOiHy157EeJkf5Ct2oCWPnRdodQZglSOrQQGHTXRzEPfmh5Ur-MMo1sisuLbGZcRrJzP5yhI7wx4bYdxDijg-PXHBpq2rnGyuEitg7uqeFtYtZt66XhuhV202l4IEjk-LSE_wPNl6FxBMXjjQbCSXjsoAZEO0769hsCh05jK0Nf0qh2PO8svPoWCzXZaM8PEC3Y_8r9wjt8EWLssid1ZfqYkZSy74"/>
+</div>
+<div class="flex-1 relative">
+<input class="w-full bg-[#F5F7FA] border-none rounded-lg px-4 py-2 text-sm focus:ring-1 focus:ring-blue-500 transition-all" placeholder="快捷回复或添加备注..." type="text"/>
+</div>
+<div class="flex gap-2">
+<button class="p-2 text-slate-400 hover:text-blue-500"><span class="material-symbols-outlined">attach_file</span></button>
+<button class="p-2 text-slate-400 hover:text-blue-500"><span class="material-symbols-outlined">mood</span></button>
+<button class="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+</body></html>

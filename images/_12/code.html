@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-variant": "#d8e3fb",
+                        "secondary": "#50616b",
+                        "background": "#f9f9ff",
+                        "outline": "#6f787e",
+                        "primary-container": "#7dd3fc",
+                        "on-background": "#111c2d",
+                        "on-tertiary-fixed-variant": "#3f484d",
+                        "tertiary-container": "#c1cad0",
+                        "surface-dim": "#cfdaf2",
+                        "surface-container-low": "#f0f3ff",
+                        "error": "#ba1a1a",
+                        "secondary-fixed": "#d3e5f1",
+                        "tertiary-fixed": "#dbe4ea",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed-variant": "#384953",
+                        "outline-variant": "#bec8ce",
+                        "on-primary-fixed-variant": "#004d66",
+                        "inverse-primary": "#7bd1fa",
+                        "primary-fixed-dim": "#7bd1fa",
+                        "primary": "#006686",
+                        "primary-fixed": "#c0e8ff",
+                        "inverse-surface": "#263143",
+                        "surface-container-highest": "#d8e3fb",
+                        "surface": "#f9f9ff",
+                        "on-primary-fixed": "#001e2b",
+                        "on-primary": "#ffffff",
+                        "surface-bright": "#f9f9ff",
+                        "error-container": "#ffdad6",
+                        "on-secondary-container": "#566771",
+                        "tertiary-fixed-dim": "#bfc8ce",
+                        "on-surface": "#111c2d",
+                        "secondary-container": "#d3e5f1",
+                        "on-tertiary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-container": "#4c555a",
+                        "tertiary": "#576065",
+                        "surface-container-high": "#dee8ff",
+                        "on-surface-variant": "#3f484e",
+                        "secondary-fixed-dim": "#b7c9d5",
+                        "on-tertiary-fixed": "#141d21",
+                        "surface-container": "#e7eeff",
+                        "on-secondary-fixed": "#0c1e26",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-tint": "#006686",
+                        "inverse-on-surface": "#ecf1ff",
+                        "on-primary-container": "#005b78",
+                        "on-secondary": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "unit": "4px",
+                        "lg": "24px",
+                        "md": "16px",
+                        "container-margin": "32px",
+                        "xs": "4px",
+                        "gutter": "20px",
+                        "xl": "40px"
+                    },
+                    "fontFamily": {
+                        "body-main": ["Manrope"],
+                        "label-sm": ["Manrope"],
+                        "display-lg": ["Manrope"],
+                        "headline-md": ["Manrope"]
+                    },
+                    "fontSize": {
+                        "body-main": ["16px", {"lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500"}],
+                        "display-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "1.4", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; background-color: #f9f9ff; -webkit-tap-highlight-color: transparent; }
+        .glass-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(224, 242, 254, 0.5); }
+        .ice-gradient { background: linear-gradient(135deg, #7dd3fc 0%, #006686 100%); }
+        .chart-grid { background-image: linear-gradient(#e0f2fe 1px, transparent 1px), linear-gradient(90deg, #e0f2fe 1px, transparent 1px); background-size: 40px 40px; }
+        .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-background min-h-screen pb-24">
+<!-- Top Navigation Bar -->
+<header class="bg-white/70 dark:bg-slate-900/70 backdrop-blur-2xl text-sky-400 dark:text-sky-300 font-['Manrope'] font-medium tracking-tight docked full-width top-0 sticky border-b border-sky-100/20 dark:border-sky-900/20 flat no-shadows z-50">
+<div class="flex justify-between items-center w-full px-4 h-16">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-sky-50/50 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined text-on-surface-variant">menu</span>
+</button>
+<h1 class="text-lg font-bold text-slate-900 dark:text-slate-50">入河排污口勘察</h1>
+<div class="w-10 h-10 rounded-full bg-surface-variant overflow-hidden border border-sky-100">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="close-up portrait of a professional worker with a friendly expression in a modern office setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSutzPDsPNy2nb0nX34rChHlKAZZPrEUn3wEvEI1Z3qKk5h-qc3zCqCiNdlXab-qm4fCjzgq7d_KAaTi6UeBaDoE1uGGQCzcCJFX4HEiJilmP7F5kjFJLSPmMkmw8TyEt2HfwVQFMaZEoN-SEfYKQ7h376a07ZO562ulasifelCyuR43nleJqWxxftmreeF_V0K5_lHEzOiFN5JU1YCn6ZrDEUTBw5biZrgWnIp8JLrUD3Nx-Av7wYQmZdTMLrQE8fPTWt5cBzhVw"/>
+</div>
+</div>
+</header>
+<main class="px-md mt-md space-y-lg">
+<!-- 2x2 Core Metrics -->
+<section class="grid grid-cols-2 gap-md">
+<!-- Total Points -->
+<div class="glass-card p-md rounded-xl flex flex-col justify-between h-32 relative overflow-hidden">
+<div class="flex justify-between items-start">
+<span class="text-label-sm font-label-sm text-secondary uppercase tracking-wider">总点位</span>
+<span class="material-symbols-outlined text-primary-container">database</span>
+</div>
+<div>
+<h2 class="text-headline-md font-headline-md text-on-background">1,284</h2>
+<p class="text-label-sm font-label-sm text-primary flex items-center mt-xs">
+<span class="material-symbols-outlined text-sm mr-xs">trending_up</span>
+                        较昨日 +12
+                    </p>
+</div>
+<div class="absolute -right-2 -bottom-2 opacity-5">
+<span class="material-symbols-outlined text-7xl">water_drop</span>
+</div>
+</div>
+<!-- Completion Rate -->
+<div class="glass-card p-md rounded-xl flex flex-col justify-between h-32">
+<div class="flex justify-between items-start">
+<span class="text-label-sm font-label-sm text-secondary uppercase tracking-wider">完成率</span>
+<span class="material-symbols-outlined text-primary-container">verified</span>
+</div>
+<div>
+<h2 class="text-headline-md font-headline-md text-on-background">84.2%</h2>
+<div class="w-full bg-surface-container rounded-full h-1.5 mt-sm overflow-hidden">
+<div class="ice-gradient h-full rounded-full" style="width: 84.2%"></div>
+</div>
+</div>
+</div>
+<!-- Survey Efficiency -->
+<div class="glass-card p-md rounded-xl flex flex-col justify-between h-32">
+<div class="flex justify-between items-start">
+<span class="text-label-sm font-label-sm text-secondary uppercase tracking-wider">勘察效率</span>
+<span class="material-symbols-outlined text-primary-container">speed</span>
+</div>
+<div>
+<h2 class="text-headline-md font-headline-md text-on-background">42<span class="text-body-main font-normal text-secondary ml-xs">点/日</span></h2>
+<p class="text-label-sm font-label-sm text-on-tertiary-container mt-xs">提升 5.4%</p>
+</div>
+</div>
+<!-- Anomalies -->
+<div class="glass-card p-md rounded-xl flex flex-col justify-between h-32 border-error/10">
+<div class="flex justify-between items-start">
+<span class="text-label-sm font-label-sm text-secondary uppercase tracking-wider">异常点位</span>
+<span class="material-symbols-outlined text-error">report</span>
+</div>
+<div>
+<h2 class="text-headline-md font-headline-md text-error">15</h2>
+<p class="text-label-sm font-label-sm text-error/60 mt-xs">待核实排口</p>
+</div>
+</div>
+</section>
+<!-- Survey Trend Chart -->
+<section class="glass-card rounded-xl p-md">
+<div class="flex justify-between items-center mb-lg">
+<div>
+<h3 class="text-body-main font-bold text-on-background">勘察趋势</h3>
+<p class="text-label-sm font-label-sm text-secondary">近 7 日每日勘察完成数量</p>
+</div>
+<div class="bg-surface-container px-sm py-xs rounded-lg text-label-sm text-on-secondary-container">
+                    7-Day Trend
+                </div>
+</div>
+<div class="relative h-48 w-full flex items-end justify-between px-2 overflow-hidden chart-grid">
+<!-- Simple SVG Area Chart -->
+<svg class="absolute inset-0 w-full h-full" preserveaspectratio="none" viewbox="0 0 100 100">
+<defs>
+<lineargradient id="chartGradient" x1="0%" x2="0%" y1="0%" y2="100%">
+<stop offset="0%" style="stop-color:#7dd3fc;stop-opacity:0.3"></stop>
+<stop offset="100%" style="stop-color:#7dd3fc;stop-opacity:0"></stop>
+</lineargradient>
+</defs>
+<path d="M 0,80 Q 15,65 30,70 T 60,40 T 100,20 L 100,100 L 0,100 Z" fill="url(#chartGradient)"></path>
+<path d="M 0,80 Q 15,65 30,70 T 60,40 T 100,20" fill="none" stroke="#7dd3fc" stroke-width="2"></path>
+</svg>
+<!-- Chart Labels -->
+<div class="flex justify-between w-full mt-auto relative z-10 text-[10px] text-secondary font-medium px-1 pt-48">
+<span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+</div>
+</div>
+</section>
+<!-- Activity Stream -->
+<section class="space-y-md">
+<div class="flex justify-between items-center">
+<h3 class="text-body-main font-bold text-on-background">近期动态</h3>
+<button class="text-primary text-label-sm font-label-sm flex items-center">
+                    全部动态 <span class="material-symbols-outlined text-sm ml-xs">chevron_right</span>
+</button>
+</div>
+<div class="space-y-sm">
+<!-- Activity Item 1 -->
+<div class="glass-card p-md rounded-xl flex gap-md items-start">
+<div class="w-10 h-10 rounded-full bg-primary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">add_location_alt</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between">
+<span class="font-bold text-on-background text-body-main">新增排口勘察</span>
+<span class="text-label-sm text-secondary">10分钟前</span>
+</div>
+<p class="text-on-surface-variant text-label-sm mt-xs">勘察员 张伟 提交了 亳州路段 B-04 排口数据。</p>
+<div class="mt-sm grid grid-cols-3 gap-xs">
+<div class="aspect-square rounded-lg bg-surface-container overflow-hidden">
+<img alt="Outlet survey 1" class="w-full h-full object-cover" data-alt="aerial drone view of a clean concrete river outlet with flowing water surrounded by green vegetation" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_hQKmGrJ15JEQrWgNIo4I_UyhpJHJXz6Kuz6b0m5okJUVDV_-qP1Frk3CufzObhsReSos2xqrslNIj-fuOnys-GuuZzYuinzZHB56Ep2Bwplm4Nt0TJaB8xKWsHa-exbjOcqsyafjd-efrpgeZPrYU5njFZ_V1T6DDyUaK2fPHz5bGMRVVfgKvMuo5vVr9ZRLqtJ5a1UD_HCmgHMnwwvkWil6E_lNAyw2ODJBt5A6eOrjM4iObnxQtqC8s0vo17du-Ai5h5wM1rM"/>
+</div>
+<div class="aspect-square rounded-lg bg-surface-container overflow-hidden">
+<img alt="Outlet survey 2" class="w-full h-full object-cover" data-alt="macro shot of water sampling device near a river bank scientific equipment outdoor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQQ_E57Y15yIkogTYhfKaqjMSJWEZWTsxezDiFxZcsUzTbWlPq19TSGqUZj_R4QPaxdLeyPz84ZH-1preW9yorVjzsN7MdDXqvU2rJeEd3Wz2N2uVd_4F1AWpVn-6AV0p1E3ViMrO5EP7YbDOhWqSiDDjMo3aqapIcycyMcjkzG88lirpNUT_4ODxTk9aDJpjiRAmaVhdAiVnU1aY-qQlU8bE2lS6pQSe0Aj-PdzvuwsiLZHqvUTreOtgv0PlRC1d7vtl038OjWhI"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Activity Item 2 -->
+<div class="glass-card p-md rounded-xl flex gap-md items-start">
+<div class="w-10 h-10 rounded-full bg-error-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-error">warning</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between">
+<span class="font-bold text-on-background text-body-main">检测到异常</span>
+<span class="text-label-sm text-secondary">2小时前</span>
+</div>
+<p class="text-on-surface-variant text-label-sm mt-xs">涡河中段发现疑似非法排污口，需立即指派人员复核。</p>
+<div class="mt-sm flex items-center gap-sm">
+<span class="px-sm py-1 rounded-full bg-error-container text-error text-[10px] font-bold">高优先级</span>
+<span class="text-label-sm text-primary flex items-center">
+<span class="material-symbols-outlined text-sm mr-xs">near_me</span>
+                                查看位置
+                            </span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="bg-white/80 dark:bg-slate-950/80 backdrop-blur-3xl fixed bottom-0 w-full rounded-t-3xl border-t border-sky-100/10 dark:border-sky-900/10 shadow-[0_-4px_20px_rgba(125,211,252,0.05)] z-50 flex justify-around items-center px-4 pt-2 pb-safe-area h-20">
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 px-3 py-1 hover:text-sky-400 transition-all active:scale-90 duration-300">
+<span class="material-symbols-outlined">map</span>
+<span class="font-['Manrope'] text-[11px] font-semibold mt-1">地图</span>
+</div>
+<!-- Active Tab: 勘察 -->
+<div class="flex flex-col items-center justify-center text-sky-500 dark:text-sky-300 bg-sky-50/40 dark:bg-sky-900/20 rounded-2xl px-3 py-1 transition-all active:scale-90 duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">edit_square</span>
+<span class="font-['Manrope'] text-[11px] font-semibold mt-1">勘察</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 px-3 py-1 hover:text-sky-400 transition-all active:scale-90 duration-300">
+<span class="material-symbols-outlined">assignment</span>
+<span class="font-['Manrope'] text-[11px] font-semibold mt-1">任务</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 px-3 py-1 hover:text-sky-400 transition-all active:scale-90 duration-300">
+<span class="material-symbols-outlined">chat_bubble</span>
+<span class="font-['Manrope'] text-[11px] font-semibold mt-1">消息</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 px-3 py-1 hover:text-sky-400 transition-all active:scale-90 duration-300">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Manrope'] text-[11px] font-semibold mt-1">我的</span>
+</div>
+</nav>
+<!-- FAB for New Survey (Contextual) -->
+<button class="fixed right-6 bottom-24 ice-gradient w-14 h-14 rounded-full shadow-lg flex items-center justify-center text-white active:scale-90 transition-transform duration-200 z-40">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+</body></html>

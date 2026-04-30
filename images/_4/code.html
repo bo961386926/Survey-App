@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#7DD3FC",
+                        "primary-fixed": "#e0f2fe",
+                        "on-primary": "#0369a1",
+                        "surface": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#f8fafc",
+                        "surface-container": "#f1f5f9",
+                        "on-surface": "#0f172a",
+                        "on-surface-variant": "#475569",
+                        "outline": "#94a3b8",
+                        "outline-variant": "#cbd5e1",
+                        "secondary": "#94a3b8",
+                        "tertiary-container": "#e0f2fe",
+                        "on-primary-container": "#0284c7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .bg-gradient-primary {
+            background: linear-gradient(135deg, #7DD3FC 0%, #38bdf8 100%);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface font-body text-on-surface">
+<!-- Shell Suppression applied: Transactional screen - No TopAppBar/BottomNavBar -->
+<main class="min-h-screen flex items-center justify-center p-6 md:p-12">
+<div class="w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-0 overflow-hidden rounded-[2rem] shadow-[0_24px_48px_-12px_rgba(15,23,42,0.08)] bg-surface-container-lowest border border-outline-variant/30">
+<!-- Left Side: Branding & Context -->
+<div class="md:col-span-5 bg-gradient-primary p-12 flex flex-col justify-between relative overflow-hidden">
+<div class="relative z-10">
+<div class="flex items-center gap-3 mb-12">
+<div class="w-10 h-10 bg-surface rounded-xl flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-primary text-2xl" data-icon="precision_manufacturing">precision_manufacturing</span>
+</div>
+<span class="font-headline font-black text-2xl text-on-primary tracking-tight">SurveyCore</span>
+</div>
+<h1 class="font-headline font-extrabold text-4xl lg:text-5xl text-on-primary leading-tight mb-6">
+                        加入<br/>专业外勤团队
+                    </h1>
+<p class="text-on-primary-container text-lg max-w-xs font-medium">
+                        精密测量，权威审计。开启您的数字化勘察之旅，建立可信的数据基石。
+                    </p>
+</div>
+<div class="relative z-10 mt-12 p-6 rounded-[1.5rem] glass-panel border border-white/40 shadow-sm">
+<div class="flex items-center gap-4">
+<div class="flex -space-x-3">
+<img class="w-10 h-10 rounded-full border-2 border-surface" data-alt="professional field surveyor wearing high visibility vest and helmet in sunlit industrial site" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCOn4A2UowJcbD221isX8F_ca8QdEmY4M4olK-wAr5TokYl5F9r-hRmP7ETNiTOJhne7ZCPuPWYTIAwBjrqZ2Nf-eA4EtzjtSzmVb4B_h-381Jw1hbUYRMw_Y-DgqHbuWMKwnvlN6XFlGrlVs8kvaPTyP2AZubJ_DFbWBF-uwUis8QlFlCaGc8RsrOZ6aDja1AoLQRZ-uwlU0hlYiav30lvesl8WG2tb1jv2-ZJ31nyuJa_GszxwuDhk5GJDgadgc4rTai6_zPSGXM"/>
+<img class="w-10 h-10 rounded-full border-2 border-surface" data-alt="technical auditor looking at tablet screen in a modern architectural building interior" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvc1D1BiQ0FA7dggX2QOm54NG0ASuODY9fBrr7i32nwklg-OU7D8XtNcYtdj4IXKLAhOTKrZTr8zstRb_AlBkhL1TsWLXcIofjN48aXiFbECrMBGpY1toSwstmL0E6iNk_fbD9o2EjgIe9IagHTocjGS82GLizpX0wBGzjp9VMeSW02M38XkXICzS5RIego_Tc2uTL8rai3WM3eC0FJa02BVCY5FPHRFS_OPSyGnMpkADrlEtlyFHif5WJA8D6uuYBZr09JdB1ZY4"/>
+</div>
+<div class="text-sm">
+<p class="text-on-primary font-bold">已有 2,400+ 专业人员</p>
+<p class="text-on-primary-container">在全国各地进行精准作业</p>
+</div>
+</div>
+</div>
+<!-- Abstract Texture Background -->
+<div class="absolute -bottom-24 -right-24 w-64 h-64 bg-surface rounded-full opacity-40 blur-3xl"></div>
+<div class="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuB_FkYUwFMtPt_lbra-aPqlKMkGDwimjnjHJbJ6O5mExy2DndusEPuPtxvswP7ZsmNV1fiUw63cJB0Kq8hAoE-ddUi3lOaslMQ8OENaaa1lVmjRUEbCPAI0NwECz62yZdSlkMuNlwZItO6Sh8SdEdj1g5vSRFfgZDfQyh11WPjaC5eLwzU2TVqM4nctF6-2yrQT4kMC0tDjk1udPECNRChT6FT6pr_qg7DL2v-GYmAKwNfPGANQvYAe60g3jVJGN6FtArlxN10Uytc');"></div>
+</div>
+<!-- Right Side: Form Content -->
+<div class="md:col-span-7 p-8 md:p-16 bg-surface-container-lowest">
+<div class="max-w-md mx-auto">
+<header class="mb-10">
+<h2 class="font-headline font-bold text-2xl text-on-surface mb-2">提交入职申请</h2>
+<p class="text-on-surface-variant">请填写以下信息，我们将审核您的资质。</p>
+</header>
+<form class="space-y-6">
+<!-- Name Field -->
+<div class="group">
+<label class="block text-sm font-semibold text-on-surface-variant mb-2 ml-1" for="name">姓名</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-xl transition-colors group-focus-within:text-on-primary" data-icon="person">person</span>
+<input class="w-full h-14 pl-12 pr-4 bg-surface-container-low border border-outline-variant/50 rounded-[1rem] focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-on-surface font-medium placeholder:text-outline/60" id="name" placeholder="请输入您的真实姓名" type="text"/>
+</div>
+</div>
+<!-- Phone Field -->
+<div class="group">
+<label class="block text-sm font-semibold text-on-surface-variant mb-2 ml-1" for="phone">联系电话</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-xl transition-colors group-focus-within:text-on-primary" data-icon="call">call</span>
+<input class="w-full h-14 pl-12 pr-4 bg-surface-container-low border border-outline-variant/50 rounded-[1rem] focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-on-surface font-medium placeholder:text-outline/60" id="phone" placeholder="+86 1XX XXXX XXXX" type="tel"/>
+</div>
+</div>
+<!-- Department Selection -->
+<div class="group">
+<label class="block text-sm font-semibold text-on-surface-variant mb-2 ml-1" for="dept">所属部门</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline text-xl transition-colors group-focus-within:text-on-primary" data-icon="corporate_fare">corporate_fare</span>
+<select class="w-full h-14 pl-12 pr-10 bg-surface-container-low border border-outline-variant/50 rounded-[1rem] focus:ring-2 focus:ring-primary focus:border-transparent appearance-none transition-all text-on-surface font-medium" id="dept">
+<option disabled="" selected="" value="">选择您的部门</option>
+<option>华东测量部</option>
+<option>北方审计组</option>
+<option>基建勘察部</option>
+<option>数字化质量中心</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline pointer-events-none" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+<!-- Role Selection (Asymmetric Bento-ish Grid) -->
+<div>
+<label class="block text-sm font-semibold text-on-surface-variant mb-3 ml-1">申请角色</label>
+<div class="grid grid-cols-2 gap-4">
+<label class="relative flex flex-col p-4 bg-surface-container-low rounded-[1.25rem] cursor-pointer hover:bg-surface-container hover:shadow-sm transition-all border border-outline-variant/50 has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary has-[:checked]:bg-primary-fixed/20">
+<input checked="" class="sr-only" name="role" type="radio" value="surveyor"/>
+<span class="material-symbols-outlined text-primary mb-2" data-icon="edit_road">edit_road</span>
+<span class="font-bold text-on-surface">现场测量员</span>
+</label>
+<label class="relative flex flex-col p-4 bg-surface-container-low rounded-[1.25rem] cursor-pointer hover:bg-surface-container hover:shadow-sm transition-all border border-outline-variant/50 has-[:checked]:border-primary has-[:checked]:ring-1 has-[:checked]:ring-primary has-[:checked]:bg-primary-fixed/20">
+<input class="sr-only" name="role" type="radio" value="auditor"/>
+<span class="material-symbols-outlined text-outline mb-2" data-icon="fact_check">fact_check</span>
+<span class="font-bold text-on-surface">审计核查员</span>
+</label>
+</div>
+</div>
+<!-- Terms & Conditions -->
+<div class="flex items-start gap-3 py-2">
+<div class="flex items-center h-5">
+<input class="w-5 h-5 rounded-[0.4rem] border-outline-variant bg-surface-container-low text-primary focus:ring-primary focus:ring-offset-surface-container-lowest cursor-pointer" id="terms" type="checkbox"/>
+</div>
+<label class="text-sm text-on-surface-variant leading-relaxed cursor-pointer" for="terms">
+                                我已阅读并同意 <a class="text-on-primary font-bold hover:underline" href="#">《服务条款》</a> 及 <a class="text-on-primary font-bold hover:underline" href="#">《隐私权政策》</a>。我确认所提供的信息均真实准确。
+                            </label>
+</div>
+<!-- Submit Button -->
+<button class="w-full h-14 bg-on-primary text-surface rounded-[1rem] font-headline font-bold text-lg flex items-center justify-center gap-2 hover:opacity-95 active:scale-[0.98] transition-all shadow-[0_8px_20px_rgba(3,105,161,0.25)]" type="submit">
+                            提交申请
+                            <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</form>
+<footer class="mt-8 text-center">
+<p class="text-sm text-on-surface-variant">
+                            已有账号？ <a class="text-on-primary font-extrabold hover:underline" href="#">立即登录</a>
+</p>
+</footer>
+</div>
+</div>
+</div>
+</main>
+<!-- Contextual FAB Suppression: Transactional Screen -->
+</body></html>

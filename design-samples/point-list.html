@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>青泓勘察系统 - 点位管理设计小样</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #0066FF;
+      --primary-hover: #0052CC;
+      --primary-light: rgba(0, 102, 255, 0.08);
+      --success: #34C759;
+      --warning: #FF9500;
+      --danger: #FF3B30;
+      --info: #5AC8FA;
+      --purple: #AF52DE;
+      --bg-page: #F5F7FA;
+      --text-primary: #1D1D1F;
+      --text-secondary: #6E6E73;
+      --text-tertiary: #86868B;
+      --radius-sm: 10px;
+      --radius-md: 14px;
+      --radius-lg: 18px;
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.08);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    /* 背景装饰 */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -30%;
+      right: -10%;
+      width: 60%;
+      height: 60%;
+      background: radial-gradient(circle, rgba(0, 102, 255, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* 毛玻璃导航栏 */
+    .navbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(40px) saturate(200%);
+      -webkit-backdrop-filter: blur(40px) saturate(200%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      z-index: 100;
+    }
+
+    .navbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .navbar-brand .logo {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, #0066FF, #5AC8FA);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .navbar-menu {
+      display: flex;
+      gap: 8px;
+    }
+
+    .navbar-menu a {
+      padding: 8px 16px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .navbar-menu a:hover {
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+
+    .navbar-menu a.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .user-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0066FF, #5AC8FA);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* 主内容 */
+    .main-content {
+      padding: 96px 48px 48px;
+      max-width: 1280px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 页面标题区 */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .page-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    /* 按钮 */
+    .btn {
+      padding: 10px 20px;
+      border-radius: 12px;
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 102, 255, 0.35);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(20px);
+      color: var(--text-primary);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+    }
+
+    .btn-secondary:hover {
+      background: white;
+      border-color: rgba(0, 0, 0, 0.12);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      padding: 8px 12px;
+    }
+
+    .btn-ghost:hover {
+      background: rgba(0, 0, 0, 0.04);
+      color: var(--text-primary);
+    }
+
+    /* 搜索和筛选区 */
+    .filter-bar {
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      padding: 20px 24px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .search-box {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 10px 16px 10px 42px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      background: rgba(255, 255, 255, 0.8);
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+
+    .search-box input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.12);
+    }
+
+    .search-box .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 16px;
+      opacity: 0.4;
+    }
+
+    .filter-select {
+      padding: 10px 36px 10px 16px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      background: rgba(255, 255, 255, 0.8);
+      color: var(--text-primary);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236E6E73' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(0, 102, 255, 0.12);
+    }
+
+    /* 统计概览 */
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .stat-chip {
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: var(--radius-md);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .stat-chip-number {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .stat-chip-label {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .stat-chip-number.blue { color: var(--primary); }
+    .stat-chip-number.orange { color: var(--warning); }
+    .stat-chip-number.green { color: var(--success); }
+    .stat-chip-number.red { color: var(--danger); }
+
+    /* 点位列表 */
+    .point-list {
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+
+    .list-header {
+      display: grid;
+      grid-template-columns: 40px 2fr 1.5fr 1fr 1fr 100px 80px;
+      gap: 16px;
+      padding: 14px 24px;
+      background: rgba(0, 0, 0, 0.02);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .list-item {
+      display: grid;
+      grid-template-columns: 40px 2fr 1.5fr 1fr 1fr 100px 80px;
+      gap: 16px;
+      padding: 16px 24px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+      align-items: center;
+      transition: all 0.15s ease;
+      cursor: pointer;
+    }
+
+    .list-item:last-child {
+      border-bottom: none;
+    }
+
+    .list-item:hover {
+      background: rgba(0, 102, 255, 0.03);
+    }
+
+    .list-checkbox {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(0, 0, 0, 0.15);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .list-checkbox.checked {
+      background: var(--primary);
+      border-color: var(--primary);
+      position: relative;
+    }
+
+    .list-checkbox.checked::after {
+      content: '✓';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .point-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .point-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .point-code {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+
+    .point-location {
+      font-size: 14px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .point-assignee {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .assignee-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #0066FF, #5AC8FA);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .assignee-name {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .point-coords {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      font-family: 'SF Mono', 'Menlo', monospace;
+    }
+
+    /* 状态标签 */
+    .status-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .status-tag::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .status-tag.pass {
+      background: rgba(52, 199, 89, 0.12);
+      color: var(--success);
+    }
+    .status-tag.pass::before { background: var(--success); }
+
+    .status-tag.pending {
+      background: rgba(255, 149, 0, 0.12);
+      color: var(--warning);
+    }
+    .status-tag.pending::before { background: var(--warning); }
+
+    .status-tag.reject {
+      background: rgba(255, 59, 48, 0.12);
+      color: var(--danger);
+    }
+    .status-tag.reject::before { background: var(--danger); }
+
+    .status-tag.draft {
+      background: rgba(173, 181, 189, 0.12);
+      color: var(--text-secondary);
+    }
+    .status-tag.draft::before { background: var(--text-secondary); }
+
+    .status-tag.collecting {
+      background: rgba(0, 102, 255, 0.12);
+      color: var(--primary);
+    }
+    .status-tag.collecting::before { background: var(--primary); }
+
+    /* 操作按钮 */
+    .action-btns {
+      display: flex;
+      gap: 4px;
+    }
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.15s ease;
+    }
+
+    .action-btn:hover {
+      background: rgba(0, 0, 0, 0.06);
+    }
+
+    /* 分页 */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .pagination-info {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .pagination-controls {
+      display: flex;
+      gap: 4px;
+    }
+
+    .page-btn {
+      min-width: 36px;
+      height: 36px;
+      border: none;
+      background: transparent;
+      border-radius: 10px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      font-family: inherit;
+    }
+
+    .page-btn:hover {
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    .page-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    .page-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* 动画 */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .filter-bar, .stats-row, .point-list {
+      animation: fadeInUp 0.4s ease-out backwards;
+    }
+
+    .stats-row { animation-delay: 0.05s; }
+    .point-list { animation-delay: 0.1s; }
+  </style>
+</head>
+<body>
+  <!-- 导航栏 -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <div class="logo">青</div>
+      <span>青泓勘察系统</span>
+    </div>
+    <div class="navbar-menu">
+      <a href="dashboard.html">首页</a>
+      <a href="#">项目管理</a>
+      <a href="#" class="active">点位管理</a>
+      <a href="#">审核中心</a>
+      <a href="#">地图中心</a>
+    </div>
+    <div class="user-avatar">张</div>
+  </nav>
+
+  <!-- 主内容 -->
+  <main class="main-content">
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <h1 class="page-title">点位管理</h1>
+      <div class="page-actions">
+        <button class="btn btn-secondary">📥 导入</button>
+        <button class="btn btn-primary">＋ 新增点位</button>
+      </div>
+    </div>
+
+    <!-- 搜索筛选 -->
+    <div class="filter-bar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="搜索点位名称、编号...">
+      </div>
+      <select class="filter-select">
+        <option>全部状态</option>
+        <option>待分配</option>
+        <option>待采集</option>
+        <option>草稿中</option>
+        <option>待审核</option>
+        <option>审核通过</option>
+        <option>驳回待修改</option>
+      </select>
+      <select class="filter-select">
+        <option>全部项目</option>
+        <option>朝阳区排口勘察</option>
+        <option>海淀区河道排查</option>
+        <option>丰台区排污口普查</option>
+      </select>
+      <select class="filter-select">
+        <option>全部区域</option>
+        <option>朝阳区</option>
+        <option>海淀区</option>
+        <option>丰台区</option>
+      </select>
+    </div>
+
+    <!-- 统计 -->
+    <div class="stats-row">
+      <div class="stat-chip">
+        <span class="stat-chip-number blue">1,284</span>
+        <span class="stat-chip-label">点位总数</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-chip-number orange">56</span>
+        <span class="stat-chip-label">待审核</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-chip-number green">892</span>
+        <span class="stat-chip-label">已通过</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-chip-number red">8</span>
+        <span class="stat-chip-label">已驳回</span>
+      </div>
+    </div>
+
+    <!-- 点位列表 -->
+    <div class="point-list">
+      <div class="list-header">
+        <div></div>
+        <div>点位信息</div>
+        <div>所属项目</div>
+        <div>采集人</div>
+        <div>坐标</div>
+        <div>状态</div>
+        <div>操作</div>
+      </div>
+
+      <div class="list-item">
+        <div class="list-checkbox checked"></div>
+        <div class="point-info">
+          <span class="point-name">朝阳区排口A1</span>
+          <span class="point-code">PK-2024-001</span>
+        </div>
+        <div class="point-location">📍 朝阳区排口勘察项目</div>
+        <div class="point-assignee">
+          <div class="assignee-avatar">李</div>
+          <span class="assignee-name">李明</span>
+        </div>
+        <div class="point-coords">116.4074, 39.9042</div>
+        <div><span class="status-tag pass">审核通过</span></div>
+        <div class="action-btns">
+          <button class="action-btn" title="查看">👁</button>
+          <button class="action-btn" title="编辑">✏️</button>
+          <button class="action-btn" title="更多">⋯</button>
+        </div>
+      </div>
+
+      <div class="list-item">
+        <div class="list-checkbox"></div>
+        <div class="point-info">
+          <span class="point-name">朝阳区排口A2</span>
+          <span class="point-code">PK-2024-002</span>
+        </div>
+        <div class="point-location">📍 朝阳区排口勘察项目</div>
+        <div class="point-assignee">
+          <div class="assignee-avatar">王</div>
+          <span class="assignee-name">王芳</span>
+        </div>
+        <div class="point-coords">116.4123, 39.9087</div>
+        <div><span class="status-tag pending">待审核</span></div>
+        <div class="action-btns">
+          <button class="action-btn" title="查看">👁</button>
+          <button class="action-btn" title="编辑">✏️</button>
+          <button class="action-btn" title="更多">⋯</button>
+        </div>
+      </div>
+
+      <div class="list-item">
+        <div class="list-checkbox"></div>
+        <div class="point-info">
+          <span class="point-name">海淀区河道B1</span>
+          <span class="point-code">PK-2024-015</span>
+        </div>
+        <div class="point-location">📍 海淀区河道排查项目</div>
+        <div class="point-assignee">
+          <div class="assignee-avatar">赵</div>
+          <span class="assignee-name">赵强</span>
+        </div>
+        <div class="point-coords">116.3023, 39.9621</div>
+        <div><span class="status-tag reject">已驳回</span></div>
+        <div class="action-btns">
+          <button class="action-btn" title="查看">👁</button>
+          <button class="action-btn" title="编辑">✏️</button>
+          <button class="action-btn" title="更多">⋯</button>
+        </div>
+      </div>
+
+      <div class="list-item">
+        <div class="list-checkbox"></div>
+        <div class="point-info">
+          <span class="point-name">海淀区河道B2</span>
+          <span class="point-code">PK-2024-016</span>
+        </div>
+        <div class="point-location">📍 海淀区河道排查项目</div>
+        <div class="point-assignee">
+          <div class="assignee-avatar">刘</div>
+          <span class="assignee-name">刘洋</span>
+        </div>
+        <div class="point-coords">116.3089, 39.9567</div>
+        <div><span class="status-tag collecting">采集中</span></div>
+        <div class="action-btns">
+          <button class="action-btn" title="查看">👁</button>
+          <button class="action-btn" title="编辑">✏️</button>
+          <button class="action-btn" title="更多">⋯</button>
+        </div>
+      </div>
+
+      <div class="list-item">
+        <div class="list-checkbox"></div>
+        <div class="point-info">
+          <span class="point-name">丰台区排污口C1</span>
+          <span class="point-code">PK-2024-022</span>
+        </div>
+        <div class="point-location">📍 丰台区排污口普查</div>
+        <div class="point-assignee">
+          <div class="assignee-avatar">陈</div>
+          <span class="assignee-name">陈静</span>
+        </div>
+        <div class="point-coords">116.2856, 39.8623</div>
+        <div><span class="status-tag draft">草稿</span></div>
+        <div class="action-btns">
+          <button class="action-btn" title="查看">👁</button>
+          <button class="action-btn" title="编辑">✏️</button>
+          <button class="action-btn" title="更多">⋯</button>
+        </div>
+      </div>
+
+      <div class="list-item">
+        <div class="list-checkbox checked"></div>
+        <div class="point-info">
+          <span class="point-name">丰台区排污口C2</span>
+          <span class="point-code">PK-2024-023</span>
+        </div>
+        <div class="point-location">📍 丰台区排污口普查</div>
+        <div class="point-assignee">
+          <div class="assignee-avatar">孙</div>
+          <span class="assignee-name">孙伟</span>
+        </div>
+        <div class="point-coords">116.2912, 39.8578</div>
+        <div><span class="status-tag pass">审核通过</span></div>
+        <div class="action-btns">
+          <button class="action-btn" title="查看">👁</button>
+          <button class="action-btn" title="编辑">✏️</button>
+          <button class="action-btn" title="更多">⋯</button>
+        </div>
+      </div>
+
+      <div class="list-item">
+        <div class="list-checkbox"></div>
+        <div class="point-info">
+          <span class="point-name">朝阳区排口A3</span>
+          <span class="point-code">PK-2024-003</span>
+        </div>
+        <div class="point-location">📍 朝阳区排口勘察项目</div>
+        <div class="point-assignee">
+          <div class="assignee-avatar">周</div>
+          <span class="assignee-name">周杰</span>
+        </div>
+        <div class="point-coords">116.4156, 39.9123</div>
+        <div><span class="status-tag pass">审核通过</span></div>
+        <div class="action-btns">
+          <button class="action-btn" title="查看">👁</button>
+          <button class="action-btn" title="编辑">✏️</button>
+          <button class="action-btn" title="更多">⋯</button>
+        </div>
+      </div>
+
+      <!-- 分页 -->
+      <div class="pagination">
+        <div class="pagination-info">共 1,284 条，第 1/129 页</div>
+        <div class="pagination-controls">
+          <button class="page-btn" disabled>‹</button>
+          <button class="page-btn active">1</button>
+          <button class="page-btn">2</button>
+          <button class="page-btn">3</button>
+          <button class="page-btn">4</button>
+          <button class="page-btn">5</button>
+          <button class="page-btn">...</button>
+          <button class="page-btn">129</button>
+          <button class="page-btn">›</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

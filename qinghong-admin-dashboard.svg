@@ -1,0 +1,218 @@
+﻿<svg width="1600" height="1120" viewBox="0 0 1600 1120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1600" y2="1120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4F8FC"/>
+      <stop offset="1" stop-color="#EAF2FF"/>
+    </linearGradient>
+    <linearGradient id="hero" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#1664FF"/>
+      <stop offset="1" stop-color="#4C93FF"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#9BB7E680"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="1120" fill="url(#bg)"/>
+  <rect x="0" y="0" width="96" height="1120" rx="0" fill="#2C3E50"/>
+  <rect x="24" y="28" width="48" height="48" rx="14" fill="#1664FF"/>
+  <text x="48" y="59" text-anchor="middle" fill="white" font-size="24" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">青</text>
+
+  <g opacity="0.92">
+    <rect x="24" y="116" width="48" height="48" rx="14" fill="#EEF4FF"/>
+    <rect x="38" y="130" width="20" height="20" rx="6" fill="#1664FF"/>
+    <rect x="24" y="184" width="48" height="48" rx="14" fill="#385067"/>
+    <rect x="38" y="198" width="20" height="20" rx="6" fill="#C5D1DD"/>
+    <rect x="24" y="252" width="48" height="48" rx="14" fill="#385067"/>
+    <circle cx="48" cy="276" r="10" fill="#C5D1DD"/>
+    <rect x="24" y="320" width="48" height="48" rx="14" fill="#385067"/>
+    <path d="M38 344H58" stroke="#C5D1DD" stroke-width="4" stroke-linecap="round"/>
+    <path d="M48 334V354" stroke="#C5D1DD" stroke-width="4" stroke-linecap="round"/>
+  </g>
+
+  <rect x="120" y="28" width="1452" height="84" rx="24" fill="#FFFFFF" filter="url(#shadow)"/>
+  <text x="156" y="61" fill="#1F2D3D" font-size="30" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">青泓项目勘察管理后台</text>
+  <text x="156" y="88" fill="#7B8794" font-size="15" font-family="Microsoft YaHei, PingFang SC, sans-serif">围绕项目、动态模板、点位地图、审核闭环与版本追溯的一体化工作台</text>
+  <rect x="1140" y="44" width="228" height="38" rx="19" fill="#F5F7FA"/>
+  <text x="1170" y="68" fill="#909399" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">搜索项目 / 点位 / 审核单</text>
+  <rect x="1390" y="40" width="74" height="44" rx="14" fill="#E8F3FF"/>
+  <text x="1427" y="67" text-anchor="middle" fill="#1664FF" font-size="15" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">导出</text>
+  <circle cx="1510" cy="62" r="22" fill="#1664FF"/>
+  <text x="1510" y="68" text-anchor="middle" fill="white" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">LH</text>
+
+  <rect x="120" y="136" width="1452" height="176" rx="28" fill="url(#hero)" filter="url(#shadow)"/>
+  <text x="156" y="188" fill="white" font-size="34" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">项目总览与审核调度中心</text>
+  <text x="156" y="222" fill="#DCE9FF" font-size="17" font-family="Microsoft YaHei, PingFang SC, sans-serif">管理员可在同一屏内查看项目进度、待审积压、地图分布与模板配置状态，减少在多模块之间来回切换。</text>
+
+  <g>
+    <rect x="156" y="244" width="250" height="40" rx="20" fill="#FFFFFF22" stroke="#FFFFFF55"/>
+    <circle cx="182" cy="264" r="6" fill="#67C23A"/>
+    <text x="198" y="269" fill="white" font-size="15" font-family="Microsoft YaHei, PingFang SC, sans-serif">在线采集 324</text>
+    <circle cx="292" cy="264" r="6" fill="#E6A23C"/>
+    <text x="308" y="269" fill="white" font-size="15" font-family="Microsoft YaHei, PingFang SC, sans-serif">待审核 46</text>
+  </g>
+
+  <g>
+    <rect x="1068" y="160" width="160" height="120" rx="22" fill="#FFFFFF1F" stroke="#FFFFFF33"/>
+    <text x="1092" y="194" fill="#DCE9FF" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">项目数</text>
+    <text x="1092" y="244" fill="white" font-size="40" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">12</text>
+    <text x="1092" y="270" fill="#DCE9FF" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">进行中 8 个</text>
+  </g>
+  <g>
+    <rect x="1244" y="160" width="160" height="120" rx="22" fill="#FFFFFF1F" stroke="#FFFFFF33"/>
+    <text x="1268" y="194" fill="#DCE9FF" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">点位数</text>
+    <text x="1268" y="244" fill="white" font-size="40" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">1,286</text>
+    <text x="1268" y="270" fill="#DCE9FF" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">本周新增 74</text>
+  </g>
+  <g>
+    <rect x="1420" y="160" width="116" height="120" rx="22" fill="#FFFFFF1F" stroke="#FFFFFF33"/>
+    <text x="1444" y="194" fill="#DCE9FF" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">通过率</text>
+    <text x="1444" y="244" fill="white" font-size="40" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">93%</text>
+    <text x="1444" y="270" fill="#DCE9FF" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">驳回 7%</text>
+  </g>
+
+  <rect x="120" y="340" width="932" height="422" rx="26" fill="white" filter="url(#shadow)"/>
+  <text x="152" y="384" fill="#1F2D3D" font-size="24" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">点位地图中心</text>
+  <text x="152" y="412" fill="#909399" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">按项目、状态、区县筛选点位，聚焦待勘察与驳回重提区域</text>
+  <rect x="732" y="364" width="96" height="32" rx="16" fill="#E8F3FF"/>
+  <text x="780" y="385" text-anchor="middle" fill="#1664FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">全部项目</text>
+  <rect x="840" y="364" width="92" height="32" rx="16" fill="#F5F7FA"/>
+  <text x="886" y="385" text-anchor="middle" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">待审核</text>
+  <rect x="944" y="364" width="76" height="32" rx="16" fill="#F5F7FA"/>
+  <text x="982" y="385" text-anchor="middle" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">图层</text>
+
+  <rect x="152" y="432" width="868" height="294" rx="22" fill="#EEF4FB"/>
+  <path d="M194 672C280 598 320 618 398 552C470 490 540 508 618 470C686 437 780 462 866 426C905 410 956 406 1000 422" stroke="#D7E4F6" stroke-width="18" stroke-linecap="round"/>
+  <path d="M190 510C248 540 320 526 388 486C472 436 542 438 650 496C748 548 868 536 980 486" stroke="#C4D8F8" stroke-width="10" stroke-linecap="round" opacity="0.9"/>
+  <path d="M272 474L348 530L308 620L230 582Z" fill="#E7F0FB"/>
+  <path d="M462 470L574 510L526 640L418 612Z" fill="#E3EEFC"/>
+  <path d="M696 456L842 502L780 644L636 606Z" fill="#E7F0FB"/>
+  <path d="M854 486L966 552L918 664L806 624Z" fill="#E3EEFC"/>
+
+  <g>
+    <circle cx="308" cy="552" r="14" fill="#1664FF"/>
+    <circle cx="308" cy="552" r="5" fill="white"/>
+    <circle cx="436" cy="594" r="14" fill="#67C23A"/>
+    <circle cx="436" cy="594" r="5" fill="white"/>
+    <circle cx="560" cy="524" r="14" fill="#E6A23C"/>
+    <circle cx="560" cy="524" r="5" fill="white"/>
+    <circle cx="650" cy="628" r="14" fill="#F56C6C"/>
+    <circle cx="650" cy="628" r="5" fill="white"/>
+    <circle cx="732" cy="548" r="14" fill="#1664FF"/>
+    <circle cx="732" cy="548" r="5" fill="white"/>
+    <circle cx="824" cy="604" r="14" fill="#67C23A"/>
+    <circle cx="824" cy="604" r="5" fill="white"/>
+    <circle cx="904" cy="516" r="14" fill="#E6A23C"/>
+    <circle cx="904" cy="516" r="5" fill="white"/>
+  </g>
+  <g>
+    <rect x="812" y="448" width="178" height="104" rx="18" fill="white" stroke="#E4E7ED"/>
+    <text x="834" y="479" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">S-024 北岸排口</text>
+    <text x="834" y="505" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">状态：待审核</text>
+    <text x="834" y="529" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">采集人：刘晨</text>
+    <text x="834" y="553" fill="#1664FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">查看版本差异 ></text>
+  </g>
+
+  <g>
+    <rect x="152" y="688" width="250" height="26" rx="13" fill="#F5F7FA"/>
+    <circle cx="176" cy="701" r="6" fill="#1664FF"/>
+    <text x="190" y="706" fill="#606266" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">已提交 428</text>
+    <circle cx="268" cy="701" r="6" fill="#67C23A"/>
+    <text x="282" y="706" fill="#606266" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">已通过 721</text>
+    <circle cx="360" cy="701" r="6" fill="#F56C6C"/>
+    <text x="374" y="706" fill="#606266" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">驳回 91</text>
+  </g>
+
+  <rect x="1080" y="340" width="492" height="422" rx="26" fill="white" filter="url(#shadow)"/>
+  <text x="1112" y="384" fill="#1F2D3D" font-size="24" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">待审核队列</text>
+  <text x="1112" y="412" fill="#909399" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">用卡片流承接“提交-审核-驳回-重提”的闭环，避免审核员漏单</text>
+
+  <g>
+    <rect x="1112" y="438" width="428" height="86" rx="18" fill="#F9FBFF" stroke="#E4EAF3"/>
+    <circle cx="1140" cy="466" r="8" fill="#E6A23C"/>
+    <text x="1160" y="470" fill="#1F2D3D" font-size="17" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">A1 标段 / 西闸口 001</text>
+    <text x="1160" y="494" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">最新版本 v3  ·  采集时间 10:24  ·  图片 6 张</text>
+    <rect x="1438" y="452" width="82" height="28" rx="14" fill="#FFF4E8"/>
+    <text x="1479" y="471" text-anchor="middle" fill="#E6A23C" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">待审核</text>
+    <text x="1160" y="515" fill="#1664FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">快速预览  审核  版本对比</text>
+  </g>
+
+  <g>
+    <rect x="1112" y="536" width="428" height="86" rx="18" fill="#F9FBFF" stroke="#E4EAF3"/>
+    <circle cx="1140" cy="564" r="8" fill="#F56C6C"/>
+    <text x="1160" y="568" fill="#1F2D3D" font-size="17" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">南岸泵站 / 复核点 017</text>
+    <text x="1160" y="592" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">驳回后重提  ·  定位偏差 8m  ·  待核对照片水印</text>
+    <rect x="1438" y="550" width="82" height="28" rx="14" fill="#FDEDEE"/>
+    <text x="1479" y="569" text-anchor="middle" fill="#F56C6C" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">高优先</text>
+    <text x="1160" y="613" fill="#1664FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">查看驳回意见  地图定位  再次审核</text>
+  </g>
+
+  <g>
+    <rect x="1112" y="634" width="428" height="96" rx="18" fill="#1664FF"/>
+    <text x="1140" y="667" fill="white" font-size="18" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">审核工作台侧滑预览</text>
+    <text x="1140" y="693" fill="#DCE9FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">左侧照片与地图校验，中部表单字段，右侧版本 Diff 与驳回原因模板。</text>
+    <rect x="1140" y="707" width="118" height="30" rx="15" fill="white"/>
+    <text x="1199" y="727" text-anchor="middle" fill="#1664FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">进入审核</text>
+  </g>
+
+  <rect x="120" y="790" width="700" height="282" rx="26" fill="white" filter="url(#shadow)"/>
+  <text x="152" y="834" fill="#1F2D3D" font-size="24" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">动态模板引擎</text>
+  <text x="152" y="862" fill="#909399" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">拖拽字段、条件显示与图片上限配置集中在一屏，方便管理员快速切换不同排口类型模板</text>
+
+  <rect x="152" y="892" width="188" height="150" rx="18" fill="#F7FAFE" stroke="#E4E7ED"/>
+  <text x="176" y="922" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">字段组件库</text>
+  <rect x="176" y="942" width="140" height="28" rx="14" fill="#E8F3FF"/>
+  <text x="246" y="960" text-anchor="middle" fill="#1664FF" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">输入框 Input</text>
+  <rect x="176" y="978" width="140" height="28" rx="14" fill="#F5F7FA"/>
+  <text x="246" y="996" text-anchor="middle" fill="#606266" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">下拉 Select</text>
+  <rect x="176" y="1014" width="140" height="28" rx="14" fill="#F5F7FA"/>
+  <text x="246" y="1032" text-anchor="middle" fill="#606266" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">图片 Image x9</text>
+
+  <rect x="360" y="892" width="262" height="150" rx="18" fill="#FCFDFF" stroke="#D7E5FF"/>
+  <text x="384" y="922" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">当前模板画布</text>
+  <rect x="384" y="944" width="214" height="28" rx="10" fill="#FFFFFF" stroke="#E4E7ED"/>
+  <text x="398" y="962" fill="#606266" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">排口名称  Required</text>
+  <rect x="384" y="980" width="214" height="28" rx="10" fill="#FFFFFF" stroke="#E4E7ED"/>
+  <text x="398" y="998" fill="#606266" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">排口类型  工业 / 生活 / 雨水</text>
+  <rect x="384" y="1016" width="214" height="28" rx="10" fill="#F0F7FF" stroke="#1664FF" stroke-dasharray="5 4"/>
+  <text x="398" y="1034" fill="#1664FF" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">供电方式 = 太阳能 时显示“日照条件”</text>
+
+  <rect x="640" y="892" width="156" height="150" rx="18" fill="#F7FAFE" stroke="#E4E7ED"/>
+  <text x="662" y="922" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">联动规则</text>
+  <text x="662" y="952" fill="#606266" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">IF</text>
+  <rect x="690" y="936" width="82" height="24" rx="12" fill="#E8F3FF"/>
+  <text x="731" y="952" text-anchor="middle" fill="#1664FF" font-size="11" font-family="Microsoft YaHei, PingFang SC, sans-serif">power_type</text>
+  <text x="662" y="986" fill="#606266" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">THEN</text>
+  <rect x="690" y="970" width="82" height="24" rx="12" fill="#EDF9E8"/>
+  <text x="731" y="986" text-anchor="middle" fill="#67C23A" font-size="11" font-family="Microsoft YaHei, PingFang SC, sans-serif">显示日照条件</text>
+  <text x="662" y="1022" fill="#909399" font-size="11" font-family="Microsoft YaHei, PingFang SC, sans-serif">支持版本保存与复制模板</text>
+
+  <rect x="848" y="790" width="724" height="282" rx="26" fill="white" filter="url(#shadow)"/>
+  <text x="880" y="834" fill="#1F2D3D" font-size="24" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">项目与版本追踪</text>
+  <text x="880" y="862" fill="#909399" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">项目表、点位版本、导出报表和操作日志整合成可追溯资产</text>
+
+  <g>
+    <rect x="880" y="892" width="312" height="148" rx="18" fill="#F9FBFF" stroke="#E4EAF3"/>
+    <text x="904" y="922" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">项目清单</text>
+    <text x="904" y="952" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">亳州入河排污口项目</text>
+    <text x="1136" y="952" text-anchor="end" fill="#1664FF" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">进行中</text>
+    <line x1="904" y1="970" x2="1168" y2="970" stroke="#EEF1F5"/>
+    <text x="904" y="994" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">负责人  李航</text>
+    <text x="904" y="1018" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">周期  2026.04 - 2026.09</text>
+    <text x="904" y="1042" fill="#1664FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">进入项目详情  导出全局数据</text>
+  </g>
+
+  <g>
+    <rect x="1210" y="892" width="336" height="148" rx="18" fill="#F9FBFF" stroke="#E4EAF3"/>
+    <text x="1234" y="922" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">版本时间线</text>
+    <line x1="1258" y1="948" x2="1258" y2="1016" stroke="#C9D8F0" stroke-width="2"/>
+    <circle cx="1258" cy="958" r="7" fill="#1664FF"/>
+    <circle cx="1258" cy="984" r="7" fill="#E6A23C"/>
+    <circle cx="1258" cy="1010" r="7" fill="#67C23A"/>
+    <text x="1280" y="963" fill="#606266" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">v3 提交审核</text>
+    <text x="1280" y="989" fill="#606266" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">v2 驳回：定位偏移</text>
+    <text x="1280" y="1015" fill="#606266" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">v1 首次采集完成</text>
+    <rect x="1386" y="948" width="132" height="32" rx="16" fill="#E8F3FF"/>
+    <text x="1452" y="969" text-anchor="middle" fill="#1664FF" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">生成 A4 PDF 报告</text>
+  </g>
+</svg>

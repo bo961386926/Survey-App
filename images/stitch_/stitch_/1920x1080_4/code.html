@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>GLACIAL ADMIN - 点位地图中心</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#0058bc",
+                    "outline-variant": "#c1c6d7",
+                    "secondary": "#326578",
+                    "surface-variant": "#dde2f3",
+                    "on-secondary": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "surface-container-low": "#f1f3ff",
+                    "error-container": "#ffdad6",
+                    "secondary-container": "#b5e7fe",
+                    "surface-container-lowest": "#ffffff",
+                    "surface": "#f9f9ff",
+                    "on-tertiary-container": "#fffbff",
+                    "surface-bright": "#f9f9ff",
+                    "on-tertiary-fixed-variant": "#7c2e00",
+                    "surface-container-highest": "#dde2f3",
+                    "tertiary-fixed": "#ffdbcd",
+                    "primary-fixed-dim": "#adc6ff",
+                    "tertiary": "#9e3d00",
+                    "on-tertiary-fixed": "#351000",
+                    "on-primary-container": "#fefcff",
+                    "on-primary-fixed-variant": "#004493",
+                    "surface-container-high": "#e2e8f9",
+                    "on-error": "#ffffff",
+                    "on-primary-fixed": "#001a41",
+                    "background": "#f9f9ff",
+                    "tertiary-fixed-dim": "#ffb595",
+                    "primary-fixed": "#d8e2ff",
+                    "inverse-surface": "#2a303d",
+                    "on-secondary-fixed": "#001f29",
+                    "primary-container": "#0070eb",
+                    "inverse-on-surface": "#ecf0ff",
+                    "secondary-fixed": "#baeaff",
+                    "on-surface": "#151c28",
+                    "surface-container": "#e8eeff",
+                    "surface-tint": "#005bc1",
+                    "on-error-container": "#93000a",
+                    "on-secondary-fixed-variant": "#144d5f",
+                    "on-tertiary": "#ffffff",
+                    "inverse-primary": "#adc6ff",
+                    "on-background": "#151c28",
+                    "surface-dim": "#d4daeb",
+                    "tertiary-container": "#bf551c",
+                    "on-secondary-container": "#36697c",
+                    "error": "#ba1a1a",
+                    "on-surface-variant": "#414755",
+                    "outline": "#717786",
+                    "secondary-fixed-dim": "#9ccee4"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "gutter-mobile": "12px",
+                    "margin-mobile": "20px",
+                    "xs": "4px",
+                    "sm": "12px",
+                    "md": "16px",
+                    "lg": "24px",
+                    "base": "8px",
+                    "xl": "32px"
+            },
+            "fontFamily": {
+                    "h2": ["Manrope"],
+                    "tiny-label": ["Manrope"],
+                    "label-caps": ["Manrope"],
+                    "body-lg": ["Manrope"],
+                    "h3": ["Manrope"],
+                    "body-sm": ["Manrope"],
+                    "metric-value": ["Manrope"],
+                    "h1": ["Manrope"]
+            },
+            "fontSize": {
+                    "h2": ["24px", {"lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+                    "tiny-label": ["10px", {"lineHeight": "1", "fontWeight": "500"}],
+                    "label-caps": ["12px", {"lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "body-lg": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "h3": ["20px", {"lineHeight": "1.4", "fontWeight": "600"}],
+                    "body-sm": ["14px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "metric-value": ["30px", {"lineHeight": "1", "fontWeight": "900"}],
+                    "h1": ["32px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f9f9ff;
+            color: #151c28;
+            overflow: hidden;
+        }
+        .map-container {
+            height: calc(100vh - 64px);
+            margin-top: 64px;
+            margin-left: 240px;
+            position: relative;
+        }
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            background-color: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(224, 240, 255, 0.5);
+        }
+    </style>
+</head>
+<body class="font-['Manrope']">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-[240px] z-50 bg-white dark:bg-slate-950 border-r border-slate-100 flex flex-col">
+<div class="px-6 py-8">
+<h1 class="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 bg-clip-text text-transparent">Glacial Console</h1>
+<p class="text-xs text-slate-400 mt-1 font-medium">Tech Precision v2.0</p>
+</div>
+<nav class="flex-1 overflow-y-auto">
+<div class="flex items-center gap-3 px-6 py-4 cursor-pointer text-slate-600 hover:bg-slate-50 transition-all duration-200">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-body-sm">概览工作台</span>
+</div>
+<div class="flex items-center gap-3 px-6 py-4 cursor-pointer bg-blue-50/50 text-blue-600 font-bold border-r-2 border-blue-600 transition-all duration-200">
+<span class="material-symbols-outlined">map</span>
+<span class="font-body-sm">地图视图</span>
+</div>
+<div class="flex items-center gap-3 px-6 py-4 cursor-pointer text-slate-600 hover:bg-slate-50 transition-all duration-200">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="font-body-sm">项目管理</span>
+</div>
+<div class="flex items-center gap-3 px-6 py-4 cursor-pointer text-slate-600 hover:bg-slate-50 transition-all duration-200">
+<span class="material-symbols-outlined">assignment</span>
+<span class="font-body-sm">任务中心</span>
+</div>
+<div class="flex items-center gap-3 px-6 py-4 cursor-pointer text-slate-600 hover:bg-slate-50 transition-all duration-200">
+<span class="material-symbols-outlined">group</span>
+<span class="font-body-sm">团队管理</span>
+</div>
+<div class="flex items-center gap-3 px-6 py-4 cursor-pointer text-slate-600 hover:bg-slate-50 transition-all duration-200">
+<span class="material-symbols-outlined">schema</span>
+<span class="font-body-sm">模板引擎</span>
+</div>
+<div class="flex items-center gap-3 px-6 py-4 cursor-pointer text-slate-600 hover:bg-slate-50 transition-all duration-200">
+<span class="material-symbols-outlined">verified_user</span>
+<span class="font-body-sm">审核中心</span>
+</div>
+<div class="flex items-center gap-3 px-6 py-4 cursor-pointer text-slate-600 hover:bg-slate-50 transition-all duration-200">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-body-sm">系统管理</span>
+</div>
+</nav>
+<div class="p-6 border-t border-slate-100">
+<div class="flex items-center gap-3">
+<img alt="User Profile" class="w-8 h-8 rounded-full border border-blue-100" data-alt="professional portrait of a technical administrator with a modern clean aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCWt5TcNCbb3YASEdxyGGYKH_pzEewMvOX3wVK5gYTdBV6ftjDeFv8TmuKuUEiKwaWnDhIvPOMd7RGSKnfUt7fYyVRKJcuN9X3hiViIRgNRZKqTXrQXoCJcV8-m3EB73IpQ4LQEUSq6ry65takkRH60oSF4TD-PQ-TRSoUEbiIoIyfbELfjDeFkUVFWQcRaNjZBjTpV3CsDOl7JE1vB9ViHZcf6vrc4SfQC2LRohv8MiAOEal_-hUyzXL4JcR3RFCcHYq4VNuxVQaE"/>
+<div class="overflow-hidden">
+<p class="text-xs font-bold text-slate-900 truncate">勘察管理员</p>
+<p class="text-[10px] text-slate-400 truncate">admin@glacial.tech</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-100 flex items-center justify-between px-8 h-16 w-[calc(100%-240px)] ml-[240px]">
+<div class="flex items-center gap-6">
+<span class="text-lg font-black tracking-tighter text-blue-600 uppercase">GLACIAL ADMIN</span>
+<div class="relative group">
+<div class="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-blue-500 transition-colors">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="pl-10 pr-4 py-2 bg-slate-50 border-none rounded-full text-sm w-80 focus:ring-2 focus:ring-blue-100 focus:bg-white transition-all" placeholder="搜索勘察点位 ID 或名称..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 gap-2 cursor-pointer hover:bg-blue-100 transition-colors">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">location_on</span>
+<span class="text-xs font-bold">上海市静安区</span>
+</div>
+<div class="p-2 text-slate-500 hover:bg-slate-50 rounded-full cursor-pointer transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-error rounded-full border-2 border-white"></span>
+</div>
+<div class="p-2 text-slate-500 hover:bg-slate-50 rounded-full cursor-pointer transition-colors">
+<span class="material-symbols-outlined">help</span>
+</div>
+</div>
+</header>
+<!-- Main Content Area (Full Map) -->
+<main class="map-container">
+<!-- Mock Map Background -->
+<div class="absolute inset-0 bg-slate-200">
+<img alt="Map" class="w-full h-full object-cover grayscale-[0.2] opacity-80" data-alt="high resolution satellite map view of an urban district with clear street grids and industrial zones" data-location="Shanghai" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnx5ZXzJCbXYYpRNbLz9iVJfR6OWghN2uHtwSX3RVECzDEp3V8yNhGI34d-DJSTHngMWAYPsspzenrf-5SZZPafHxN9vdIMcKW_SBvMdna9TiD7seGjEYOWu2s4fpSEcQaVQQ3Ta46TbSoSuVNfofaW3IQxcnhCybS_UVcJAPpd4EdJZrWOBuPOvOnXgue7cXRF0NYzvz9ox69T9JlqBKRtOaGjl-zt-GuQlDxZqa5Mjftedm6lT7UOjpn5nrsyWoE-3CIeQh-FZo"/>
+<!-- Map Markers -->
+<div class="absolute top-1/4 left-1/3 group cursor-pointer">
+<div class="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white scale-110 animate-pulse">
+<span class="material-symbols-outlined text-sm">satellite_alt</span>
+</div>
+<div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1 bg-white rounded shadow-sm border border-blue-100 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">
+<p class="text-[10px] font-bold">勘察点 P-1024</p>
+</div>
+</div>
+<div class="absolute bottom-1/3 right-1/4 group cursor-pointer">
+<div class="w-6 h-6 bg-secondary text-white rounded-full flex items-center justify-center shadow-lg border-2 border-white">
+<span class="material-symbols-outlined text-xs">done_all</span>
+</div>
+</div>
+</div>
+<!-- Left Filter Panel -->
+<aside class="absolute top-8 left-8 w-80 glass-panel rounded-xl p-6 shadow-sm flex flex-col gap-6 max-h-[calc(100%-64px)] overflow-y-auto">
+<div class="flex items-center justify-between">
+<h2 class="font-h2 text-h2 text-primary">勘察筛选器</h2>
+<button class="p-2 text-slate-400 hover:bg-white rounded-lg transition-colors">
+<span class="material-symbols-outlined">tune</span>
+</button>
+</div>
+<section class="space-y-4">
+<label class="font-label-caps text-label-caps text-slate-500">点位状态</label>
+<div class="grid grid-cols-2 gap-2">
+<div class="flex items-center gap-2 p-3 bg-white rounded-lg border border-primary/20 text-primary cursor-pointer hover:shadow-sm transition-all">
+<span class="w-2 h-2 bg-primary rounded-full"></span>
+<span class="text-xs font-bold">勘察中</span>
+</div>
+<div class="flex items-center gap-2 p-3 bg-slate-50/50 rounded-lg border border-transparent text-slate-500 cursor-pointer hover:bg-white transition-all">
+<span class="w-2 h-2 bg-slate-300 rounded-full"></span>
+<span class="text-xs font-bold">已完成</span>
+</div>
+<div class="flex items-center gap-2 p-3 bg-slate-50/50 rounded-lg border border-transparent text-slate-500 cursor-pointer hover:bg-white transition-all">
+<span class="w-2 h-2 bg-error rounded-full"></span>
+<span class="text-xs font-bold">待纠偏</span>
+</div>
+<div class="flex items-center gap-2 p-3 bg-slate-50/50 rounded-lg border border-transparent text-slate-500 cursor-pointer hover:bg-white transition-all">
+<span class="w-2 h-2 bg-secondary rounded-full"></span>
+<span class="text-xs font-bold">待审核</span>
+</div>
+</div>
+</section>
+<section class="space-y-3">
+<label class="font-label-caps text-label-caps text-slate-500">责任单位</label>
+<select class="w-full bg-white border-slate-100 rounded-lg text-sm p-3 focus:ring-primary focus:border-primary">
+<option>全部勘察单位</option>
+<option>华东第一工程部</option>
+<option>中铁建设分队</option>
+</select>
+</section>
+<section class="space-y-3">
+<label class="font-label-caps text-label-caps text-slate-500">日期范围</label>
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-100">
+<span class="text-xs text-slate-400">从</span>
+<span class="text-xs font-bold">2023-11-01</span>
+</div>
+<div class="flex items-center justify-between p-3 bg-white rounded-lg border border-slate-100">
+<span class="text-xs text-slate-400">至</span>
+<span class="text-xs font-bold">2023-12-31</span>
+</div>
+</div>
+</section>
+<div class="pt-2">
+<button class="w-full bg-primary text-on-primary py-4 rounded-xl font-bold text-sm hover:shadow-lg hover:shadow-primary/20 active:scale-95 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[20px]">refresh</span>
+<span>应用筛选</span>
+</button>
+</div>
+</aside>
+<!-- Right Detail Panel -->
+<aside class="absolute top-8 right-8 w-[420px] bg-white rounded-xl shadow-2xl border border-slate-100 flex flex-col max-h-[calc(100%-64px)] overflow-hidden">
+<div class="p-6 border-b border-slate-50">
+<div class="flex justify-between items-start">
+<div>
+<div class="flex items-center gap-2 mb-1">
+<span class="px-2 py-0.5 bg-primary/10 text-primary text-[10px] font-black rounded uppercase">Active</span>
+<span class="text-[10px] text-slate-400 font-medium">ID: SN-882910</span>
+</div>
+<h3 class="font-h3 text-h3 text-slate-900 leading-tight">静安大厦基准勘察点</h3>
+</div>
+<button class="p-2 hover:bg-slate-50 rounded-full transition-colors">
+<span class="material-symbols-outlined text-slate-400">close</span>
+</button>
+</div>
+<div class="flex items-center gap-4 mt-4">
+<div class="flex-1">
+<p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">坐标经纬度</p>
+<p class="text-sm font-mono text-slate-700">121.442, 31.233</p>
+</div>
+<div class="w-px h-8 bg-slate-100"></div>
+<div class="flex-1 text-right">
+<p class="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-1">最后更新</p>
+<p class="text-sm font-medium text-slate-700">24分钟前</p>
+</div>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-6 space-y-8">
+<section>
+<h4 class="font-label-caps text-label-caps text-slate-400 mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">photo_camera</span>
+                        勘察实景图
+                    </h4>
+<div class="grid grid-cols-2 gap-3">
+<div class="aspect-video rounded-lg overflow-hidden border border-slate-100 group relative">
+<img alt="Site Photo 1" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="close-up of a construction foundation survey point with concrete markers and measuring equipment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqHlM8_5XxVkOO0e2KZup_P1V_Lm25y7WlCa73WDk0moHmHJZsH8JSRwa9m1V6dyrWg68cciT2_L_L9E3MZoOlxU1FK7y7GWC0t4VwkJkA3aGKNVet4PHq0_Aua5qb_at5Z8XFytSsTCP-K1uLlNsT2K1bc5eUMNfYiJgOTEUaerbr22rc-Y9WbcTZUc1CIq1YYdRV-6Sfcv5xICP_SykeKtt9gmfRYDZs_x3LduJygkBXwaj_vvSPtjIrNjFw5DyJNDBK2kBbQOY"/>
+<div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined text-white">zoom_in</span>
+</div>
+</div>
+<div class="aspect-video rounded-lg overflow-hidden border border-slate-100 group relative">
+<img alt="Site Photo 2" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="worker in high visibility vest using a digital theodolite at a modern urban development site" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDdM7upBxcjWSKt3bY60jdlXqd8J7qHfpULzeFhvUMc3PPnbDIJdijam3G_QQHpYC2gcwMgT4H9kJMUX-6CX6kbF57vHKs15q_mBdzjln6TvX90L-4WlBICfph7PoqhYV765x_EsMEXuF1j7aWClLpenoK8qbNICJiA_hcqOP7LhsGyEA9_z-ls5hwo-vW7AWPeGO5hKJFgIlgSvL5dZhkcz2GpI27qqOXl6W30SqqXCTtyJLd89-TGQ-jR-VgGNcMPAF90sXFgFLo"/>
+<div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined text-white">zoom_in</span>
+</div>
+</div>
+</div>
+</section>
+<section>
+<h4 class="font-label-caps text-label-caps text-slate-400 mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">analytics</span>
+                        勘察数据
+                    </h4>
+<div class="space-y-4">
+<div class="p-4 bg-slate-50 rounded-xl">
+<div class="flex justify-between items-center mb-2">
+<span class="text-xs text-slate-500">地基沉降率</span>
+<span class="text-xs font-bold text-primary">正常 (0.02mm/d)</span>
+</div>
+<div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[15%]"></div>
+</div>
+</div>
+<div class="p-4 bg-slate-50 rounded-xl">
+<div class="flex justify-between items-center mb-2">
+<span class="text-xs text-slate-500">信号覆盖强度</span>
+<span class="text-xs font-bold text-secondary">极强 (-45 dBm)</span>
+</div>
+<div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full w-[85%]"></div>
+</div>
+</div>
+</div>
+</section>
+<section>
+<h4 class="font-label-caps text-label-caps text-slate-400 mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">history</span>
+                        最近勘察记录
+                    </h4>
+<div class="space-y-4 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-px before:bg-blue-50">
+<div class="flex gap-4 relative">
+<div class="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center shrink-0 z-10 border-4 border-white shadow-sm">
+<span class="material-symbols-outlined text-[12px] text-white" style="font-variation-settings: 'FILL' 1;">check</span>
+</div>
+<div>
+<p class="text-xs font-bold text-slate-800">完成现场初步勘察</p>
+<p class="text-[10px] text-slate-400">操作员: 王建国 | 2023-12-01 14:20</p>
+</div>
+</div>
+<div class="flex gap-4 relative">
+<div class="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center shrink-0 z-10 border-4 border-white">
+<span class="material-symbols-outlined text-[12px] text-slate-400">info</span>
+</div>
+<div>
+<p class="text-xs font-bold text-slate-500">点位布设申请通过</p>
+<p class="text-[10px] text-slate-400">系统自动 | 2023-11-28 09:15</p>
+</div>
+</div>
+</div>
+</section>
+</div>
+<div class="p-6 bg-slate-50/80 border-t border-slate-100 grid grid-cols-2 gap-4">
+<button class="bg-white border border-slate-200 text-slate-700 py-3 rounded-xl font-bold text-xs hover:bg-slate-100 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">edit_location_alt</span>
+<span>人工纠偏</span>
+</button>
+<button class="bg-primary text-on-primary py-3 rounded-xl font-bold text-xs shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>确认审核</span>
+</button>
+</div>
+</aside>
+<!-- Floating Zoom Controls -->
+<div class="absolute bottom-8 left-96 flex flex-col gap-2">
+<button class="w-12 h-12 bg-white rounded-xl shadow-lg border border-slate-100 flex items-center justify-center text-slate-600 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">add</span>
+</button>
+<button class="w-12 h-12 bg-white rounded-xl shadow-lg border border-slate-100 flex items-center justify-center text-slate-600 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">remove</span>
+</button>
+<button class="w-12 h-12 bg-white rounded-xl shadow-lg border border-slate-100 flex items-center justify-center text-slate-600 hover:text-primary transition-colors mt-4">
+<span class="material-symbols-outlined">my_location</span>
+</button>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#7DD3FC",
+                        "primary-fixed": "#bae6fd",
+                        "on-primary-fixed": "#0284c7",
+                        "surface": "#ffffff",
+                        "on-surface": "#0f172a",
+                        "on-surface-variant": "#475569",
+                        "error-container": "#fee2e2",
+                        "on-error-container": "#991b1b"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+        }
+        .headline-font {
+            font-family: 'Manrope', sans-serif;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="text-on-surface">
+<!-- TopAppBar -->
+<header class="w-full sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-primary/20 flex justify-between items-center px-6 py-4 transition-colors duration-200">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-slate-800 p-2 hover:bg-primary/20 rounded-full transition-colors" data-icon="menu">menu</span>
+<h1 class="font-manrope font-bold text-lg tracking-tight text-slate-800">勘测中心</h1>
+</div>
+<div class="relative w-10 h-10 rounded-full overflow-hidden border-2 border-primary">
+<img alt="用户头像" class="w-full h-full object-cover" data-alt="Professional portrait of a male lead inspector wearing a dark blue tactical uniform in a bright office setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7YlsjHzr78KCN4SgNRUwsBK_wRQInFIv6aitSnOPSEMfobdE0OVgi4yrU_fZKIO8BEwDyygB6M6Kl0NkIedYWCcRpcMdIJEckYftOHze_8z94ZNbN8tEs58bN0ILCR6bn2uNeK6W0VJjXdk8pDJgdcFfka5pkT21o-rdJIDm2ttou_6fS3cGEspmiUzogqzFk3GB0mIVCR6QlxKfa_Iqj24I-r5JmV41eFV51fs5k3lzwG3fhwOAhBZ5sfeoBxNW-08fdoXGIkKU"/>
+</div>
+</header>
+<main class="max-w-4xl mx-auto px-6 pb-32 pt-8">
+<!-- Profile Header Section -->
+<section class="mb-10 flex flex-col md:flex-row items-center md:items-start gap-8">
+<div class="relative">
+<div class="w-32 h-32 rounded-full overflow-hidden shadow-xl border-4 border-white">
+<img alt="首席巡检员头像" class="w-full h-full object-cover" data-alt="Close up portrait of an experienced professional male inspector with a confident expression, clear skin, and short dark hair" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB3bA7lc9vfFtbMwWRMSyICPJ5TuZWs6grjojDPvKOEpVKKDhIz47IJIJ-TmVjI2nZLXGZOC9zny9FdgZwo0ek5lWXaBxurkIaMclNnQrEqcaVR9mEg-iWMvwIn-M2Qud18kUlrgVumE3pgTo2ps79xACHf6r5NSq_Qqc-crlC4peq1A5Yq-7T7n8gHvpAANIHI-b-O4ksdsLbYDJ41qPv-ZF2B15ERsE_Bqcjc6SQ-eOC62hXzAPQ48HzI_-GJk7_XyUWatQ6Iklo"/>
+</div>
+<div class="absolute bottom-1 right-1 bg-primary text-slate-900 p-1.5 rounded-full border-2 border-white flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-sm" data-icon="verified" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+<div class="text-center md:text-left flex-1">
+<div class="flex flex-col md:flex-row md:items-baseline gap-2 mb-1">
+<h2 class="text-3xl font-extrabold headline-font tracking-tight text-slate-800">李志强</h2>
+<span class="bg-primary/20 text-slate-800 px-3 py-0.5 rounded-full text-xs font-semibold tracking-wider border border-primary/30">首席巡检员</span>
+</div>
+<p class="text-slate-500 font-medium mb-4">工号: 99284-X • 华东区勘测中心</p>
+<div class="flex flex-wrap justify-center md:justify-start gap-3">
+<div class="bg-primary/10 px-4 py-2 rounded-xl flex items-center gap-2 backdrop-blur-sm border border-primary/20">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="task_alt">task_alt</span>
+<span class="text-slate-700 text-sm font-bold">1,248 完成任务</span>
+</div>
+<div class="bg-primary/10 px-4 py-2 rounded-xl flex items-center gap-2 backdrop-blur-sm border border-primary/20">
+<span class="material-symbols-outlined text-yellow-500 text-lg" data-icon="stars">stars</span>
+<span class="text-slate-700 text-sm font-bold">4.9 评分</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Bento Grid Settings -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+<!-- Primary Actions -->
+<div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+<!-- Offline Maps -->
+<button class="flex flex-col items-start p-6 bg-primary/5 backdrop-blur-md rounded-2xl border border-primary/20 hover:bg-primary/10 transition-colors text-left group shadow-sm">
+<div class="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mb-4 text-slate-700 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl" data-icon="map">map</span>
+</div>
+<h3 class="text-lg font-bold headline-font text-slate-800 mb-1">离线地图管理</h3>
+<p class="text-sm text-slate-500">管理已下载的 1.2GB 地图数据</p>
+</button>
+<!-- Certifications -->
+<button class="flex flex-col items-start p-6 bg-primary/5 backdrop-blur-md rounded-2xl border border-primary/20 hover:bg-primary/10 transition-colors text-left group shadow-sm">
+<div class="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mb-4 text-slate-700 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl" data-icon="workspace_premium">workspace_premium</span>
+</div>
+<h3 class="text-lg font-bold headline-font text-slate-800 mb-1">我的资质认证</h3>
+<p class="text-sm text-slate-500">3 项证书即将到期</p>
+</button>
+<!-- Security -->
+<button class="flex flex-col items-start p-6 bg-primary/5 backdrop-blur-md rounded-2xl border border-primary/20 hover:bg-primary/10 transition-colors text-left group shadow-sm">
+<div class="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mb-4 text-slate-700 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl" data-icon="security">security</span>
+</div>
+<h3 class="text-lg font-bold headline-font text-slate-800 mb-1">安全设置</h3>
+<p class="text-sm text-slate-500">密码、生物识别及登录保护</p>
+</button>
+<!-- Help -->
+<button class="flex flex-col items-start p-6 bg-primary/5 backdrop-blur-md rounded-2xl border border-primary/20 hover:bg-primary/10 transition-colors text-left group shadow-sm">
+<div class="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center mb-4 text-slate-700 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl" data-icon="help_center">help_center</span>
+</div>
+<h3 class="text-lg font-bold headline-font text-slate-800 mb-1">帮助中心</h3>
+<p class="text-sm text-slate-500">常见问题与操作手册</p>
+</button>
+</div>
+<!-- Side Cards -->
+<div class="md:col-span-4 flex flex-col gap-4">
+<!-- Sync Status Card -->
+<div class="p-6 bg-primary/20 backdrop-blur-md border border-primary/30 rounded-2xl text-slate-800 shadow-sm">
+<div class="flex justify-between items-start mb-6">
+<span class="material-symbols-outlined text-3xl text-primary" data-icon="cloud_sync">cloud_sync</span>
+<span class="text-xs font-bold tracking-widest uppercase opacity-70">同步状态</span>
+</div>
+<p class="text-2xl font-bold headline-font mb-1">已同步</p>
+<p class="text-xs opacity-80 mb-4 text-slate-600">上次同步: 今天 14:32</p>
+<div class="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-full"></div>
+</div>
+</div>
+<!-- Feedback Card -->
+<button class="p-6 bg-primary/5 backdrop-blur-md border border-primary/20 rounded-2xl text-left hover:bg-primary/10 transition-colors flex items-center justify-between group shadow-sm">
+<div>
+<h3 class="font-bold headline-font text-slate-800">意见反馈</h3>
+<p class="text-xs text-slate-500 mt-1">帮助我们改进系统</p>
+</div>
+<span class="material-symbols-outlined text-slate-400 group-hover:translate-x-1 transition-transform" data-icon="arrow_forward_ios">arrow_forward_ios</span>
+</button>
+</div>
+</div>
+<!-- Logout Section -->
+<div class="mt-12 flex justify-center">
+<button class="flex items-center gap-3 px-10 py-4 bg-red-50 text-red-600 border border-red-100 rounded-full font-bold headline-font hover:bg-red-100 transition-colors active:scale-95 duration-150 shadow-sm">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                退出登录
+            </button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-6 pt-3 bg-white/70 backdrop-blur-xl border-t border-primary/20 shadow-[0_-8px_24px_rgba(125,211,252,0.1)]">
+<button class="flex flex-col items-center justify-center text-slate-400 hover:text-primary px-5 py-2.5 transition-colors duration-150 active:scale-90">
+<span class="material-symbols-outlined mb-1" data-icon="assignment">assignment</span>
+<span class="font-inter text-[11px] font-semibold tracking-wider">任务</span>
+</button>
+<button class="flex flex-col items-center justify-center text-slate-400 hover:text-primary px-5 py-2.5 transition-colors duration-150 active:scale-90">
+<span class="material-symbols-outlined mb-1" data-icon="mail">mail</span>
+<span class="font-inter text-[11px] font-semibold tracking-wider">消息</span>
+</button>
+<button class="flex flex-col items-center justify-center text-slate-400 hover:text-primary px-5 py-2.5 transition-colors duration-150 active:scale-90">
+<span class="material-symbols-outlined mb-1" data-icon="security">security</span>
+<span class="font-inter text-[11px] font-semibold tracking-wider">安全</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-primary/20 text-slate-800 rounded-2xl px-5 py-2.5 transition-transform duration-150 scale-95 active:scale-90 border border-primary/30">
+<span class="material-symbols-outlined mb-1 text-primary" data-icon="person_gear" style="font-variation-settings: 'FILL' 1;">person</span>
+<span class="font-inter text-[11px] font-semibold tracking-wider">我的</span>
+</button>
+</nav>
+</body></html>

@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>现场采集 - 青泓项目勘察系统</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0EA5E9;
+      --primary-light: #38BDF8;
+      --primary-dark: #0284C7;
+      --primary-glow: rgba(14, 165, 233, 0.3);
+      --success: #10B981;
+      --warning: #F59E0B;
+      --danger: #EF4444;
+      --bg-primary: #0F172A;
+      --bg-secondary: #1E293B;
+      --bg-card: rgba(30, 41, 59, 0.8);
+      --bg-input: rgba(51, 65, 85, 0.5);
+      --text-primary: #F1F5F9;
+      --text-secondary: #94A3B8;
+      --text-muted: #64748B;
+      --border: rgba(148, 163, 184, 0.15);
+      --border-focus: rgba(14, 165, 233, 0.5);
+      --glass-bg: rgba(30, 41, 59, 0.6);
+      --glass-border: rgba(148, 163, 184, 0.1);
+      --safe-top: env(safe-area-inset-top, 20px);
+      --safe-bottom: env(safe-area-inset-bottom, 20px);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Background Effects */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: 
+        radial-gradient(ellipse at 20% 20%, rgba(14, 165, 233, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(16, 185, 129, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(139, 92, 246, 0.04) 0%, transparent 50%);
+      animation: bgShift 20s ease-in-out infinite;
+      z-index: 0;
+    }
+
+    @keyframes bgShift {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      33% { transform: translate(-2%, 2%) rotate(1deg); }
+      66% { transform: translate(2%, -1%) rotate(-1deg); }
+    }
+
+    /* Status Bar */
+    .status-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--safe-top);
+      background: var(--bg-primary);
+      z-index: 1000;
+    }
+
+    /* Header */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: linear-gradient(180deg, var(--bg-primary) 0%, rgba(15, 23, 42, 0.95) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      padding-top: calc(var(--safe-top) + 12px);
+    }
+
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-primary);
+      font-size: 18px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .back-btn:active {
+      transform: scale(0.92);
+      background: var(--primary);
+    }
+
+    .header-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .header-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .header-icon-btn:active {
+      transform: scale(0.92);
+    }
+
+    .header-icon-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* Main Content */
+    .main-content {
+      position: relative;
+      z-index: 1;
+      padding: 16px;
+      padding-bottom: calc(100px + var(--safe-bottom));
+    }
+
+    /* Point Info Card */
+    .point-info-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .point-info-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--success));
+    }
+
+    .point-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .point-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .point-code {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    .point-status {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .point-status.completed {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .point-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .meta-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: var(--bg-input);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .meta-text {
+      min-width: 0;
+    }
+
+    .meta-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .meta-value {
+      font-size: 13px;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Progress Section */
+    .progress-section {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .progress-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .progress-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .progress-percent {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .progress-bar-container {
+      height: 8px;
+      background: var(--bg-input);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      border-radius: 4px;
+      transition: width 0.5s ease;
+      position: relative;
+    }
+
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .progress-steps {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .step-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .step-dot {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--bg-input);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: var(--text-muted);
+      transition: all 0.3s ease;
+    }
+
+    .step-dot.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      box-shadow: 0 0 12px var(--primary-glow);
+    }
+
+    .step-dot.completed {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+
+    .step-label {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .step-label.active {
+      color: var(--primary);
+      font-weight: 500;
+    }
+
+    /* Form Section */
+    .form-section {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(14, 165, 233, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    /* Form Elements */
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .form-label .required {
+      color: var(--danger);
+      margin-left: 4px;
+    }
+
+    .form-label .optional {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 16px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      color: var(--text-primary);
+      font-size: 15px;
+      font-family: inherit;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .form-input:focus {
+      border-color: var(--border-focus);
+      background: rgba(51, 65, 85, 0.7);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .form-textarea {
+      height: 100px;
+      padding: 12px 16px;
+      resize: none;
+    }
+
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      padding-right: 40px;
+    }
+
+    /* Radio/Checkbox Group */
+    .option-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .option-item {
+      flex: 1;
+      min-width: calc(50% - 5px);
+    }
+
+    .option-item input {
+      display: none;
+    }
+
+    .option-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 16px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .option-item input:checked + .option-label {
+      background: rgba(14, 165, 233, 0.15);
+      border-color: var(--primary);
+      color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+    }
+
+    .option-label:active {
+      transform: scale(0.96);
+    }
+
+    /* Photo Upload */
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .photo-item {
+      aspect-ratio: 1;
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .photo-item input {
+      display: none;
+    }
+
+    .photo-placeholder {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-input);
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+    }
+
+    .photo-placeholder:active {
+      transform: scale(0.96);
+      border-color: var(--primary);
+    }
+
+    .photo-icon {
+      font-size: 28px;
+    }
+
+    .photo-text {
+      font-size: 11px;
+    }
+
+    .photo-preview {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 16px;
+    }
+
+    .photo-delete {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    /* Signature Pad */
+    .signature-pad {
+      width: 100%;
+      height: 150px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .signature-canvas {
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    .signature-placeholder {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--text-muted);
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    .signature-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    .signature-clear {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-muted);
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    /* Location Info */
+    .location-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .location-item {
+      padding: 12px;
+      background: var(--bg-input);
+      border-radius: 12px;
+    }
+
+    .location-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .location-value {
+      font-size: 13px;
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    /* Bottom Action Bar */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.9) 0%, var(--bg-primary) 100%);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      padding: 16px;
+      padding-bottom: calc(16px + var(--safe-bottom));
+      z-index: 100;
+    }
+
+    .bottom-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      flex: 1;
+      height: 52px;
+      border-radius: 16px;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      outline: none;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn-secondary {
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      box-shadow: 0 4px 15px var(--primary-glow);
+    }
+
+    .btn-primary:active {
+      box-shadow: 0 2px 8px var(--primary-glow);
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      top: calc(var(--safe-top) + 80px);
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast-icon {
+      font-size: 18px;
+    }
+
+    .toast-text {
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    /* Responsive */
+    @media (max-width: 360px) {
+      .main-content {
+        padding: 12px;
+      }
+
+      .photo-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .option-item {
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Status Bar -->
+  <div class="status-bar"></div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div class="header-left">
+        <button class="back-btn" onclick="history.back()">←</button>
+        <div>
+          <div class="header-title">现场采集</div>
+          <div class="header-subtitle">点位 DK0+120 水质采样</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <button class="header-icon-btn active" title="GPS定位">📍</button>
+        <button class="header-icon-btn" title="帮助">?</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Point Info Card -->
+    <div class="point-info-card">
+      <div class="point-header">
+        <div>
+          <div class="point-name">DK0+120 水质采样点</div>
+          <div class="point-code">PTN-2024-00120-WQ</div>
+        </div>
+        <span class="point-status">采集中</span>
+      </div>
+      <div class="point-meta">
+        <div class="meta-item">
+          <div class="meta-icon">📅</div>
+          <div class="meta-text">
+            <div class="meta-label">计划日期</div>
+            <div class="meta-value">2024-03-15</div>
+          </div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-icon">👤</div>
+          <div class="meta-text">
+            <div class="meta-label">负责人</div>
+            <div class="meta-value">张工</div>
+          </div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-icon">🏷️</div>
+          <div class="meta-text">
+            <div class="meta-label">类型</div>
+            <div class="meta-value">水质采样</div>
+          </div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-icon">⚡</div>
+          <div class="meta-text">
+            <div class="meta-label">优先级</div>
+            <div class="meta-value">高</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress Section -->
+    <div class="progress-section">
+      <div class="progress-header">
+        <span class="progress-title">采集进度</span>
+        <span class="progress-percent">60%</span>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" style="width: 60%"></div>
+      </div>
+      <div class="progress-steps">
+        <div class="step-item">
+          <div class="step-dot completed">✓</div>
+          <span class="step-label">签到</span>
+        </div>
+        <div class="step-item">
+          <div class="step-dot completed">✓</div>
+          <span class="step-label">拍照</span>
+        </div>
+        <div class="step-item">
+          <div class="step-dot active">3</div>
+          <span class="step-label active">数据</span>
+        </div>
+        <div class="step-item">
+          <div class="step-dot">4</div>
+          <span class="step-label">签字</span>
+        </div>
+        <div class="step-item">
+          <div class="step-dot">5</div>
+          <span class="step-label">提交</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Location Info -->
+    <div class="form-section">
+      <div class="section-title">
+        <span class="section-icon">📍</span>
+        位置信息
+      </div>
+      <div class="location-info">
+        <div class="location-item">
+          <div class="location-label">经度</div>
+          <div class="location-value">116.3974°E</div>
+        </div>
+        <div class="location-item">
+          <div class="location-label">纬度</div>
+          <div class="location-value">39.9093°N</div>
+        </div>
+        <div class="location-item">
+          <div class="location-label">海拔</div>
+          <div class="location-value">45.2m</div>
+        </div>
+        <div class="location-item">
+          <div class="location-label">精度</div>
+          <div class="location-value">±3.5m</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Collection Form -->
+    <div class="form-section">
+      <div class="section-title">
+        <span class="section-icon">📊</span>
+        采集数据
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          <span>水温 (°C)<span class="required">*</span></span>
+          <span class="optional">范围: 0-40</span>
+        </label>
+        <input type="number" class="form-input" placeholder="请输入水温" value="18.5" step="0.1">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          <span>pH值<span class="required">*</span></span>
+          <span class="optional">范围: 0-14</span>
+        </label>
+        <input type="number" class="form-input" placeholder="请输入pH值" value="7.2" step="0.1">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          <span>溶解氧 (mg/L)<span class="required">*</span></span>
+        </label>
+        <input type="number" class="form-input" placeholder="请输入溶解氧" value="6.8" step="0.1">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          <span>浊度 (NTU)</span>
+          <span class="optional">选填</span>
+        </label>
+        <input type="number" class="form-input" placeholder="请输入浊度" step="0.1">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          <span>水质状况<span class="required">*</span></span>
+        </label>
+        <div class="option-group">
+          <div class="option-item">
+            <input type="radio" name="water_quality" id="wq1" value="good" checked>
+            <label class="option-label" for="wq1">✅ 良好</label>
+          </div>
+          <div class="option-item">
+            <input type="radio" name="water_quality" id="wq2" value="fair">
+            <label class="option-label" for="wq2">⚠️ 一般</label>
+          </div>
+          <div class="option-item">
+            <input type="radio" name="water_quality" id="wq3" value="poor">
+            <label class="option-label" for="wq3">❌ 较差</label>
+          </div>
+          <div class="option-item">
+            <input type="radio" name="water_quality" id="wq4" value="unknown">
+            <label class="option-label" for="wq4">❓ 待检</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">
+          <span>备注说明</span>
+          <span class="optional">选填</span>
+        </label>
+        <textarea class="form-input form-textarea" placeholder="请输入备注信息...">水面无明显漂浮物，水质清澈</textarea>
+      </div>
+    </div>
+
+    <!-- Photo Section -->
+    <div class="form-section">
+      <div class="section-title">
+        <span class="section-icon">📷</span>
+        现场照片
+      </div>
+      <div class="photo-grid">
+        <div class="photo-item">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%231E293B' width='200' height='200'/%3E%3Ctext fill='%2394A3B8' font-family='sans-serif' font-size='14' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3E照片1%3C/text%3E%3C/svg%3E" alt="照片" class="photo-preview">
+          <div class="photo-delete">×</div>
+        </div>
+        <div class="photo-item">
+          <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Crect fill='%231E293B' width='200' height='200'/%3E%3Ctext fill='%2394A3B8' font-family='sans-serif' font-size='14' x='50%25' y='50%25' text-anchor='middle' dy='.3em'%3E照片2%3C/text%3E%3C/svg%3E" alt="照片" class="photo-preview">
+          <div class="photo-delete">×</div>
+        </div>
+        <div class="photo-item">
+          <label class="photo-placeholder">
+            <input type="file" accept="image/*" capture="environment">
+            <span class="photo-icon">📷</span>
+            <span class="photo-text">添加</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Signature Section -->
+    <div class="form-section">
+      <div class="section-title">
+        <span class="section-icon">✍️</span>
+        现场签字
+      </div>
+      <div class="signature-pad">
+        <canvas class="signature-canvas" id="signatureCanvas"></canvas>
+        <span class="signature-placeholder" id="sigPlaceholder">请在上方签名</span>
+      </div>
+      <div class="signature-actions">
+        <button class="signature-clear" onclick="clearSignature()">清除签名</button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Action Bar -->
+  <div class="bottom-bar">
+    <div class="bottom-actions">
+      <button class="btn btn-secondary" onclick="saveDraft()">
+        💾 暂存
+      </button>
+      <button class="btn btn-primary" onclick="submitData()">
+        📤 提交数据
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <span class="toast-icon" id="toastIcon">✅</span>
+    <span class="toast-text" id="toastText">操作成功</span>
+  </div>
+
+  <script>
+    // Toast notification
+    function showToast(icon, text) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastIcon').textContent = icon;
+      document.getElementById('toastText').textContent = text;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // Save draft
+    function saveDraft() {
+      showToast('💾', '草稿已保存');
+    }
+
+    // Submit data
+    function submitData() {
+      showToast('✅', '数据提交成功');
+    }
+
+    // Signature pad
+    const canvas = document.getElementById('signatureCanvas');
+    const ctx = canvas.getContext('2d');
+    const placeholder = document.getElementById('sigPlaceholder');
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      ctx.strokeStyle = '#0EA5E9';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+    }
+
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    function startDrawing(e) {
+      isDrawing = true;
+      placeholder.style.display = 'none';
+      const pos = getPos(e);
+      lastX = pos.x;
+      lastY = pos.y;
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      e.preventDefault();
+      const pos = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+      lastX = pos.x;
+      lastY = pos.y;
+    }
+
+    function stopDrawing() {
+      isDrawing = false;
+    }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    canvas.addEventListener('touchend', stopDrawing);
+
+    function clearSignature() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      placeholder.style.display = 'block';
+    }
+  </script>
+</body>
+</html>

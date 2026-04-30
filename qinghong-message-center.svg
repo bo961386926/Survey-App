@@ -1,0 +1,57 @@
+﻿<svg width="1600" height="1120" viewBox="0 0 1600 1120" fill="none" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1600" y2="1120" gradientUnits="userSpaceOnUse"><stop stop-color="#F4F8FC"/><stop offset="1" stop-color="#EAF2FF"/></linearGradient><filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#9BB7E680"/></filter></defs>
+<rect width="1600" height="1120" fill="url(#bg)"/>
+<rect x="0" y="0" width="96" height="1120" fill="#2C3E50"/>
+<rect x="24" y="28" width="48" height="48" rx="14" fill="#1664FF"/><text x="48" y="59" text-anchor="middle" fill="white" font-size="24" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">青</text>
+<rect x="24" y="660" width="48" height="48" rx="14" fill="#EEF4FF"/>
+<rect x="120" y="28" width="1452" height="84" rx="24" fill="#FFFFFF" filter="url(#shadow)"/>
+<text x="156" y="62" fill="#1F2D3D" font-size="30" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">消息与任务提醒</text>
+<text x="156" y="88" fill="#7B8794" font-size="15" font-family="Microsoft YaHei, PingFang SC, sans-serif">承接待审核、项目预警、协作到期、导出完成与系统通知</text>
+<rect x="1398" y="40" width="110" height="44" rx="14" fill="#1664FF"/><text x="1453" y="67" text-anchor="middle" fill="white" font-size="15" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">全部已读</text>
+<rect x="120" y="136" width="360" height="920" rx="26" fill="white" filter="url(#shadow)"/>
+<text x="152" y="180" fill="#1F2D3D" font-size="24" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">消息分类</text>
+<text x="152" y="208" fill="#909399" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">优先把用户今天必须处理的事情放在前面</text>
+<rect x="152" y="238" width="296" height="78" rx="18" fill="#1664FF"/>
+<text x="182" y="274" fill="white" font-size="18" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">待处理任务</text>
+<text x="182" y="302" fill="#DCE9FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">46 条待审核，2 条项目预警</text>
+<rect x="152" y="334" width="296" height="78" rx="18" fill="#F7FAFE" stroke="#E7EDF4"/>
+<text x="182" y="370" fill="#1F2D3D" font-size="18" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">系统通知</text>
+<text x="182" y="398" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">模板更新、风控拦截、发布公告</text>
+<rect x="152" y="430" width="296" height="78" rx="18" fill="#F7FAFE" stroke="#E7EDF4"/>
+<text x="182" y="466" fill="#1F2D3D" font-size="18" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">协作提醒</text>
+<text x="182" y="494" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">第三方 Token 即将到期、入口被访问</text>
+<rect x="152" y="544" width="296" height="214" rx="18" fill="#F7FAFE"/>
+<text x="180" y="580" fill="#1F2D3D" font-size="16" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">今日摘要</text>
+<text x="180" y="618" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">待审核点位 46</text>
+<text x="180" y="652" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">驳回重提 12</text>
+<text x="180" y="686" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">导出完成 3</text>
+<text x="180" y="720" fill="#606266" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">高风险告警 1</text>
+<rect x="152" y="784" width="296" height="240" rx="18" fill="#1664FF"/>
+<text x="180" y="822" fill="white" font-size="18" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">推荐处理顺序</text>
+<text x="180" y="864" fill="#DCE9FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">1. 清空驳回重提队列</text>
+<text x="180" y="900" fill="#DCE9FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">2. 处理南岸复核段延期预警</text>
+<text x="180" y="936" fill="#DCE9FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">3. 检查第三方协作 Token 到期情况</text>
+<rect x="180" y="970" width="132" height="36" rx="18" fill="white"/><text x="246" y="993" text-anchor="middle" fill="#1664FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">进入待审核</text>
+<rect x="508" y="136" width="1064" height="920" rx="26" fill="white" filter="url(#shadow)"/>
+<text x="540" y="180" fill="#1F2D3D" font-size="24" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">消息流</text>
+<text x="540" y="208" fill="#909399" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">像工作收件箱一样组织提醒，每条消息都能直接落到动作</text>
+<rect x="540" y="238" width="1000" height="118" rx="20" fill="#F9FBFF" stroke="#E7EDF4"/>
+<circle cx="584" cy="297" r="10" fill="#E6A23C"/><text x="612" y="286" fill="#1F2D3D" font-size="18" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">待审核积压提醒</text><text x="612" y="316" fill="#606266" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">A1 标段当前有 46 条待审核，其中 12 条为驳回重提，建议优先处理</text><text x="612" y="338" fill="#1664FF" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">进入审核队列  查看点位地图</text><text x="1402" y="286" fill="#909399" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">5 分钟前</text>
+<rect x="540" y="374" width="1000" height="118" rx="20" fill="#F9FBFF" stroke="#E7EDF4"/>
+<circle cx="584" cy="433" r="10" fill="#F56C6C"/><text x="612" y="422" fill="#1F2D3D" font-size="18" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">项目延期预警</text><text x="612" y="452" fill="#606266" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">南岸复核段连续三天新增驳回，当前进度 45%，建议协调审核人手</text><text x="612" y="474" fill="#1664FF" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">查看项目详情  分配任务</text><text x="1402" y="422" fill="#909399" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">18 分钟前</text>
+<rect x="540" y="510" width="1000" height="118" rx="20" fill="#F9FBFF" stroke="#E7EDF4"/>
+<circle cx="584" cy="569" r="10" fill="#67C23A"/><text x="612" y="558" fill="#1F2D3D" font-size="18" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">导出任务完成</text><text x="612" y="588" fill="#606266" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">4 月项目点位清单导出已生成，可下载或复制分享链接</text><text x="612" y="610" fill="#1664FF" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">下载文件  进入导出中心</text><text x="1402" y="558" fill="#909399" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">1 小时前</text>
+<rect x="540" y="646" width="1000" height="118" rx="20" fill="#F9FBFF" stroke="#E7EDF4"/>
+<circle cx="584" cy="705" r="10" fill="#1664FF"/><text x="612" y="694" fill="#1F2D3D" font-size="18" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">模板已发布</text><text x="612" y="724" fill="#606266" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">工业排口标准模板 v3 已发布，已绑定 2 个项目</text><text x="612" y="746" fill="#1664FF" font-size="14" font-family="Microsoft YaHei, PingFang SC, sans-serif">查看模板设计器</text><text x="1402" y="694" fill="#909399" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">今天</text>
+<rect x="540" y="792" width="484" height="232" rx="20" fill="#F7FAFE"/>
+<text x="570" y="832" fill="#1F2D3D" font-size="20" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">消息统计</text>
+<rect x="620" y="892" width="70" height="84" rx="18" fill="#EAF1FB"/><rect x="620" y="940" width="70" height="36" rx="18" fill="#1664FF"/>
+<rect x="736" y="850" width="70" height="126" rx="18" fill="#EAF1FB"/><rect x="736" y="902" width="70" height="74" rx="18" fill="#1664FF"/>
+<rect x="852" y="808" width="70" height="168" rx="18" fill="#FCEFEF"/><rect x="852" y="874" width="70" height="102" rx="18" fill="#F56C6C"/>
+<text x="626" y="1000" fill="#606266" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">系统</text><text x="742" y="1000" fill="#606266" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">任务</text><text x="858" y="1000" fill="#606266" font-size="12" font-family="Microsoft YaHei, PingFang SC, sans-serif">预警</text>
+<rect x="1056" y="792" width="484" height="232" rx="20" fill="#1664FF"/>
+<text x="1086" y="832" fill="white" font-size="20" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-weight="700">智能提醒策略</text>
+<text x="1086" y="874" fill="#DCE9FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">根据角色、项目范围和风险级别推送消息</text>
+<text x="1086" y="910" fill="#DCE9FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">管理员看到全局预警，审核员优先看到待审积压</text>
+<text x="1086" y="946" fill="#DCE9FF" font-size="13" font-family="Microsoft YaHei, PingFang SC, sans-serif">第三方只收到与其入口相关的状态与到期提醒</text>
+</svg>
