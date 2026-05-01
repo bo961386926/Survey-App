@@ -3,19 +3,14 @@
     {
       "path": "pages/login/login",
       "style": {
-        "navigationBarTitleText": "登录"
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom"
       }
     },
     {
       "path": "pages/home/home",
       "style": {
         "navigationBarTitleText": "首页"
-      }
-    },
-    {
-      "path": "pages/survey/survey",
-      "style": {
-        "navigationBarTitleText": "勘查填报"
       }
     },
     {
@@ -31,14 +26,68 @@
       }
     },
     {
+      "path": "pages/point-map/point-map",
+      "style": {
+        "navigationBarTitleText": "点位地图"
+      }
+    },
+    {
+      "path": "pages/survey/survey",
+      "style": {
+        "navigationBarTitleText": "勘察填报"
+      }
+    },
+    {
+      "path": "pages/draft/draft-list",
+      "style": {
+        "navigationBarTitleText": "草稿管理"
+      }
+    },
+    {
+      "path": "pages/audit/audit-list",
+      "style": {
+        "navigationBarTitleText": "审核记录"
+      }
+    },
+    {
+      "path": "pages/audit/audit-detail",
+      "style": {
+        "navigationBarTitleText": "审核详情"
+      }
+    },
+    {
+      "path": "pages/message/message-list",
+      "style": {
+        "navigationBarTitleText": "消息中心"
+      }
+    },
+    {
+      "path": "pages/message/message-detail",
+      "style": {
+        "navigationBarTitleText": "消息详情"
+      }
+    },
+    {
       "path": "pages/my/my",
       "style": {
         "navigationBarTitleText": "我的"
       }
+    },
+    {
+      "path": "pages/my/change-password",
+      "style": {
+        "navigationBarTitleText": "修改密码"
+      }
+    },
+    {
+      "path": "pages/my/profile",
+      "style": {
+        "navigationBarTitleText": "用户档案"
+      }
     }
   ],
   "tabBar": {
-    "color": "#7A7E83",
+    "color": "#999999",
     "selectedColor": "#409EFF",
     "borderStyle": "black",
     "backgroundColor": "#ffffff",
@@ -65,9 +114,9 @@
   },
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "青泓项目勘查",
-    "navigationBarBackgroundColor": "#F8F8F8",
-    "backgroundColor": "#F8F8F8"
+    "navigationBarTitleText": "青泓项目勘察",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F5F7FA"
   },
   "permission": {
     "scope.userLocation": {

@@ -9,28 +9,32 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #0EA5E9;
-      --primary-light: #38BDF8;
-      --primary-dark: #0284C7;
-      --primary-glow: rgba(14, 165, 233, 0.3);
+      --primary: #2563EB;
+      --primary-light: #3B82F6;
+      --primary-lighter: #60A5FA;
+      --primary-dark: #1D4ED8;
+      --primary-glow: rgba(37, 99, 235, 0.25);
+      --accent: #F97316;
+      --accent-light: #FB923C;
       --success: #10B981;
-      --success-glow: rgba(16, 185, 129, 0.3);
+      --success-light: #34D399;
       --warning: #F59E0B;
-      --warning-glow: rgba(245, 158, 11, 0.3);
+      --warning-light: #FBBF24;
       --danger: #EF4444;
-      --danger-glow: rgba(239, 68, 68, 0.3);
+      --danger-light: #F87171;
       --info: #8B5CF6;
-      --bg-primary: #0F172A;
-      --bg-secondary: #1E293B;
-      --bg-card: rgba(30, 41, 59, 0.8);
-      --bg-input: rgba(51, 65, 85, 0.5);
-      --text-primary: #F1F5F9;
-      --text-secondary: #94A3B8;
-      --text-muted: #64748B;
-      --border: rgba(148, 163, 184, 0.15);
-      --border-focus: rgba(14, 165, 233, 0.5);
-      --glass-bg: rgba(30, 41, 59, 0.6);
-      --glass-border: rgba(148, 163, 184, 0.1);
+      --info-light: #A78BFA;
+      --bg-primary: #FFFFFF;
+      --bg-secondary: #F8FAFC;
+      --bg-card: rgba(255, 255, 255, 0.95);
+      --bg-input: rgba(241, 245, 249, 0.8);
+      --text-primary: #1E293B;
+      --text-secondary: #64748B;
+      --text-muted: #94A3B8;
+      --border: rgba(226, 232, 240, 0.8);
+      --border-focus: rgba(37, 99, 235, 0.5);
+      --glass-bg: rgba(255, 255, 255, 0.9);
+      --glass-border: rgba(226, 232, 240, 0.3);
     }
 
     * {
@@ -56,9 +60,9 @@
       width: 200%;
       height: 200%;
       background: 
-        radial-gradient(ellipse at 20% 20%, rgba(14, 165, 233, 0.08) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
-        radial-gradient(ellipse at 50% 50%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
+        radial-gradient(ellipse at 20% 20%, rgba(14, 165, 233, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.04) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
       animation: bgShift 25s ease-in-out infinite;
       z-index: 0;
     }

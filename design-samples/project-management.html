@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>项目管理 - 青泓项目勘察信息采集与审核系统</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Primary Colors - Trust Blue (matching sample) */
+      --primary: #2563EB;
+      --primary-light: #3B82F6;
+      --primary-lighter: #60A5FA;
+      --primary-dark: #1D4ED8;
+      --primary-glow: rgba(37, 99, 235, 0.25);
+
+      /* Accent Colors - Orange (matching sample) */
+      --accent: #F97316;
+      --accent-light: #FB923C;
+      --success: #10B981;
+      --success-light: #34D399;
+      --warning: #F59E0B;
+      --warning-light: #FBBF24;
+      --danger: #EF4444;
+      --danger-light: #F87171;
+      --info: #8B5CF6;
+      --info-light: #A78BFA;
+
+      /* Light Mode Colors (matching sample style) */
+      --bg-primary: #FFFFFF;
+      --bg-secondary: #F8FAFC;
+      --bg-tertiary: #F1F5F9;
+      --bg-card: rgba(255, 255, 255, 0.95);
+      --bg-card-hover: rgba(241, 245, 249, 0.98);
+      --bg-input: rgba(241, 245, 249, 0.8);
+
+      /* Text Colors (matching sample) */
+      --text-primary: #1E293B;
+      --text-secondary: #64748B;
+      --text-muted: #94A3B8;
+      --text-subtle: #CBD5E1;
+
+      /* Border & Glass (matching sample) */
+      --border: rgba(226, 232, 240, 0.8);
+      --border-light: rgba(241, 245, 249, 0.6);
+      --border-focus: rgba(37, 99, 235, 0.5);
+      --glass-bg: rgba(255, 255, 255, 0.9);
+      --glass-border: rgba(226, 232, 240, 0.3);
+
+      /* Spacing */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --radius-2xl: 24px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Animated Background */
+    .bg-effects {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .bg-effects::before {
+      content: '';
+      position: absolute;
+      top: -30%;
+      left: -20%;
+      width: 80%;
+      height: 80%;
+      background: radial-gradient(ellipse at center, rgba(37, 99, 235, 0.03) 0%, transparent 60%);
+      animation: float1 20s ease-in-out infinite;
+    }
+
+    .grid-pattern {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(226, 232, 240, 0.3) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(226, 232, 240, 0.3) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes float1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(10%, 10%) scale(1.05); }
+    }
+
+    .layout {
+      display: flex;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-right: 1px solid var(--glass-border);
+      padding: 24px 20px;
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 0 8px;
+      margin-bottom: 32px;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--info));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: white;
+    }
+
+    .logo-text {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .logo-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 12px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-input);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: rgba(37, 99, 235, 0.15);
+      color: var(--primary);
+    }
+
+    .nav-icon {
+      font-size: 18px;
+      width: 24px;
+      text-align: center;
+    }
+
+    .nav-badge {
+      margin-left: auto;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--danger);
+      color: white;
+    }
+
+    .main-content {
+      flex: 1;
+      margin-left: 280px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--glass-border);
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header-btn {
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+    }
+
+    .header-btn:active {
+      transform: scale(0.96);
+    }
+
+    .header-btn-secondary {
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .header-btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
+
+    .content {
+      flex: 1;
+      padding: 32px;
+      max-width: 1400px;
+    }
+
+    /* Search and Filters */
+    .filters-bar {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      flex: 1;
+      min-width: 300px;
+      padding: 12px 16px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .search-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .filter-select {
+      padding: 12px 16px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .filter-select:focus {
+      border-color: var(--border-focus);
+    }
+
+    /* Projects Grid */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 24px;
+    }
+
+    .project-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 24px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .project-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+      border-color: rgba(37, 99, 235, 0.2);
+    }
+
+    .project-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .project-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .project-icon.blue {
+      background: rgba(37, 99, 235, 0.15);
+      color: var(--primary);
+    }
+
+    .project-icon.green {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+
+    .project-icon.orange {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+
+    .project-icon.purple {
+      background: rgba(139, 92, 246, 0.15);
+      color: var(--info);
+    }
+
+    .project-status {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .project-status.active {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
+    }
+
+    .project-status.pending {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+
+    .project-status.completed {
+      background: rgba(37, 99, 235, 0.15);
+      color: var(--primary);
+    }
+
+    .project-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .project-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .project-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .project-stats {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .project-stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .project-progress {
+      margin-top: 16px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: var(--bg-input);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 80px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+    }
+
+    .empty-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .empty-desc {
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .empty-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .empty-action:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px var(--primary-glow);
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar {
+        display: none;
+      }
+
+      .main-content {
+        margin-left: 0;
+      }
+
+      .projects-grid {
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      }
+    }
+
+    @media (max-width: 768px) {
+      .content {
+        padding: 16px;
+      }
+
+      .filters-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .search-input {
+        min-width: auto;
+      }
+
+      .projects-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .header {
+        padding: 16px;
+      }
+
+      .page-title {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-effects"></div>
+  <div class="grid-pattern"></div>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">🌊</div>
+        <div>
+          <div class="logo-text">青泓勘察</div>
+          <div class="logo-sub">Survey System</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="nav-item">
+          <span class="nav-icon">📊</span>
+          <span>数据仪表板</span>
+        </a>
+        <a href="#" class="nav-item active">
+          <span class="nav-icon">📋</span>
+          <span>项目管理</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">📍</span>
+          <span>点位管理</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">✅</span>
+          <span>数据审核</span>
+          <span class="nav-badge">12</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">📈</span>
+          <span>统计分析</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">📁</span>
+          <span>报告管理</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">👥</span>
+          <span>人员管理</span>
+        </a>
+        <a href="#" class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          <span>系统设置</span>
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <div>
+            <h1 class="page-title">项目管理</h1>
+            <div class="page-subtitle">管理勘察项目的创建、编辑和进度跟踪</div>
+          </div>
+        </div>
+        <div class="header-right">
+          <button class="header-btn header-btn-secondary">📥 导入</button>
+          <button class="header-btn header-btn-primary">➕ 新建项目</button>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="content">
+        <!-- Filters Bar -->
+        <div class="filters-bar">
+          <input type="text" class="search-input" placeholder="搜索项目名称、地点或负责人...">
+          <select class="filter-select">
+            <option value="">所有状态</option>
+            <option value="active">进行中</option>
+            <option value="pending">待开始</option>
+            <option value="completed">已完成</option>
+          </select>
+          <select class="filter-select">
+            <option value="">所有类型</option>
+            <option value="water">水质勘察</option>
+            <option value="soil">土壤勘察</option>
+            <option value="air">空气勘察</option>
+          </select>
+          <select class="filter-select">
+            <option value="">时间范围</option>
+            <option value="week">本周</option>
+            <option value="month">本月</option>
+            <option value="quarter">本季度</option>
+          </select>
+        </div>
+
+        <!-- Projects Grid -->
+        <div class="projects-grid">
+          <!-- Project Card 1 -->
+          <div class="project-card">
+            <div class="project-header">
+              <div class="project-icon blue">💧</div>
+              <div class="project-status active">进行中</div>
+            </div>
+            <div class="project-title">河道水质勘察A标</div>
+            <div class="project-desc">对A标段河道进行全面水质监测，包括pH值、溶解氧、COD等指标的采集与分析。</div>
+            <div class="project-meta">
+              <div class="project-stats">
+                <div class="project-stat">📍 河道A段</div>
+                <div class="project-stat">👤 张工</div>
+                <div class="project-stat">📅 2024-03-15</div>
+              </div>
+            </div>
+            <div class="project-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 75%"></div>
+              </div>
+              <div class="progress-text">75% 已完成 (18/24 采样点)</div>
+            </div>
+          </div>
+
+          <!-- Project Card 2 -->
+          <div class="project-card">
+            <div class="project-header">
+              <div class="project-icon green">🌱</div>
+              <div class="project-status active">进行中</div>
+            </div>
+            <div class="project-title">工业园区土壤检测</div>
+            <div class="project-desc">对工业园区周边土壤进行重金属含量检测，评估环境影响。</div>
+            <div class="project-meta">
+              <div class="project-stats">
+                <div class="project-stat">📍 工业园区</div>
+                <div class="project-stat">👤 李工</div>
+                <div class="project-stat">📅 2024-03-10</div>
+              </div>
+            </div>
+            <div class="project-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 45%"></div>
+              </div>
+              <div class="progress-text">45% 已完成 (9/20 采样点)</div>
+            </div>
+          </div>
+
+          <!-- Project Card 3 -->
+          <div class="project-card">
+            <div class="project-header">
+              <div class="project-icon orange">🏭</div>
+              <div class="project-status pending">待开始</div>
+            </div>
+            <div class="project-title">城市空气质量监测</div>
+            <div class="project-desc">在城市主要路段设置空气质量监测点，实时监测PM2.5、PM10等指标。</div>
+            <div class="project-meta">
+              <div class="project-stats">
+                <div class="project-stat">📍 城市中心</div>
+                <div class="project-stat">👤 王工</div>
+                <div class="project-stat">📅 2024-04-01</div>
+              </div>
+            </div>
+            <div class="project-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 10%"></div>
+              </div>
+              <div class="progress-text">10% 准备中 (设备采购)</div>
+            </div>
+          </div>
+
+          <!-- Project Card 4 -->
+          <div class="project-card">
+            <div class="project-header">
+              <div class="project-icon purple">🌊</div>
+              <div class="project-status completed">已完成</div>
+            </div>
+            <div class="project-title">湖泊生态评估</div>
+            <div class="project-desc">对城市湖泊进行生态系统评估，包括水生生物多样性和水质综合评价。</div>
+            <div class="project-meta">
+              <div class="project-stats">
+                <div class="project-stat">📍 城市湖泊</div>
+                <div class="project-stat">👤 陈工</div>
+                <div class="project-stat">📅 2024-02-20</div>
+              </div>
+            </div>
+            <div class="project-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 100%"></div>
+              </div>
+              <div class="progress-text">100% 已完成 (报告已提交)</div>
+            </div>
+          </div>
+
+          <!-- Project Card 5 -->
+          <div class="project-card">
+            <div class="project-header">
+              <div class="project-icon blue">🏗️</div>
+              <div class="project-status active">进行中</div>
+            </div>
+            <div class="project-title">建设用地土壤调查</div>
+            <div class="project-desc">为新工业园区建设进行土壤环境背景调查，确保建设用地环境安全。</div>
+            <div class="project-meta">
+              <div class="project-stats">
+                <div class="project-stat">📍 新工业区</div>
+                <div class="project-stat">👤 刘工</div>
+                <div class="project-stat">📅 2024-03-01</div>
+              </div>
+            </div>
+            <div class="project-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 60%"></div>
+              </div>
+              <div class="progress-text">60% 已完成 (15/25 采样点)</div>
+            </div>
+          </div>
+
+          <!-- Project Card 6 -->
+          <div class="project-card">
+            <div class="project-header">
+              <div class="project-icon green">🌿</div>
+              <div class="project-status active">进行中</div>
+            </div>
+            <div class="project-title">农业用地重金属检测</div>
+            <div class="project-desc">对农业种植区土壤进行重金属含量检测，保障农产品质量安全。</div>
+            <div class="project-meta">
+              <div class="project-stats">
+                <div class="project-stat">📍 农业园区</div>
+                <div class="project-stat">👤 赵工</div>
+                <div class="project-stat">📅 2024-03-08</div>
+              </div>
+            </div>
+            <div class="project-progress">
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 30%"></div>
+              </div>
+              <div class="progress-text">30% 已完成 (6/20 采样点)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

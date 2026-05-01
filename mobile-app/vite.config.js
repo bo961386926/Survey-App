@@ -1,9 +1,22 @@
 import { defineConfig } from 'vite'
-import uniPlugin from '@dcloudio/vite-plugin-uni'
+import vue from '@vitejs/plugin-vue'
+import { resolve } from 'path'
 
 export default defineConfig({
-  plugins: [uniPlugin.default || uniPlugin],
+  plugins: [vue()],
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src')
+    }
+  },
   server: {
-    port: 8081
+    port: 3000,
+    host: '0.0.0.0',
+    proxy: {
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true
+      }
+    }
   }
 })
