@@ -153,6 +153,7 @@ const AUTH_PAGES = [
   'pages/point-detail/point-detail',
   'pages/point-map/point-map',
   'pages/survey/survey',
+  'pages/survey/survey-list',
   'pages/draft/draft-list',
   'pages/audit/audit-list',
   'pages/audit/audit-detail',

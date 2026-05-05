@@ -1,8 +1,12 @@
 package com.qhiot.survey.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.Version;
 import lombok.Data;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -43,6 +47,22 @@ public class SysUser implements Serializable {
     private LocalDateTime createTime;
     
     private LocalDateTime updateTime;
+    
+    @TableLogic
+    private Integer isDeleted;
+    
+    @Version
+    private Integer version;
+    
+    @TableField(fill = FieldFill.INSERT)
+    private String createBy;
+    
+    @TableField(fill = FieldFill.INSERT_UPDATE)
+    private String updateBy;
+    
+    private LocalDateTime deletedTime;
+    
+    private String deletedBy;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

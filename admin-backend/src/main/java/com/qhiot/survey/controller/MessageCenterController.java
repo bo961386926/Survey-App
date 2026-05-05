@@ -17,7 +17,7 @@ import java.util.List;
  */
 @Tag(name = "消息中心", description = "消息通知管理")
 @RestController
-@RequestMapping("/api/message")
+@RequestMapping("/api/v1/message")
 public class MessageCenterController {
 
     @Autowired

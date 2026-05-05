@@ -1,0 +1,57 @@
+server:
+  port: 8080
+
+jwt:
+  secret: survey-system-secret-key-2024-survey-system-secret-key-2024
+  expiration: 7200000
+  refresh-expiration: 604800000
+
+spring:
+  application:
+    name: survey-admin
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:survey_db;DB_CLOSE_DELAY=-1;MODE=MySQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password: 
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  sql:
+    init:
+      mode: always
+      continue-on-error: true
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/*.xml
+  type-aliases-package: com.qhiot.survey.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+aliyun:
+  oss:
+    endpoint: oss-cn-hangzhou.aliyuncs.com
+    access-key-id: ${OSS_ACCESS_KEY_ID:your-access-key-id}
+    access-key-secret: ${OSS_ACCESS_KEY_SECRET:your-access-key-secret}
+    bucket-name: ${OSS_BUCKET_NAME:survey-images}
+    folder: survey/
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    swagger-model-name: 实体类列表
+
+logging:
+  level:
+    com.qhiot.survey: debug
+    root: info

@@ -1,0 +1,40 @@
+# ========================================
+# 快速Dockerfile - 仅打包，不编译
+# 前提：需要先在本地编译好jar包
+# ========================================
+
+FROM eclipse-temurin:17-jre
+
+# 创建非root用户
+RUN groupadd -r appgroup && useradd -r -g appgroup appuser
+
+WORKDIR /app
+
+# 直接复制已编译的jar包
+COPY target/survey-admin-1.0.0.jar app.jar
+
+# 设置时区
+ENV TZ=Asia/Shanghai
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# 暴露端口
+EXPOSE 8080
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+  CMD wget -qO- http://localhost:8080/api/v1/health || exit 1
+
+# 切换到非root用户
+USER appuser
+
+# JVM优化参数
+ENTRYPOINT ["java", \
+  "-Xms256m", \
+  "-Xmx512m", \
+  "-XX:+UseG1GC", \
+  "-XX:MaxGCPauseMillis=200", \
+  "-XX:+HeapDumpOnOutOfMemoryError", \
+  "-XX:HeapDumpPath=/app/logs/heap_dump.hprof", \
+  "-Djava.security.egd=file:/dev/./urandom", \
+  "-jar", "app.jar", \
+  "--spring.profiles.active=prod"]

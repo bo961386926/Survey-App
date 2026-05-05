@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
  */
 @Tag(name = "操作日志", description = "操作日志查询")
 @RestController
-@RequestMapping("/api/log/operation")
+@RequestMapping("/api/v1/log/operation")
 public class OperationLogController {
 
     @Autowired

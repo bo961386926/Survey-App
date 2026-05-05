@@ -16,7 +16,7 @@ import java.util.List;
  */
 @Tag(name = "角色管理", description = "角色权限管理")
 @RestController
-@RequestMapping("/api/role")
+@RequestMapping("/api/v1/role")
 public class SysRoleController {
 
     @Autowired

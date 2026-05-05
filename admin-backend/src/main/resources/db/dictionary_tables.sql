@@ -1,4 +1,4 @@
--- 数据字典分类表
+b执行-- 数据字典分类表
 CREATE TABLE IF NOT EXISTS `sys_dictionary` (
   `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '字典ID',
   `dict_code` VARCHAR(64) NOT NULL COMMENT '字典代码（唯一标识）',

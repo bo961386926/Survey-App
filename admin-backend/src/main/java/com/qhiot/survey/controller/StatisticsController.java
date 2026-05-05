@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/statistics")
+@RequestMapping("/api/v1/statistics")
 public class StatisticsController {
 
     @Autowired

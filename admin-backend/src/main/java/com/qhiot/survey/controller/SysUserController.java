@@ -17,6 +17,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,7 @@ import java.util.Map;
  */
 @Tag(name = "系统用户管理", description = "用户增删改查、状态管理、密码重置等接口")
 @RestController
-@RequestMapping("/api/user")
+@RequestMapping(value = "/api/v1/user", produces = "application/json;charset=UTF-8")
 @RequiredArgsConstructor
 public class SysUserController {
 
@@ -34,7 +35,7 @@ public class SysUserController {
     private final PasswordEncoder passwordEncoder;
 
     @Operation(summary = "分页查询用户列表")
-    @GetMapping("/page")
+    @GetMapping(value = "/page", produces = "application/json;charset=UTF-8")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<PageResult<SysUser>> queryUserPage(
             @RequestParam(required = false) String username,
@@ -46,7 +47,7 @@ public class SysUserController {
     }
 
     @Operation(summary = "获取用户列表")
-    @GetMapping("/list")
+    @GetMapping(value = "/list", produces = "application/json;charset=UTF-8")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<List<SysUser>> getUserList() {
         List<SysUser> users = sysUserService.getUserList();
@@ -107,9 +108,11 @@ public class SysUserController {
     @Operation(summary = "重置用户密码")
     @PutMapping("/reset-password/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public Result<Boolean> resetPassword(@PathVariable Long id, @RequestParam String newPassword) {
-        String encodedPassword = passwordEncoder.encode(newPassword);
-        boolean success = sysUserService.resetPassword(id, encodedPassword);
+    public Result<Boolean> resetPassword(
+        @PathVariable Long id, 
+        @Valid @RequestBody com.qhiot.survey.dto.ResetPasswordRequest request
+    ) {
+        boolean success = sysUserService.resetPassword(id, request.getNewPassword());
         return success ? Result.success(true) : Result.error("重置密码失败");
     }
 

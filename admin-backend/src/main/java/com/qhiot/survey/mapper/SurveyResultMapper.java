@@ -14,6 +14,11 @@ public interface SurveyResultMapper extends BaseMapper<SurveyResult> {
      * @param pointId 点位ID
      * @return 最新的已审核结果
      */
-    @Select("SELECT * FROM survey_result WHERE point_id = #{pointId} AND result_status = 3 ORDER BY version_no DESC LIMIT 1")
+    @Select("SELECT id, point_id, form_data, audit_status, version_no, " +
+            "submit_time, audit_time, auditor_id, remark, " +
+            "create_time, update_time, create_by, update_by " +
+            "FROM survey_result " +
+            "WHERE point_id = #{pointId} AND audit_status = 3 " +
+            "ORDER BY version_no DESC LIMIT 1")
     SurveyResult selectLatestByPointId(@Param("pointId") Long pointId);
 }

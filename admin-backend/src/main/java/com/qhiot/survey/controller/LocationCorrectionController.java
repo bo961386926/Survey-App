@@ -16,7 +16,7 @@ import java.util.List;
  */
 @Tag(name = "位置纠偏", description = "地图纠偏轨迹管理")
 @RestController
-@RequestMapping("/api/location-correction")
+@RequestMapping("/api/v1/location-correction")
 public class LocationCorrectionController {
 
     @Autowired

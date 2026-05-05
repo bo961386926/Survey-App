@@ -13,13 +13,18 @@ import org.springframework.stereotype.Service;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 短信验证码服务实现
+ * 短信验证码服务实现（Mock版本 - 用于开发环境）
  * 
- * 注意：实际项目中需要接入真实的短信服务（如阿里云、腾讯云等）
- * 当前实现使用Redis存储验证码，仅用于开发测试
+ * 注意：此实现仅用于开发测试，验证码会打印到日志中
+ * 生产环境请使用 AliyunSmsCodeServiceImpl（需在application.yml中配置 aliyun.sms.enabled=true）
  */
 @Slf4j
 @Service
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+    name = "aliyun.sms.enabled", 
+    havingValue = "false", 
+    matchIfMissing = true
+)
 @RequiredArgsConstructor
 public class SmsCodeServiceImpl implements SmsCodeService {
 
@@ -59,8 +64,9 @@ public class SmsCodeServiceImpl implements SmsCodeService {
         // 设置发送间隔
         redisTemplate.opsForValue().set(intervalKey, "1", SEND_INTERVAL_SECONDS, TimeUnit.SECONDS);
 
-        // TODO: 接入真实短信服务，发送验证码
-        log.info("发送短信验证码: phone={}, scene={}, code={}", phone, scene, code);
+        // Mock模式：打印验证码到日志（开发环境使用）
+        log.info("📱 [Mock短信服务] 发送验证码: phone={}, scene={}, code={}", phone, scene, code);
+        log.info("⚠️  提示：这是Mock实现，生产环境请配置 aliyun.sms.enabled=true 接入真实短信服务");
 
         return true;
     }

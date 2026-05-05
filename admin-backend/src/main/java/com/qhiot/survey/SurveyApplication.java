@@ -1,4 +1,4 @@
-package com.survey;
+package com.qhiot.survey;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.survey", "com.qhiot.survey"})
+@ComponentScan(basePackages = {"com.qhiot.survey", "com.qhiot.survey"})
 @MapperScan("com.qhiot.survey.mapper")
 @EnableAsync
 @EnableScheduling

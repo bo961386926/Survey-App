@@ -4,7 +4,7 @@
  */
 
 // 基础配置
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api/v1'
 const TIMEOUT = 10000
 
 /**
@@ -223,58 +223,64 @@ export const projectApi = {
   // 获取项目列表
   getList: (params) => get('/project/list', params),
   // 获取项目详情
-  getDetail: (id) => get(`/project/${id}`)
+  getDetail: (id) => get(`/project/${id}`),
+  // 获取项目统计信息
+  getStatistics: (id) => get(`/project/${id}/statistics`),
+  // 获取项目进度
+  getProgress: (id) => get(`/project/${id}/progress`)
 }
 
 // 点位相关
 export const pointApi = {
   // 获取点位列表
-  getList: (params) => get('/survey-point/list', params),
+  getList: (params) => get('/point/list', params),
   // 获取点位详情
-  getDetail: (id) => get(`/survey-point/${id}`),
+  getDetail: (id) => get(`/point/${id}`),
   // 获取我的点位
-  getMyPoints: (params) => get('/survey-point/my', params),
+  getMyPoints: (params) => get('/point/my', params),
   // 开始采集（认领任务）
-  startCollect: (id) => post(`/survey-point/${id}/start`),
+  startCollect: (id) => post(`/point/${id}/start`),
   // 获取点位地图数据
-  getMapData: (params) => get('/survey-point/map', params)
+  getMapData: (params) => get('/point/map', params)
 }
 
 // 采集结果相关
 export const resultApi = {
-  // 别名，兼容旧代码
+  // 别名,兼容旧代码
+  // 获取我的勘查结果列表
+  getMyResults: (params) => get('/result/my', params)
 }
 
 // 审核结果相关（别名，与resultApi相同）
 export const surveyResultApi = {
   // 获取采集结果
-  getDetail: (id) => get(`/survey-result/${id}`),
+  getDetail: (id) => get(`/result/${id}`),
   // 保存草稿
-  saveDraft: (data) => post('/survey-result/draft', data),
+  saveDraft: (data) => post('/result/draft', data),
   // 提交审核
-  submit: (data) => post('/survey-result/submit', data),
+  submit: (data) => post('/result/submit', data),
   // 获取版本历史
-  getVersionHistory: (pointId) => get(`/survey-result/versions/${pointId}`),
+  getVersionHistory: (pointId) => get(`/result/versions/${pointId}`),
   // 获取驳回意见
-  getRejectReason: (resultId) => get(`/survey-result/reject-reason/${resultId}`)
+  getRejectReason: (resultId) => get(`/result/reject-reason/${resultId}`)
 }
 
 // 模板相关
 export const templateApi = {
   // 获取模板详情
-  getDetail: (id) => get(`/survey-template/${id}`),
+  getDetail: (id) => get(`/template/${id}`),
   // 根据排口类型获取模板
-  getByOutfallType: (outfallType) => get(`/survey-template/outfall/${outfallType}`)
+  getByOutfallType: (outfallType) => get(`/template/outfall/${outfallType}`)
 }
 
 // 审核相关
 export const auditApi = {
   // 获取审核列表
-  getList: (params) => get('/survey-audit/list', params),
+  getList: (params) => get('/audit/list', params),
   // 获取审核详情
-  getDetail: (id) => get(`/survey-audit/${id}`),
+  getDetail: (id) => get(`/audit/${id}`),
   // 获取版本差异
-  getVersionDiff: (resultId, compareId) => get(`/survey-audit/diff/${resultId}`, { compareId })
+  getVersionDiff: (resultId, compareId) => get(`/audit/diff/${resultId}`, { compareId })
 }
 
 // 消息相关
@@ -300,7 +306,7 @@ export const locationApi = {
 // 字典相关
 export const dictApi = {
   // 获取字典数据
-  getData: (dictType) => get(`/sys-dictionary/data/${dictType}`)
+  getData: (dictType) => get(`/dictionary/data/${dictType}`)
 }
 
 // 默认导出

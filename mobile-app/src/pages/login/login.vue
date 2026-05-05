@@ -118,9 +118,9 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { authApi } from '@/utils/api'
-import { saveToken, saveUserInfo, saveLoginType } from '@/utils/auth'
+import { saveToken, saveUserInfo, saveLoginType, isLogin } from '@/utils/auth'
 
 const loginType = ref('password') // password | sms
 const loading = ref(false)
@@ -137,6 +137,13 @@ const loginForm = reactive({
 const smsCounting = ref(false)
 const smsCountdown = ref(0)
 let smsTimer = null
+
+onMounted(() => {
+  // 如果已登录，直接跳转到首页
+  if (isLogin()) {
+    uni.switchTab({ url: '/pages/home/home' })
+  }
+})
 
 // 发送短信验证码
 async function sendSmsCode() {
@@ -206,19 +213,28 @@ async function handleLogin() {
       })
     }
     
+    console.log('登录结果:', result)
+    
     // 保存登录信息
-    saveToken(result.token)
-    saveUserInfo(result.user)
+    saveToken(result.token || result.accessToken)
+    saveUserInfo(result.user || result.userInfo || result)
     saveLoginType(result.loginType || 'internal')
     
     uni.showToast({ title: '登录成功', icon: 'success' })
     
     // 跳转到首页
     setTimeout(() => {
-      uni.switchTab({ url: '/pages/home/home' })
+      uni.switchTab({ 
+        url: '/pages/home/home',
+        fail: (err) => {
+          console.error('跳转失败:', err)
+          uni.reLaunch({ url: '/pages/home/home' })
+        }
+      })
     }, 500)
   } catch (error) {
-    uni.showToast({ title: error.message || '登录失败', icon: 'none' })
+    console.error('登录失败:', error)
+    uni.showToast({ title: error.message || '登录失败，请检查网络连接', icon: 'none', duration: 2000 })
   } finally {
     loading.value = false
   }

@@ -3,6 +3,8 @@ package com.qhiot.survey.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.qhiot.survey.common.BusinessException;
+import com.qhiot.survey.common.ResultCode;
 import com.qhiot.survey.dto.PageResult;
 import com.qhiot.survey.dto.ProjectCreateRequest;
 import com.qhiot.survey.dto.ProjectQueryRequest;
@@ -98,12 +100,12 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     public boolean updateProject(Long id, ProjectCreateRequest request) {
         Project project = getById(id);
         if (project == null) {
-            throw new RuntimeException("项目不存在");
+            throw new BusinessException(ResultCode.PROJECT_NOT_FOUND);
         }
         
         // 已归档的项目不允许修改
         if (project.getStatus() == STATUS_ARCHIVED) {
-            throw new RuntimeException("已归档的项目不允许修改");
+            throw new BusinessException("已归档的项目不允许修改");
         }
         
         project.setProjectName(request.getProjectName());
@@ -122,12 +124,12 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     public boolean deleteProject(Long id) {
         Project project = getById(id);
         if (project == null) {
-            throw new RuntimeException("项目不存在");
+            throw new BusinessException(ResultCode.PROJECT_NOT_FOUND);
         }
         
         // 只有草稿状态的项目可以删除
         if (project.getStatus() != STATUS_DRAFT) {
-            throw new RuntimeException("只有草稿状态的项目可以删除");
+            throw new BusinessException("只有草稿状态的项目可以删除");
         }
         
         return removeById(id);
@@ -143,14 +145,14 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     public boolean changeStatus(Long id, Integer targetStatus) {
         Project project = getById(id);
         if (project == null) {
-            throw new RuntimeException("项目不存在");
+            throw new BusinessException(ResultCode.PROJECT_NOT_FOUND);
         }
         
         int currentStatus = project.getStatus();
         
         // 状态机校验
         if (!isValidTransition(currentStatus, targetStatus)) {
-            throw new RuntimeException("不允许的状态转换: " + currentStatus + " -> " + targetStatus);
+            throw new BusinessException("不允许的状态转换: " + currentStatus + " -> " + targetStatus);
         }
         
         project.setStatus(targetStatus);
@@ -182,7 +184,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     public Map<String, Object> getProjectStatistics(Long id) {
         Project project = getById(id);
         if (project == null) {
-            throw new RuntimeException("项目不存在");
+            throw new BusinessException(ResultCode.PROJECT_NOT_FOUND);
         }
         
         Map<String, Object> statistics = new HashMap<>();
@@ -210,12 +212,12 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     public boolean archiveProject(Long id) {
         Project project = getById(id);
         if (project == null) {
-            throw new RuntimeException("项目不存在");
+            throw new BusinessException(ResultCode.PROJECT_NOT_FOUND);
         }
         
         // 只有已完成的项目可以归档
         if (project.getStatus() != STATUS_COMPLETED) {
-            throw new RuntimeException("只有已完成的项目可以归档");
+            throw new BusinessException("只有已完成的项目可以归档");
         }
         
         project.setStatus(STATUS_ARCHIVED);
@@ -229,12 +231,12 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     public boolean restoreProject(Long id) {
         Project project = getById(id);
         if (project == null) {
-            throw new RuntimeException("项目不存在");
+            throw new BusinessException(ResultCode.PROJECT_NOT_FOUND);
         }
         
         // 只有已归档的项目可以恢复
         if (project.getStatus() != STATUS_ARCHIVED) {
-            throw new RuntimeException("只有已归档的项目可以恢复");
+            throw new BusinessException("只有已归档的项目可以恢复");
         }
         
         project.setStatus(STATUS_COMPLETED);

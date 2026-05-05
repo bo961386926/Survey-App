@@ -15,7 +15,7 @@ import java.util.List;
  */
 @Tag(name = "导出任务", description = "异步导出任务管理")
 @RestController
-@RequestMapping("/api/export")
+@RequestMapping("/api/v1/export")
 public class ExportTaskController {
 
     @Autowired

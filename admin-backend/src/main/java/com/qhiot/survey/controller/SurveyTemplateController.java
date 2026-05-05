@@ -19,7 +19,7 @@ import java.util.Map;
  */
 @Tag(name = "模板管理", description = "勘查模板管理相关接口")
 @RestController
-@RequestMapping("/api/template")
+@RequestMapping("/api/v1/template")
 public class SurveyTemplateController {
 
     @Autowired

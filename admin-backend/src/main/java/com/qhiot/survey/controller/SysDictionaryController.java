@@ -17,7 +17,7 @@ import java.util.Map;
  */
 @Tag(name = "数据字典分类管理", description = "数据字典分类管理相关接口")
 @RestController
-@RequestMapping("/api/dictionary")
+@RequestMapping("/api/v1/dictionary")
 public class SysDictionaryController {
 
     @Autowired

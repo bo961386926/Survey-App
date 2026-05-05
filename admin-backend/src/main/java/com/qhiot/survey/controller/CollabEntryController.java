@@ -16,7 +16,7 @@ import java.util.List;
  */
 @Tag(name = "协作入口", description = "第三方协作入口管理")
 @RestController
-@RequestMapping("/api/collab")
+@RequestMapping("/api/v1/collab")
 public class CollabEntryController {
 
     @Autowired

@@ -2,6 +2,8 @@ package com.qhiot.survey.service.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qhiot.survey.common.BusinessException;
+import com.qhiot.survey.common.ResultCode;
 import com.qhiot.survey.common.util.PdfGeneratorUtil;
 import com.qhiot.survey.entity.ExportTask;
 import com.qhiot.survey.entity.SurveyPoint;
@@ -159,7 +161,7 @@ public class ExportTaskServiceImpl extends ServiceImpl<ExportTaskMapper, ExportT
             // 1. 查询点位数据
             SurveyPoint point = surveyPointMapper.selectById(pointId);
             if (point == null) {
-                throw new RuntimeException("点位不存在: " + pointId);
+                throw new BusinessException(ResultCode.POINT_NOT_FOUND);
             }
 
             // 2. 查询勘察结果数据

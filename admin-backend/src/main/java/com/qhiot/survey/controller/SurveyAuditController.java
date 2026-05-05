@@ -17,7 +17,7 @@ import java.util.List;
  */
 @Tag(name = "审核中心", description = "审核相关接口")
 @RestController
-@RequestMapping("/api/audit")
+@RequestMapping("/api/v1/audit")
 public class SurveyAuditController {
 
     @Autowired

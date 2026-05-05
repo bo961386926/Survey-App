@@ -272,6 +272,7 @@ CREATE TABLE IF NOT EXISTS sys_role (
   role_name VARCHAR(100) NOT NULL COMMENT '角色名称',
   permissions JSON COMMENT '权限列表',
   status TINYINT DEFAULT 1 COMMENT '1正常 0禁用',
+  sort INT DEFAULT 0 COMMENT '排序',
   create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
   update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色表';
@@ -305,6 +306,12 @@ CREATE TABLE IF NOT EXISTS sys_user (
   last_login_time DATETIME COMMENT '最后登录时间',
   create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
   update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  is_deleted TINYINT DEFAULT 0 COMMENT '1已删除 0未删除',
+  version INT DEFAULT 0 COMMENT '乐观锁版本',
+  create_by VARCHAR(50) COMMENT '创建者',
+  update_by VARCHAR(50) COMMENT '更新者',
+  deleted_time DATETIME COMMENT '删除时间',
+  deleted_by VARCHAR(50) COMMENT '删除者',
   INDEX idx_username (username),
   INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
@@ -403,15 +410,15 @@ CREATE TABLE IF NOT EXISTS sys_config (
 
 -- 插入默认管理员用户 (密码: admin123)
 INSERT IGNORE INTO sys_user (username, password, real_name, role, is_first_login) 
-VALUES ('admin', '$2a$10$N7wKfVvGZx7jZ7jZ7jZ7jO7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ', '系统管理员', 1, 0);
+VALUES ('admin', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '系统管理员', 1, 0);
 
 -- 插入测试用户数据 (密码: admin123)
 INSERT IGNORE INTO sys_user (username, password, real_name, role, status) VALUES
-('surveyor1', '$2a$10$N7wKfVvGZx7jZ7jZ7jZ7jO7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ', '张志明', 2, 1),
-('surveyor2', '$2a$10$N7wKfVvGZx7jZ7jZ7jZ7jO7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ', '李晓华', 2, 1),
-('surveyor3', '$2a$10$N7wKfVvGZx7jZ7jZ7jZ7jO7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ', '王建国', 2, 1),
-('reviewer1', '$2a$10$N7wKfVvGZx7jZ7jZ7jZ7jO7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ', '陈美丽', 3, 1),
-('reviewer2', '$2a$10$N7wKfVvGZx7jZ7jZ7jZ7jO7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ7jZ', '刘强', 3, 1);
+('surveyor1', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '张志明', 2, 1),
+('surveyor2', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '李晓华', 2, 1),
+('surveyor3', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '王建国', 2, 1),
+('reviewer1', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '陈美丽', 3, 1),
+('reviewer2', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '刘强', 3, 1);
 
 -- 插入默认角色
 INSERT IGNORE INTO sys_role (role_code, role_name, permissions) VALUES

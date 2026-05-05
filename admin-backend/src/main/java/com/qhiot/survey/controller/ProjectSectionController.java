@@ -17,7 +17,7 @@ import java.util.Map;
  */
 @Tag(name = "标段管理", description = "项目标段管理相关接口")
 @RestController
-@RequestMapping("/api/section")
+@RequestMapping("/api/v1/section")
 public class ProjectSectionController {
 
     @Autowired

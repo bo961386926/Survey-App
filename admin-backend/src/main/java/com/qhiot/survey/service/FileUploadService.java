@@ -2,18 +2,22 @@ package com.qhiot.survey.service;
 
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.model.PutObjectResult;
+import com.qhiot.survey.common.util.ImageWatermarkUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class FileUploadService {
 
@@ -29,7 +33,23 @@ public class FileUploadService {
     @Value("${file.upload.path:./uploads}")
     private String localUploadPath;
 
+    /**
+     * 上传文件（不带水印）
+     */
     public String uploadFile(MultipartFile file) throws IOException {
+        return uploadFile(file, null, null, null);
+    }
+
+    /**
+     * 上传文件（带水印）
+     *
+     * @param file      文件
+     * @param collector 采集人姓名
+     * @param longitude 经度
+     * @param latitude  纬度
+     * @return 文件URL
+     */
+    public String uploadFile(MultipartFile file, String collector, Double longitude, Double latitude) throws IOException {
         // 生成唯一文件名
         String originalFilename = file.getOriginalFilename();
         String extension = originalFilename != null && originalFilename.contains(".") 
@@ -37,10 +57,29 @@ public class FileUploadService {
                 : ".jpg";
         String fileName = UUID.randomUUID().toString() + extension;
 
+        InputStream inputStream;
+        
+        // 如果是图片且提供了水印信息，则添加水印
+        boolean isImage = extension.matches("(?i)\\.(jpg|jpeg|png|gif|bmp|webp)");
+        if (isImage && collector != null) {
+            try {
+                log.info("为图片添加水印: 采集人={}, 经度={}, 纬度={}", collector, longitude, latitude);
+                byte[] watermarkedBytes = ImageWatermarkUtil.addWatermark(
+                    file.getInputStream(), collector, longitude, latitude
+                );
+                inputStream = new ByteArrayInputStream(watermarkedBytes);
+            } catch (Exception e) {
+                log.error("添加水印失败，使用原图上传: {}", e.getMessage(), e);
+                inputStream = file.getInputStream();
+            }
+        } else {
+            inputStream = file.getInputStream();
+        }
+
         // 如果OSS客户端可用，使用OSS存储
         if (ossClient != null) {
             String ossKey = folder + "/" + fileName;
-            PutObjectResult result = ossClient.putObject(bucketName, ossKey, file.getInputStream());
+            PutObjectResult result = ossClient.putObject(bucketName, ossKey, inputStream);
             if (result != null) {
                 return "https://" + bucketName + ".oss-" + getRegion() + ".aliyuncs.com/" + ossKey;
             }
@@ -52,7 +91,7 @@ public class FileUploadService {
             Files.createDirectories(uploadPath);
         }
         Path targetPath = uploadPath.resolve(fileName);
-        file.transferTo(targetPath.toFile());
+        Files.copy(inputStream, targetPath);
         return "/api/files/" + fileName;
     }
 

@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/file")
+@RequestMapping("/api/v1/file")
 public class FileUploadController {
 
     @Autowired

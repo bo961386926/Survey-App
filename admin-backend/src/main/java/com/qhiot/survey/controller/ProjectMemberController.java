@@ -18,7 +18,7 @@ import java.util.Map;
  */
 @Tag(name = "项目成员管理")
 @RestController
-@RequestMapping("/api/project/{projectId}/members")
+@RequestMapping("/api/v1/project/{projectId}/members")
 @RequiredArgsConstructor
 public class ProjectMemberController {
 

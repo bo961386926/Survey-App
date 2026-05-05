@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qhiot.survey.common.BusinessException;
 import com.qhiot.survey.common.util.ExcelUtil;
+import com.qhiot.survey.common.util.PasswordGenerator;
 import com.qhiot.survey.dto.PageResult;
 import com.qhiot.survey.entity.SysUser;
 import com.qhiot.survey.mapper.SysUserMapper;
@@ -12,7 +13,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
@@ -25,9 +28,11 @@ import java.util.Map;
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
 
     private final PasswordEncoder passwordEncoder;
+    private final StringRedisTemplate redisTemplate;
 
-    public SysUserServiceImpl(PasswordEncoder passwordEncoder) {
+    public SysUserServiceImpl(PasswordEncoder passwordEncoder, StringRedisTemplate redisTemplate) {
         this.passwordEncoder = passwordEncoder;
+        this.redisTemplate = redisTemplate;
     }
 
     /**
@@ -57,6 +62,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean createUser(SysUser user) {
         // 检查用户名是否已存在
         if (getUserByUsername(user.getUsername()) != null) {
@@ -68,6 +74,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean updateUser(SysUser user) {
         SysUser existing = getById(user.getId());
         if (existing == null) {
@@ -77,6 +84,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean deleteUser(Long id) {
         SysUser user = getById(id);
         if (user == null) {
@@ -118,7 +126,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     public List<SysUser> getUserList() {
-        return list();
+        List<SysUser> users = list();
+        if (users != null && !users.isEmpty()) {
+            log.info("Fetched {} users. First user realName: {}", users.size(), users.get(0).getRealName());
+        }
+        return users;
     }
 
     @Override
@@ -141,6 +153,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public boolean resetPassword(Long id, String newPassword) {
         SysUser user = getById(id);
         if (user == null) {
@@ -153,36 +166,59 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
-    public synchronized void handleLoginFailure(String username) {
-        SysUser user = getUserByUsername(username);
-        if (user == null) {
+    public void handleLoginFailure(String username) {
+        String lockKey = "login:lock:" + username;
+        Boolean locked = redisTemplate.opsForValue().setIfAbsent(lockKey, "1", 5, java.util.concurrent.TimeUnit.SECONDS);
+        
+        if (Boolean.FALSE.equals(locked)) {
+            // 获取锁失败，说明有其他线程正在处理
             return;
         }
+        
+        try {
+            SysUser user = getUserByUsername(username);
+            if (user == null) {
+                return;
+            }
 
-        int failCount = user.getLoginFailCount() == null ? 0 : user.getLoginFailCount();
-        failCount++;
+            int failCount = user.getLoginFailCount() == null ? 0 : user.getLoginFailCount();
+            failCount++;
 
-        SysUser updateUser = new SysUser();
-        updateUser.setId(user.getId());
-        updateUser.setLoginFailCount(failCount);
+            SysUser updateUser = new SysUser();
+            updateUser.setId(user.getId());
+            updateUser.setLoginFailCount(failCount);
 
-        // 达到最大失败次数，锁定账户
-        if (failCount >= MAX_LOGIN_FAIL_COUNT) {
-            updateUser.setLockTime(LocalDateTime.now());
-            log.warn("用户登录失败次数过多，已锁定: username={}", username);
+            // 达到最大失败次数，锁定账户
+            if (failCount >= MAX_LOGIN_FAIL_COUNT) {
+                updateUser.setLockTime(LocalDateTime.now());
+                log.warn("用户登录失败次数过多，已锁定: username={}", username);
+            }
+
+            updateById(updateUser);
+        } finally {
+            redisTemplate.delete(lockKey);
         }
-
-        updateById(updateUser);
     }
 
     @Override
-    public synchronized void handleLoginSuccess(SysUser user) {
-        SysUser updateUser = new SysUser();
-        updateUser.setId(user.getId());
-        updateUser.setLoginFailCount(0);
-        updateUser.setLockTime(null);
-        updateUser.setLastLoginTime(LocalDateTime.now());
-        updateById(updateUser);
+    public void handleLoginSuccess(SysUser user) {
+        String lockKey = "login:success:lock:" + user.getId();
+        Boolean locked = redisTemplate.opsForValue().setIfAbsent(lockKey, "1", 5, java.util.concurrent.TimeUnit.SECONDS);
+        
+        if (Boolean.FALSE.equals(locked)) {
+            return;
+        }
+        
+        try {
+            SysUser updateUser = new SysUser();
+            updateUser.setId(user.getId());
+            updateUser.setLoginFailCount(0);
+            updateUser.setLockTime(null);
+            updateUser.setLastLoginTime(LocalDateTime.now());
+            updateById(updateUser);
+        } finally {
+            redisTemplate.delete(lockKey);
+        }
     }
 
     @Override
@@ -249,6 +285,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Map<String, Integer> importUsers(List<Map<Integer, String>> data) {
         int successCount = 0;
         int failCount = 0;
@@ -273,14 +310,21 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                     continue;
                 }
                 
-                // 创建用户
+                // 创建用户，生成强密码
                 SysUser user = new SysUser();
                 user.setUsername(username);
                 user.setRealName(realName);
                 user.setPhone(phone);
                 user.setEmail(email);
                 user.setRole(ROLE_MAP.getOrDefault(roleName, 4)); // 默认采集员
-                user.setPassword(passwordEncoder.encode("123456")); // 默认密码
+                
+                // 生成强密码（12位，包含大小写字母、数字、特殊字符）
+                String strongPassword = PasswordGenerator.generateStrongPassword();
+                user.setPassword(passwordEncoder.encode(strongPassword));
+                
+                // TODO: 应该通过邮件或短信发送密码给用户
+                log.info("创建用户: username={}, 初始密码={} (应通过邮件/短信发送)", username, strongPassword);
+                
                 user.setStatus(1);
                 user.setLoginFailCount(0);
                 user.setIsFirstLogin(1);

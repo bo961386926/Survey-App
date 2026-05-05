@@ -18,7 +18,7 @@ import java.util.Map;
  */
 @Tag(name = "点位管理", description = "勘查点位管理相关接口")
 @RestController
-@RequestMapping("/api/point")
+@RequestMapping("/api/v1/point")
 public class SurveyPointController {
 
     @Autowired

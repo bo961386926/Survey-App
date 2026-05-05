@@ -20,21 +20,21 @@ import java.util.Map;
  */
 @Tag(name = "项目管理")
 @RestController
-@RequestMapping("/api/project")
+@RequestMapping(value = "/api/v1/project", produces = "application/json;charset=UTF-8")
 @RequiredArgsConstructor
 public class ProjectController {
 
     private final ProjectService projectService;
 
     @Operation(summary = "分页查询项目列表")
-    @GetMapping("/page")
+    @GetMapping(value = "/page", produces = "application/json;charset=UTF-8")
     public Result<PageResult<Project>> queryProjectPage(ProjectQueryRequest request) {
         PageResult<Project> result = projectService.queryProjectPage(request);
         return Result.success(result);
     }
 
     @Operation(summary = "获取项目详情")
-    @GetMapping("/{id}")
+    @GetMapping(value = "/{id}", produces = "application/json;charset=UTF-8")
     public Result<Project> getProjectDetail(@PathVariable Long id) {
         Project project = projectService.getProjectDetail(id);
         return Result.success(project);

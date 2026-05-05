@@ -1,4 +1,4 @@
-package com.qhiot.survey.common.util;
+  package com.qhiot.survey.common.util;
 
 import com.qhiot.survey.service.SysDictionaryDataService;
 import org.springframework.beans.factory.annotation.Autowired;

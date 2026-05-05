@@ -18,7 +18,7 @@ import java.util.Map;
  */
 @Tag(name = "勘查结果管理", description = "勘查结果采集、审核相关接口")
 @RestController
-@RequestMapping("/api/result")
+@RequestMapping("/api/v1/result")
 @RequiredArgsConstructor
 public class SurveyResultController {
 
