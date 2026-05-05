@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>现场采集 - 青泓项目勘察信息采集与审核系统</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563EB;
+      --primary-light: #3B82F6;
+      --primary-lighter: #60A5FA;
+      --primary-dark: #1D4ED8;
+      --primary-glow: rgba(37, 99, 235, 0.25);
+      --success: #10B981;
+      --success-light: #34D399;
+      --warning: #F59E0B;
+      --warning-light: #FBBF24;
+      --danger: #EF4444;
+      --danger-light: #F87171;
+      --info: #8B5CF6;
+      --info-light: #A78BFA;
+      --bg-primary: #FFFFFF;
+      --bg-secondary: #F8FAFC;
+      --bg-tertiary: #F1F5F9;
+      --bg-card: rgba(255, 255, 255, 0.95);
+      --bg-card-hover: rgba(241, 245, 249, 0.98);
+      --bg-input: rgba(241, 245, 249, 0.8);
+      --text-primary: #1E293B;
+      --text-secondary: #64748B;
+      --text-muted: #94A3B8;
+      --text-subtle: #CBD5E1;
+      --border: rgba(226, 232, 240, 0.8);
+      --border-light: rgba(241, 245, 249, 0.6);
+      --border-focus: rgba(37, 99, 235, 0.5);
+      --glass-bg: rgba(255, 255, 255, 0.9);
+      --glass-border: rgba(226, 232, 240, 0.3);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    .bg-effects {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .bg-effects::before {
+      content: '';
+      position: absolute;
+      top: -30%; left: -20%;
+      width: 80%; height: 80%;
+      background: radial-gradient(ellipse at center, rgba(37, 99, 235, 0.04) 0%, transparent 60%);
+      animation: float1 20s ease-in-out infinite;
+    }
+
+    @keyframes float1 {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(10%, 10%) scale(1.1); }
+    }
+
+    /* Mobile Container */
+    .mobile-container {
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Status Bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .status-bar-time { font-size: 14px; font-weight: 700; }
+
+    .status-bar-icons {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .status-bar-icons span { font-size: 12px; }
+
+    /* Navigation Bar */
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--glass-border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--primary-light);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .nav-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .nav-action {
+      color: var(--primary-light);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    /* Point Info Card */
+    .point-info-card {
+      margin: 16px 16px 0;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(139, 92, 246, 0.08));
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .point-info-card::before {
+      content: '';
+      position: absolute;
+      top: -50%; right: -20%;
+      width: 200px; height: 200px;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, transparent 60%);
+    }
+
+    .point-info-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .point-info-left h2 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .point-info-id {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--primary-light);
+      font-weight: 500;
+    }
+
+    .point-status-badge {
+      padding: 6px 14px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(37, 99, 235, 0.2);
+      color: var(--primary-light);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .point-status-badge::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--primary-light);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .point-info-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .point-detail-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .point-detail-label {
+      font-size: 11px;
+      color: var(--text-subtle);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .point-detail-value {
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .point-type-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      background: rgba(37, 99, 235, 0.15);
+      color: var(--primary-light);
+    }
+
+    /* Location Card */
+    .location-card {
+      margin: 16px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+
+    .location-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .location-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .location-correct-btn {
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .location-correct-btn:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
+
+    .location-map {
+      height: 180px;
+      background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .location-map::before {
+      content: '';
+      position: absolute;
+      width: 100%; height: 100%;
+      background-image: 
+        linear-gradient(rgba(75, 85, 99, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(75, 85, 99, 0.1) 1px, transparent 1px);
+      background-size: 30px 30px;
+    }
+
+    .map-pin {
+      width: 40px; height: 40px;
+      background: var(--primary);
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 16px var(--primary-glow);
+      position: relative;
+      z-index: 1;
+    }
+
+    .map-pin::after {
+      content: '';
+      width: 16px; height: 16px;
+      background: white;
+      border-radius: 50%;
+      transform: rotate(45deg);
+    }
+
+    .map-accuracy {
+      position: absolute;
+      bottom: 12px; right: 12px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .location-coords {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .coord-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .coord-label {
+      font-size: 12px;
+      color: var(--text-subtle);
+    }
+
+    .coord-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    /* Form Section */
+    .form-section {
+      margin: 0 16px 16px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+    }
+
+    .form-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .form-section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-section-toggle {
+      color: var(--text-muted);
+      font-size: 12px;
+      transition: transform 0.2s ease;
+    }
+
+    .form-section-body {
+      padding: 20px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .form-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .form-required {
+      color: var(--danger);
+      font-size: 14px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .form-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-input::placeholder {
+      color: var(--text-subtle);
+    }
+
+    .form-select {
+      width: 100%;
+      padding: 12px 40px 12px 16px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239CA3AF' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .form-select:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-textarea {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      resize: vertical;
+      min-height: 100px;
+      transition: all 0.2s ease;
+    }
+
+    .form-textarea:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .form-textarea::placeholder {
+      color: var(--text-subtle);
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--text-subtle);
+      margin-top: 6px;
+    }
+
+    /* Image Upload */
+    .image-upload-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .image-preview-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .image-preview-item {
+      aspect-ratio: 1;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      position: relative;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+    }
+
+    .image-preview-item img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+
+    .image-watermark {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 4px 8px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.7));
+      font-size: 9px;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .image-delete {
+      position: absolute;
+      top: 4px; right: 4px;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: rgba(239, 68, 68, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .image-add-btn {
+      aspect-ratio: 1;
+      border-radius: var(--radius-md);
+      border: 2px dashed var(--border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: var(--bg-input);
+    }
+
+    .image-add-btn:hover {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.05);
+    }
+
+    .image-add-icon {
+      font-size: 24px;
+      color: var(--text-muted);
+    }
+
+    .image-add-text {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Camera Only Notice */
+    .camera-notice {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      color: var(--warning-light);
+    }
+
+    /* Action Buttons */
+    .action-bar {
+      position: sticky;
+      bottom: 0;
+      padding: 16px 20px;
+      padding-bottom: calc(16px + var(--safe-bottom));
+      background: var(--glass-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-top: 1px solid var(--glass-border);
+      display: flex;
+      gap: 12px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      font-size: 16px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      outline: none;
+    }
+
+    .action-btn:active {
+      transform: scale(0.97);
+    }
+
+    .action-btn-draft {
+      background: var(--bg-input);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+
+    .action-btn-draft:hover {
+      background: var(--bg-card-hover);
+      color: var(--text-primary);
+    }
+
+    .action-btn-submit {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white;
+      box-shadow: 0 4px 16px var(--primary-glow);
+    }
+
+    .action-btn-submit:hover {
+      box-shadow: 0 6px 24px var(--primary-glow);
+    }
+
+    /* Reject Notice */
+    .reject-notice {
+      margin: 0 16px 16px;
+      padding: 16px 20px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: var(--radius-xl);
+    }
+
+    .reject-notice-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .reject-notice-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--danger-light);
+    }
+
+    .reject-notice-content {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .reject-notice-version {
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(239, 68, 68, 0.15);
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Offline Indicator */
+    .offline-indicator {
+      margin: 0 16px 16px;
+      padding: 12px 16px;
+      background: rgba(245, 158, 11, 0.1);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--warning-light);
+    }
+
+    .offline-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--warning);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    /* Draft Recovery */
+    .draft-recovery {
+      margin: 0 16px 16px;
+      padding: 16px 20px;
+      background: rgba(37, 99, 235, 0.1);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      border-radius: var(--radius-xl);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .draft-recovery-text {
+      font-size: 13px;
+      color: var(--primary-light);
+    }
+
+    .draft-recovery-text strong {
+      font-weight: 600;
+    }
+
+    .draft-recovery-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      background: var(--primary);
+      color: white;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+    }
+
+    /* Responsive */
+    @media (min-width: 431px) {
+      body {
+        background: var(--bg-secondary);
+      }
+
+      .mobile-container {
+        border-left: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-effects"></div>
+
+  <div class="mobile-container">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span class="status-bar-time">9:41</span>
+      <div class="status-bar-icons">
+        <span>📶</span>
+        <span>🔋</span>
+      </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <div class="nav-bar">
+      <div class="nav-back">← 返回</div>
+      <span class="nav-title">现场采集</span>
+      <span class="nav-action">💾 保存</span>
+    </div>
+
+    <!-- Draft Recovery Notice -->
+    <div class="draft-recovery">
+      <div class="draft-recovery-text">
+        <strong>📝 发现未提交草稿</strong><br>
+        最后保存时间：2024-03-15 14:30
+      </div>
+      <button class="draft-recovery-btn">恢复草稿</button>
+    </div>
+
+    <!-- Point Info Card -->
+    <div class="point-info-card">
+      <div class="point-info-header">
+        <div class="point-info-left">
+          <h2>河道A-01号点</h2>
+          <span class="point-info-id">PTN-2024-001</span>
+        </div>
+        <div class="point-status-badge">草稿中</div>
+      </div>
+      <div class="point-info-details">
+        <div class="point-detail-item">
+          <span class="point-detail-label">排口类型</span>
+          <span class="point-detail-value">
+            <span class="point-type-tag">💧 雨水排口</span>
+          </span>
+        </div>
+        <div class="point-detail-item">
+          <span class="point-detail-label">所属项目</span>
+          <span class="point-detail-value">河道勘察A标段</span>
+        </div>
+        <div class="point-detail-item">
+          <span class="point-detail-label">当前版本</span>
+          <span class="point-detail-value">v2</span>
+        </div>
+        <div class="point-detail-item">
+          <span class="point-detail-label">模板版本</span>
+          <span class="point-detail-value">TPL-RW-v3</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Location Card -->
+    <div class="location-card">
+      <div class="location-header">
+        <div class="location-title">📍 位置信息</div>
+        <button class="location-correct-btn">🎯 人工纠偏</button>
+      </div>
+      <div class="location-map">
+        <div class="map-pin"></div>
+        <div class="map-accuracy">
+          📡 精度 ±5m
+        </div>
+      </div>
+      <div class="location-coords">
+        <div class="coord-item">
+          <span class="coord-label">经度</span>
+          <span class="coord-value">116.4074°E</span>
+        </div>
+        <div class="coord-item">
+          <span class="coord-label">纬度</span>
+          <span class="coord-value">39.9042°N</span>
+        </div>
+        <div class="coord-item">
+          <span class="coord-label">行政区</span>
+          <span class="coord-value">朝阳区</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reject Notice (if applicable) -->
+    <!--
+    <div class="reject-notice">
+      <div class="reject-notice-header">
+        <span>⚠️</span>
+        <span class="reject-notice-title">驳回意见</span>
+      </div>
+      <div class="reject-notice-content">
+        照片不够清晰，请重新拍摄排口全景照片，确保能看清排口结构和周边环境。
+      </div>
+      <div class="reject-notice-version">
+        驳回版本：v1 · 驳回时间：2024-03-14 16:20
+      </div>
+    </div>
+    -->
+
+    <!-- Form: 基本信息 -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <div class="form-section-title">📋 基本信息</div>
+        <span class="form-section-toggle">▼</span>
+      </div>
+      <div class="form-section-body">
+        <div class="form-group">
+          <label class="form-label">
+            <span class="form-required">*</span>
+            排口状况
+          </label>
+          <select class="form-select">
+            <option value="">请选择排口状况</option>
+            <option value="normal">正常排放</option>
+            <option value="overflow">溢流</option>
+            <option value="dry">干涸</option>
+            <option value="blocked">堵塞</option>
+            <option value="damaged">破损</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            <span class="form-required">*</span>
+            水质外观
+          </label>
+          <select class="form-select">
+            <option value="">请选择水质外观</option>
+            <option value="clear">清澈</option>
+            <option value="turbid">浑浊</option>
+            <option value="colored">有色</option>
+            <option value="foaming">起泡</option>
+            <option value="oily">油膜</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            流量估算
+          </label>
+          <input type="text" class="form-input" placeholder="请输入流量估算值">
+          <div class="form-hint">单位：m³/h</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">
+            排口尺寸
+          </label>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" class="form-input" placeholder="宽 (cm)" style="flex:1">
+            <input type="text" class="form-input" placeholder="高 (cm)" style="flex:1">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form: 水质检测 -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <div class="form-section-title">🧪 水质检测</div>
+        <span class="form-section-toggle">▼</span>
+      </div>
+      <div class="form-section-body">
+        <div class="form-group">
+          <label class="form-label">pH 值</label>
+          <input type="number" class="form-input" placeholder="请输入pH值" step="0.1" min="0" max="14">
+          <div class="form-hint">范围：0-14</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">溶解氧 (mg/L)</label>
+          <input type="number" class="form-input" placeholder="请输入溶解氧值" step="0.1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">COD (mg/L)</label>
+          <input type="number" class="form-input" placeholder="请输入COD值" step="0.1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">氨氮 (mg/L)</label>
+          <input type="number" class="form-input" placeholder="请输入氨氮值" step="0.01">
+        </div>
+      </div>
+    </div>
+
+    <!-- Form: 照片采集 -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <div class="form-section-title">📸 照片采集</div>
+        <span class="form-section-toggle">▼</span>
+      </div>
+      <div class="form-section-body">
+        <div class="camera-notice">
+          <span>📷</span>
+          <span>此字段仅允许相机拍摄，不可从相册选择</span>
+        </div>
+        <div class="image-upload-group" style="margin-top: 14px;">
+          <div class="image-preview-grid">
+            <div class="image-preview-item">
+              <div style="width:100%;height:100%;background:linear-gradient(135deg,#1a365d,#2d3748);display:flex;align-items:center;justify-content:center;">
+                <span style="font-size:32px;">🏞️</span>
+              </div>
+              <div class="image-watermark">张工 · 14:25 · 116.4074°E</div>
+              <div class="image-delete">×</div>
+            </div>
+            <div class="image-preview-item">
+              <div style="width:100%;height:100%;background:linear-gradient(135deg,#1a365d,#2d3748);display:flex;align-items:center;justify-content:center;">
+                <span style="font-size:32px;">🌊</span>
+              </div>
+              <div class="image-watermark">张工 · 14:26 · 116.4074°E</div>
+              <div class="image-delete">×</div>
+            </div>
+            <div class="image-add-btn">
+              <span class="image-add-icon">+</span>
+              <span class="image-add-text">添加照片</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form: 备注 -->
+    <div class="form-section">
+      <div class="form-section-header">
+        <div class="form-section-title">📝 备注说明</div>
+        <span class="form-section-toggle">▼</span>
+      </div>
+      <div class="form-section-body">
+        <div class="form-group">
+          <label class="form-label">现场备注</label>
+          <textarea class="form-textarea" placeholder="请输入现场备注信息..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Padding -->
+    <div style="height: 100px;"></div>
+
+    <!-- Action Bar -->
+    <div class="action-bar">
+      <button class="action-btn action-btn-draft">
+        💾 保存草稿
+      </button>
+      <button class="action-btn action-btn-submit">
+        📤 提交审核
+      </button>
+    </div>
+  </div>
+</body>
+</html>
