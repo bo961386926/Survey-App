@@ -55,7 +55,8 @@ export const generatedRoutes: GeneratedRoute[] = [
         component: 'view.audit_detail',
         meta: {
           title: 'audit_detail',
-          i18nKey: 'route.audit_detail'
+          i18nKey: 'route.audit_detail',
+          roles: ['R_SUPER', 'R_AUDITOR']
         }
       },
       {
@@ -84,7 +85,8 @@ export const generatedRoutes: GeneratedRoute[] = [
         component: 'view.export_list',
         meta: {
           title: 'export_list',
-          i18nKey: 'route.export_list'
+          i18nKey: 'route.export_list',
+          roles: ['R_SUPER', 'R_ADMIN']
         }
       }
     ]
@@ -115,7 +117,7 @@ export const generatedRoutes: GeneratedRoute[] = [
   },
   {
     name: 'login',
-    path: '/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?',
+    path: '/login',
     component: 'layout.blank$view.login',
     props: true,
     meta: {
@@ -218,6 +220,14 @@ export const generatedRoutes: GeneratedRoute[] = [
     },
     children: [
       {
+        name: 'system_dict',
+        path: '/system/dict',
+        component: 'view.system_dict',
+        meta: {
+          title: 'system_dict'
+        }
+      },
+      {
         name: 'system_help',
         path: '/system/help',
         component: 'view.system_help',
@@ -250,7 +260,8 @@ export const generatedRoutes: GeneratedRoute[] = [
         component: 'view.system_role',
         meta: {
           title: 'system_role',
-          i18nKey: 'route.system_role'
+          i18nKey: 'route.system_role',
+          roles: ['R_SUPER']
         }
       },
       {
@@ -261,7 +272,8 @@ export const generatedRoutes: GeneratedRoute[] = [
           title: 'system_user',
           i18nKey: 'route.system_user',
           icon: 'material-symbols:group-outline-rounded',
-          order: 1
+          order: 1,
+          roles: ['R_SUPER']
         }
       }
     ]
@@ -281,7 +293,8 @@ export const generatedRoutes: GeneratedRoute[] = [
         component: 'view.template_design',
         meta: {
           title: 'template_design',
-          i18nKey: 'route.template_design'
+          i18nKey: 'route.template_design',
+          roles: ['R_SUPER']
         }
       },
       {
@@ -290,7 +303,8 @@ export const generatedRoutes: GeneratedRoute[] = [
         component: 'view.template_list',
         meta: {
           title: 'template_list',
-          i18nKey: 'route.template_list'
+          i18nKey: 'route.template_list',
+          roles: ['R_SUPER']
         }
       }
     ]

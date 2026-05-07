@@ -10,6 +10,7 @@ import { $t } from '@/locales';
 import { useRouteStore } from '../route';
 import { useTabStore } from '../tab';
 import { clearAuthStorage, getToken } from './shared';
+import { ROLE } from '@/constants/role';
 
 export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
   const route = useRoute();
@@ -97,6 +98,9 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
       }
     } else {
       console.error('❌ [AuthStore] Login error:', error);
+      // 显示登录失败原因给用户
+      const errorMsg = error?.message || error?.msg || '登录失败，请检查用户名密码或验证码';
+      window.$message?.error(errorMsg);
       resetStore();
     }
 
@@ -110,15 +114,13 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
     localStg.set('token', accessToken);
     localStg.set('refreshToken', loginToken.refreshToken);
 
-    // 2. Map numeric role IDs to role codes expected by frontend
-    // Backend returns: 1=SUPER_ADMIN, 2=PROJECT_MANAGER, 3=AUDITOR, 4=COLLECTOR
-    // Frontend expects: R_SUPER, R_ADMIN, R_AUDITOR, etc.
+    // 2. Map numeric role IDs to role codes (同步 constants/role.ts)
     const roleCodeMap: Record<number, string> = {
-      1: 'R_SUPER',      // 超级管理员
-      2: 'R_ADMIN',      // 项目负责人
-      3: 'R_AUDITOR',    // 审核员
-      4: 'R_COLLECTOR',  // 采集员
-      5: 'R_VIEWER'      // 查看者
+      1: ROLE.SUPER,
+      2: ROLE.ADMIN,
+      3: ROLE.AUDITOR,
+      4: ROLE.COLLECTOR,
+      5: ROLE.VIEWER,
     };
     
     const numericRole = loginToken.role as number;
@@ -142,8 +144,63 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
     const { data: info, error } = await fetchGetUserInfo();
 
     if (!error) {
-      // update store
-      Object.assign(userInfo, info);
+      console.log('📥 [AuthStore] getUserInfo response:', info);
+      
+      // 后端getUserInfo返回的role_code需要映射为前端标准角色码
+      // 注意：后端可能返回大写（ADMIN）或小写（admin），需要兼容
+      const roleCodeToFrontend: Record<string, string> = {
+        // 小写版本
+        admin: ROLE.SUPER,
+        project_manager: ROLE.ADMIN,
+        auditor: ROLE.AUDITOR,
+        surveyor: ROLE.COLLECTOR,
+        collab: ROLE.VIEWER,
+        user: ROLE.VIEWER,
+        // 大写版本（兼容）
+        ADMIN: ROLE.SUPER,
+        PROJECT_MANAGER: ROLE.ADMIN,
+        AUDITOR: ROLE.AUDITOR,
+        COLLECTOR: ROLE.COLLECTOR,
+        THIRD_PARTY: ROLE.VIEWER,
+      };
+
+      const backendRoles: string[] = info.roles || [];
+      console.log('🔄 [AuthStore] Backend roles:', backendRoles);
+      
+      const mappedRoles = backendRoles
+        .map((r: string) => {
+          const mapped = roleCodeToFrontend[r] || r;
+          console.log(`  🔄 [AuthStore] Role mapping: ${r} -> ${mapped}`);
+          return mapped;
+        })
+        .filter(Boolean);
+
+      console.log('✅ [AuthStore] Mapped roles:', mappedRoles);
+
+      // ⚠️ 关键修复：先保存旧的角色和按钮，防止丢失
+      const oldRoles = userInfo.roles || [];
+      const oldButtons = userInfo.buttons || [];
+      
+      // 只有当映射成功时才更新角色，否则保留旧值
+      const newRoles = mappedRoles.length > 0 ? mappedRoles : oldRoles;
+      const newButtons = info.buttons?.length > 0 ? info.buttons : oldButtons;
+      
+      console.log('🔒 [AuthStore] Roles comparison:', {
+        oldRoles,
+        newRoles,
+        willUpdate: newRoles !== oldRoles
+      });
+
+      // 更新用户信息，但保留角色和按钮（如果新的为空）
+      Object.assign(userInfo, {
+        userId: info.userId || userInfo.userId,
+        userName: info.userName || userInfo.userName,
+        realName: info.realName || userInfo.realName,
+        roles: newRoles,
+        buttons: newButtons
+      });
+
+      console.log('👤 [AuthStore] Final userInfo:', userInfo);
 
       return true;
     }

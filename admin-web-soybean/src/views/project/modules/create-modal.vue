@@ -4,10 +4,6 @@ import { useRouter } from 'vue-router';
 import { message } from 'ant-design-vue';
 import type { RuleObject } from 'ant-design-vue/es/form';
 import dayjs from 'dayjs';
-import { 
-  RocketOutlined,
-  TeamOutlined
-} from '@ant-design/icons-vue';
 import { fetchCreateProject, fetchUpdateProject, fetchGetAllUsers } from '@/service/api';
 
 defineOptions({ name: 'ProjectCreateModal' });
@@ -24,9 +20,8 @@ interface Emits {
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
-const router = useRouter();
-
 const isEdit = computed(() => !!props.editData);
+const showAdvanced = ref(false);
 
 // Form state
 const formRef = ref();
@@ -40,27 +35,43 @@ const formState = ref<Api.Project.ProjectEditParams & { startDateObj?: dayjs.Day
   description: ''
 });
 
-// Watch for visibility and editData
+// Watch for visibility and editData — fill form when modal opens
 watch(
   () => props.visible,
   (val) => {
-    if (val && props.editData) {
-      formState.value = {
-        projectName: props.editData.projectName,
-        projectCode: props.editData.projectCode || '',
-        clientName: props.editData.clientName || '',
-        startDate: props.editData.startDate,
-        endDate: props.editData.endDate,
-        startDateObj: props.editData.startDate ? dayjs(props.editData.startDate) : undefined,
-        endDateObj: props.editData.endDate ? dayjs(props.editData.endDate) : undefined,
-        manager: props.editData.manager || undefined,
-        description: props.editData.description || ''
-      };
-    } else if (val && !props.editData) {
-      resetForm();
+    if (val) {
+      if (props.editData) {
+        fillEditForm(props.editData);
+      } else {
+        resetForm();
+      }
     }
   }
 );
+
+// Also watch editData directly — handle case where editData changes while modal is open
+watch(
+  () => props.editData,
+  (val) => {
+    if (props.visible && val) {
+      fillEditForm(val);
+    }
+  }
+);
+
+function fillEditForm(data: Api.Project.ProjectInfo) {
+  formState.value = {
+    projectName: data.projectName,
+    projectCode: data.projectCode || '',
+    clientName: data.clientName || '',
+    startDate: data.startDate,
+    endDate: data.endDate,
+    startDateObj: data.startDate ? dayjs(data.startDate) : undefined,
+    endDateObj: data.endDate ? dayjs(data.endDate) : undefined,
+    manager: data.manager || undefined,
+    description: data.description || ''
+  };
+}
 
 // Manager options
 const managerOptions = ref<{ label: string; value: string }[]>([]);
@@ -160,8 +171,8 @@ const handleCancel = () => {
 <template>
   <AModal
     :open="props.visible"
-    :title="isEdit ? '编辑勘察项目' : '创建新勘察项目'"
-    width="640px"
+    :title="isEdit ? `编辑项目：${props.editData?.projectName || ''}` : '新建项目'"
+    width="520px"
     :maskClosable="false"
     :confirmLoading="submitLoading"
     @cancel="handleCancel"
@@ -176,40 +187,45 @@ const handleCancel = () => {
       layout="vertical"
       class="mt-4"
     >
-      <div class="grid grid-cols-1 gap-x-6">
-        <!-- Project Name -->
-        <AFormItem name="projectName" label="项目名称">
+      <!-- 基础信息（始终可见） -->
+      <div class="grid grid-cols-2 gap-12px">
+        <AFormItem name="projectName" label="项目名称" class="col-span-2">
           <AInput
             v-model:value="formState.projectName"
-            placeholder="请输入勘察项目全称"
+            placeholder="请输入项目名称"
             allow-clear
           />
         </AFormItem>
 
-        <!-- Project Code -->
         <AFormItem name="projectCode" label="项目编号">
           <AInput
             v-model:value="formState.projectCode"
-            placeholder="请输入项目编号 (如: PRJ-2024-001)"
+            placeholder="如: PRJ-2024-001"
             allow-clear
           />
         </AFormItem>
 
-        <!-- Client Name -->
-        <AFormItem name="clientName" label="委托单位 / 客户">
+        <AFormItem name="clientName" label="委托单位">
           <AInput
             v-model:value="formState.clientName"
-            placeholder="输入合作单位名称"
+            placeholder="合作单位"
             allow-clear
-          >
-            <template #prefix>
-              <TeamOutlined class="text-[var(--color-text-placeholder)]" />
-            </template>
-          </AInput>
+          />
         </AFormItem>
+      </div>
 
-        <!-- Date Range -->
-        <div class="grid grid-cols-2 gap-4">
+      <!-- 折叠：更多信息 -->
+      <div class="mt-4">
+        <button
+          type="button"
+          class="flex items-center gap-4px text-12px text-[var(--color-text-secondary)] hover:text-primary transition-colors cursor-pointer bg-transparent border-none p-0"
+          @click="showAdvanced = !showAdvanced"
+        >
+          <div :class="['i-material-symbols:chevron-right-rounded text-14px transition-transform', showAdvanced ? 'rotate-90' : '']"></div>
+          {{ showAdvanced ? '收起更多信息' : '展开更多信息' }}
+        </button>
+
+        <div v-show="showAdvanced" class="mt-12px grid grid-cols-2 gap-12px">
           <AFormItem name="startDateObj" label="开始日期">
             <ADatePicker
               v-model:value="formState.startDateObj"
@@ -218,46 +234,40 @@ const handleCancel = () => {
             />
           </AFormItem>
 
-          <AFormItem name="endDateObj" label="预计结束">
+          <AFormItem name="endDateObj" label="结束日期">
             <ADatePicker
               v-model:value="formState.endDateObj"
               placeholder="选择日期"
               class="w-full"
             />
           </AFormItem>
+
+          <AFormItem name="manager" label="项目负责人" class="col-span-2">
+            <ASelect
+              v-model:value="formState.manager"
+              placeholder="指派负责人（可选）"
+              :options="managerOptions"
+              allow-clear
+              class="w-full"
+            />
+          </AFormItem>
+
+          <AFormItem name="description" label="备注" class="col-span-2">
+            <ATextarea
+              v-model:value="formState.description"
+              placeholder="核心目标、安全注意事项..."
+              :rows="2"
+            />
+          </AFormItem>
         </div>
-
-        <!-- Project Manager -->
-        <AFormItem name="manager" label="项目负责人">
-          <ASelect
-            v-model:value="formState.manager"
-            placeholder="请指派项目负责人"
-            :options="managerOptions"
-            allow-clear
-          >
-            <template #suffixIcon>
-              <TeamOutlined class="text-[var(--color-text-placeholder)]" />
-            </template>
-          </ASelect>
-        </AFormItem>
-
-        <!-- Description -->
-        <AFormItem name="description" label="项目描述 / 备注">
-          <ATextarea
-            v-model:value="formState.description"
-            placeholder="描述项目的核心目标、安全注意事项或特殊标准..."
-            :rows="4"
-          />
-        </AFormItem>
       </div>
     </AForm>
 
     <template #footer>
-      <div class="flex justify-end gap-3 pt-2">
+      <div class="flex justify-end gap-8px">
         <AButton @click="handleCancel">取消</AButton>
-        <AButton type="primary" :loading="submitLoading" @click="handleSubmit">
-          <template #icon><RocketOutlined /></template>
-          {{ isEdit ? '确认修改' : '立即创建' }}
+        <AButton type="primary" :loading="submitLoading" class="h-32px!" @click="handleSubmit">
+          {{ isEdit ? '保存修改' : '创建项目' }}
         </AButton>
       </div>
     </template>

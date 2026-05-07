@@ -13,10 +13,9 @@ import org.springframework.util.StringUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 操作日志服务实现类
@@ -43,16 +42,33 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationLogMapper, Ope
     }
 
     @Override
-    public void logOperation(Long userId, String module, String operation, String description, String ip, String userAgent) {
-        OperationLog log = new OperationLog();
-        log.setUserId(userId);
-        log.setModule(module);
-        log.setAction(operation);
-        log.setDetail(description);
-        log.setIp(ip);
-        log.setUserAgent(userAgent);
-        log.setCreateTime(LocalDateTime.now());
-        save(log);
+    public void logOperation(Long userId, String username, String module, String operation, String description, 
+                            String ip, String userAgent, Integer riskLevel) {
+        log.info("====== [操作日志-Service] 开始保存操作日志 ======");
+        log.info("[操作日志-Service] 参数 - userId: {}, username: {}, module: {}, action: {}", 
+            userId, username, module, operation);
+        log.info("[操作日志-Service] 参数 - description: {}, ip: {}, riskLevel: {}", 
+            description, ip, riskLevel);
+        
+        OperationLog logEntity = new OperationLog();
+        logEntity.setUserId(userId);
+        logEntity.setUsername(username);
+        logEntity.setModule(module);
+        logEntity.setAction(operation);
+        logEntity.setDetail(description);
+        logEntity.setIp(ip);
+        logEntity.setUserAgent(userAgent);
+        logEntity.setRiskLevel(riskLevel != null ? riskLevel : 0); // 默认低风险
+        logEntity.setCreateTime(LocalDateTime.now());
+        
+        log.info("[操作日志-Service] 准备插入数据库...");
+        boolean success = save(logEntity);
+        
+        if (success) {
+            log.info("====== [操作日志-Service] 操作日志保存成功，ID: {} ======", logEntity.getId());
+        } else {
+            log.error("====== [操作日志-Service] 操作日志保存失败！======");
+        }
     }
 
     @Override
@@ -120,5 +136,57 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationLogMapper, Ope
             case 2: return "高";
             default: return "未知";
         }
+    }
+
+    @Override
+    public Map<String, Long> countByModule() {
+        List<OperationLog> allLogs = list();
+        return allLogs.stream()
+            .collect(Collectors.groupingBy(
+                log -> log.getModule() != null ? log.getModule() : "未知",
+                Collectors.counting()
+            ));
+    }
+
+    @Override
+    public Map<String, Long> countByUser() {
+        List<OperationLog> allLogs = list();
+        return allLogs.stream()
+            .collect(Collectors.groupingBy(
+                log -> log.getUsername() != null ? log.getUsername() : "未知",
+                Collectors.counting()
+            ));
+    }
+
+    @Override
+    public Map<Integer, Long> countByRiskLevel() {
+        List<OperationLog> allLogs = list();
+        return allLogs.stream()
+            .collect(Collectors.groupingBy(
+                log -> log.getRiskLevel() != null ? log.getRiskLevel() : 0,
+                Collectors.counting()
+            ));
+    }
+
+    @Override
+    public Map<String, Long> countByDateRange(String startDate, String endDate) {
+        LambdaQueryWrapper<OperationLog> wrapper = new LambdaQueryWrapper<>();
+        if (startDate != null && !startDate.isEmpty()) {
+            wrapper.ge(OperationLog::getCreateTime, startDate + " 00:00:00");
+        }
+        if (endDate != null && !endDate.isEmpty()) {
+            wrapper.le(OperationLog::getCreateTime, endDate + " 23:59:59");
+        }
+        wrapper.orderByAsc(OperationLog::getCreateTime);
+        
+        List<OperationLog> logs = list(wrapper);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        
+        return logs.stream()
+            .collect(Collectors.groupingBy(
+                log -> log.getCreateTime().format(formatter),
+                LinkedHashMap::new,
+                Collectors.counting()
+            ));
     }
 }

@@ -213,7 +213,8 @@ const local: App.I18n.Schema = {
     system_message: '消息中心',
     system_log: '操作日志',
     system_help: '帮助文档',
-    system_role: '系统角色'
+    system_role: '系统角色',
+    system_dict: '数据字典'
   },
   page: {
     login: {
@@ -472,7 +473,7 @@ const local: App.I18n.Schema = {
     },
     pwd: {
       required: '请输入密码',
-      invalid: '密码格式不正确，6-18位字符，包含字母、数字、下划线'
+      invalid: '密码格式不正确，6-18位字符，包含字母、数字、下划线或特殊字符(-@#$%^&*!)'
     },
     confirmPwd: {
       required: '请输入确认密码',

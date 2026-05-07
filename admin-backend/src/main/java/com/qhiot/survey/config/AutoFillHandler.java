@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 /**
  * MyBatis-Plus 自动填充处理器
  * 自动填充审计字段：create_time, update_time, create_by, update_by
+ * 以及通用字段：is_deleted, status, is_first_login
  */
 @Slf4j
 @Component
@@ -23,19 +24,22 @@ public class AutoFillHandler implements MetaObjectHandler {
     public void insertFill(MetaObject metaObject) {
         log.debug("开始插入填充...");
         
-        // 创建时间
+        // ========== 时间字段 ==========
         this.strictInsertFill(metaObject, "createTime", LocalDateTime::now, LocalDateTime.class);
-        
-        // 更新时间
         this.strictInsertFill(metaObject, "updateTime", LocalDateTime::now, LocalDateTime.class);
         
-        // 创建人
+        // ========== 审计字段 ==========
         try {
             String username = SecurityUtils.getCurrentUsername();
             this.strictInsertFill(metaObject, "createBy", () -> username, String.class);
         } catch (Exception e) {
             log.warn("获取当前用户失败，跳过createBy填充");
         }
+        
+        // ========== 通用字段 ==========
+        this.strictInsertFill(metaObject, "isDeleted", () -> 0, Integer.class);
+        this.strictInsertFill(metaObject, "status", () -> 1, Integer.class);
+        this.strictInsertFill(metaObject, "isFirstLogin", () -> 1, Integer.class);
     }
     
     /**

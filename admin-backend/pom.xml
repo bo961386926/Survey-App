@@ -49,13 +49,6 @@
             <version>${mysql.version}</version>
         </dependency>
 
-        <!-- H2 Database (for testing) -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-
         <!-- Alibaba Druid -->
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -124,6 +117,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+
+        <!-- Spring AOP (用于操作日志切面) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
         <!-- Spring Data Redis -->

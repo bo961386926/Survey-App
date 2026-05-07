@@ -10,8 +10,16 @@ RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
 WORKDIR /app
 
-# 直接复制已编译的jar包
-COPY target/survey-admin-1.0.0.jar app.jar
+# 创建日志目录并设置权限
+RUN mkdir -p /app/logs && chown -R appuser:appgroup /app/logs
+
+# 安装 wget（用于健康检查）和 curl（用于调试）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# 直接复制已编译的jar包（支持通配符）
+COPY target/*.jar app.jar
 
 # 设置时区
 ENV TZ=Asia/Shanghai
@@ -36,5 +44,7 @@ ENTRYPOINT ["java", \
   "-XX:+HeapDumpOnOutOfMemoryError", \
   "-XX:HeapDumpPath=/app/logs/heap_dump.hprof", \
   "-Djava.security.egd=file:/dev/./urandom", \
+  "-Dfile.encoding=UTF-8", \
+  "-Duser.timezone=Asia/Shanghai", \
   "-jar", "app.jar", \
   "--spring.profiles.active=prod"]

@@ -6,7 +6,7 @@
         <h1 class="text-24px font-bold text-[var(--color-text-primary)] mb-1">表单模板</h1>
         <p class="text-14px text-[var(--color-text-secondary)]">配置勘查表单字段，支持多种字段类型与联动逻辑</p>
       </div>
-      <a-button type="primary" @click="handleCreate" class="rounded-6px">
+      <a-button v-if="isAdmin" type="primary" @click="handleCreate" class="rounded-6px">
         <template #icon><PlusOutlined /></template>
         新建模板
       </a-button>
@@ -18,7 +18,7 @@
     </div>
     <div v-else-if="templateList.length === 0" class="text-center py-20 text-[var(--color-text-secondary)]">
       <p class="text-16px mb-4">暂无模板</p>
-      <a-button type="primary" @click="handleCreate">创建第一个模板</a-button>
+      <a-button v-if="isAdmin" type="primary" @click="handleCreate">创建第一个模板</a-button>
     </div>
     <div v-else class="grid grid-cols-2 gap-6">
       <div
@@ -147,6 +147,7 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { message, Modal } from 'ant-design-vue';
+import { useAuth } from '@/hooks/common/auth';
 import {
   PlusOutlined,
   FileTextOutlined,
@@ -163,11 +164,12 @@ import {
   SwitcherOutlined,
   PictureOutlined
 } from '@ant-design/icons-vue';
-import { fetchGetTemplateList, fetchGetTemplateVersions, fetchPublishTemplate, fetchDeleteTemplate } from '@/service/api';
+import { fetchGetTemplateList, fetchGetTemplateVersions, fetchPublishTemplate, fetchDeleteTemplate, fetchCreateTemplate } from '@/service/api';
 
 defineOptions({ name: 'TemplateList' });
 
 const router = useRouter();
+const { isAdmin } = useAuth();
 
 const loading = ref(false);
 const versionModalVisible = ref(false);
@@ -293,8 +295,30 @@ const handleDesign = (id: string) => {
   router.push(`/template/design/${id}`);
 };
 
-const handleCreate = () => {
-  router.push('/template/design/new');
+const handleCreate = async () => {
+  // 先创建模板记录
+  loading.value = true;
+  try {
+    const response = await fetchCreateTemplate({
+      templateName: '新模板',
+      templateCode: `TPL_${Date.now()}`,
+      fieldsCount: 0
+    } as any);
+    
+    if (!response.error && response.data) {
+      const templateId = response.data.id || response.data.templateId;
+      message.success('模板创建成功，进入设计器');
+      // 跳转到新创建的模板设计器
+      router.push(`/template/design/${templateId}`);
+    } else {
+      message.error('创建模板失败');
+      loading.value = false;
+    }
+  } catch (error) {
+    console.error('Create template failed:', error);
+    message.error('创建模板失败');
+    loading.value = false;
+  }
 };
 
 const handlePreview = (template: any) => {

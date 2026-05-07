@@ -1,15 +1,18 @@
 package com.qhiot.survey.controller;
 
 import com.qhiot.survey.common.result.Result;
+import com.qhiot.survey.common.util.IpUtils;
 import com.qhiot.survey.common.util.JwtUtil;
 import com.qhiot.survey.dto.*;
 import com.qhiot.survey.entity.SysRole;
+import com.qhiot.survey.service.LoginLogService;
 import com.qhiot.survey.service.SysRoleService;
 import com.qhiot.survey.entity.SysUser;
 import com.qhiot.survey.service.SmsCodeService;
 import com.qhiot.survey.service.SysUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -30,6 +33,7 @@ import java.io.ByteArrayOutputStream;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,6 +55,7 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final SysRoleService sysRoleService;
     private final StringRedisTemplate redisTemplate;
+    private final LoginLogService loginLogService;
     
     @Value("${app.env:prod}")
     private String env;
@@ -129,9 +134,9 @@ public class AuthController {
         }
     }
 
-    @Operation(summary = "用户登录（账号密码）")
+    @Operation(summary = "用户登录(账号密码)")
     @PostMapping("/login")
-    public Result<LoginResponse> login(@RequestBody LoginRequest request) {
+    public Result<LoginResponse> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         try {
             // 验证图形验证码
             if (request.getCaptchaKey() == null || request.getCaptcha() == null) {
@@ -156,16 +161,25 @@ public class AuthController {
             // 检查用户是否存在
             SysUser user = sysUserService.getUserByUsername(request.getUsername());
             if (user == null) {
+                // 记录登录失败日志
+                loginLogService.logLogin(null, request.getUsername(), "internal", 1, 
+                    "用户名不存在", IpUtils.getClientIp(httpRequest), IpUtils.getUserAgent(httpRequest));
                 return Result.error("用户名或密码错误");
             }
 
             // 检查用户状态
             if (user.getStatus() == 0) {
+                // 记录登录失败日志
+                loginLogService.logLogin(user.getId(), user.getUsername(), "internal", 1, 
+                    "账号已被禁用", IpUtils.getClientIp(httpRequest), IpUtils.getUserAgent(httpRequest));
                 return Result.error("账号已被禁用");
             }
 
             // 检查用户是否被锁定
             if (sysUserService.isUserLocked(user)) {
+                // 记录登录失败日志
+                loginLogService.logLogin(user.getId(), user.getUsername(), "internal", 1, 
+                    "用户已被锁定", IpUtils.getClientIp(httpRequest), IpUtils.getUserAgent(httpRequest));
                 return Result.error("用户已被锁定，请稍后再试");
             }
 
@@ -180,6 +194,10 @@ public class AuthController {
             // 认证成功，处理登录成功逻辑
             sysUserService.handleLoginSuccess(user);
 
+            // 记录登录成功日志
+            loginLogService.logLogin(user.getId(), user.getUsername(), "internal", 0, 
+                null, IpUtils.getClientIp(httpRequest), IpUtils.getUserAgent(httpRequest));
+
             // 生成Token
             String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getUsername(), "internal");
             String refreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getUsername());
@@ -191,15 +209,36 @@ public class AuthController {
         } catch (BadCredentialsException e) {
             // 登录失败，处理失败逻辑
             sysUserService.handleLoginFailure(request.getUsername());
+            
+            // 记录登录失败日志
+            SysUser user = sysUserService.getUserByUsername(request.getUsername());
+            if (user != null) {
+                loginLogService.logLogin(user.getId(), user.getUsername(), "internal", 1, 
+                    "密码错误", IpUtils.getClientIp(httpRequest), IpUtils.getUserAgent(httpRequest));
+            } else {
+                loginLogService.logLogin(null, request.getUsername(), "internal", 1, 
+                    "密码错误", IpUtils.getClientIp(httpRequest), IpUtils.getUserAgent(httpRequest));
+            }
+            
             return Result.error("用户名或密码错误");
         } catch (Exception e) {
+            // 记录登录失败日志
+            SysUser user = sysUserService.getUserByUsername(request.getUsername());
+            if (user != null) {
+                loginLogService.logLogin(user.getId(), user.getUsername(), "internal", 1, 
+                    "登录异常: " + e.getMessage(), IpUtils.getClientIp(httpRequest), IpUtils.getUserAgent(httpRequest));
+            } else {
+                loginLogService.logLogin(null, request.getUsername(), "internal", 1, 
+                    "登录异常: " + e.getMessage(), IpUtils.getClientIp(httpRequest), IpUtils.getUserAgent(httpRequest));
+            }
+            
             return Result.error("登录失败: " + e.getMessage());
         }
     }
 
     @Operation(summary = "短信验证码登录")
     @PostMapping("/sms-login")
-    public Result<LoginResponse> smsLogin(@Valid @RequestBody SmsLoginRequest request) {
+    public Result<LoginResponse> smsLogin(@Valid @RequestBody SmsLoginRequest request, HttpServletRequest httpRequest) {
         try {
             // 验证短信验证码
             smsCodeService.verifySmsCode(request.getPhone(), request.getCode(), "login");
@@ -207,16 +246,25 @@ public class AuthController {
             // 根据手机号获取用户
             SysUser user = smsCodeService.getUserByPhone(request.getPhone());
             if (user == null) {
+                // 记录登录失败日志
+                loginLogService.logLogin(null, request.getPhone(), "internal", 1, 
+                    "手机号未注册", IpUtils.getClientIp(httpRequest), IpUtils.getUserAgent(httpRequest));
                 return Result.error("该手机号未注册");
             }
 
             // 检查用户状态
             if (user.getStatus() == 0) {
+                // 记录登录失败日志
+                loginLogService.logLogin(user.getId(), user.getUsername(), "internal", 1, 
+                    "账号已被禁用", IpUtils.getClientIp(httpRequest), IpUtils.getUserAgent(httpRequest));
                 return Result.error("账号已被禁用");
             }
 
             // 检查用户是否被锁定
             if (sysUserService.isUserLocked(user)) {
+                // 记录登录失败日志
+                loginLogService.logLogin(user.getId(), user.getUsername(), "internal", 1, 
+                    "用户已被锁定", IpUtils.getClientIp(httpRequest), IpUtils.getUserAgent(httpRequest));
                 return Result.error("用户已被锁定，请稍后再试");
             }
 
@@ -227,11 +275,25 @@ public class AuthController {
             // 更新最后登录时间
             sysUserService.handleLoginSuccess(user);
 
+            // 记录登录成功日志
+            loginLogService.logLogin(user.getId(), user.getUsername(), "internal", 0, 
+                null, IpUtils.getClientIp(httpRequest), IpUtils.getUserAgent(httpRequest));
+
             // 构建响应
             LoginResponse response = buildLoginResponse(user, accessToken, refreshToken);
 
             return Result.success(response);
         } catch (Exception e) {
+            // 记录登录失败日志
+            SysUser user = smsCodeService.getUserByPhone(request.getPhone());
+            if (user != null) {
+                loginLogService.logLogin(user.getId(), user.getUsername(), "internal", 1, 
+                    "短信登录异常: " + e.getMessage(), IpUtils.getClientIp(httpRequest), IpUtils.getUserAgent(httpRequest));
+            } else {
+                loginLogService.logLogin(null, request.getPhone(), "internal", 1, 
+                    "短信登录异常: " + e.getMessage(), IpUtils.getClientIp(httpRequest), IpUtils.getUserAgent(httpRequest));
+            }
+            
             return Result.error("短信验证码登录失败: " + e.getMessage());
         }
     }
@@ -403,17 +465,22 @@ public class AuthController {
                 return Result.error("用户不存在");
             }
 
-            // 获取用户角色
-            String[] roles;
-            if (user.getRole() != null) {
-                SysRole role = sysRoleService.getById(user.getRole());
-                if (role != null && role.getRoleCode() != null) {
-                    roles = new String[]{role.getRoleCode()};
-                } else {
-                    roles = new String[]{"user"};
-                }
+            // ✅ 关键修复：从 sys_user_role 表查询用户的多个角色（支持多角色）
+            List<SysRole> roles = sysRoleService.getUserRoles(user.getId());
+            
+            String[] roleCodes;
+            if (roles != null && !roles.isEmpty()) {
+                // 将角色实体转换为角色编码数组
+                roleCodes = roles.stream()
+                    .map(SysRole::getRoleCode)
+                    .filter(code -> code != null && !code.isEmpty())
+                    .toArray(String[]::new);
+                
+                System.out.println("====== [AuthController] getUserInfo - userId: " + user.getId() + ", roles: " + java.util.Arrays.toString(roleCodes) + " ======");
             } else {
-                roles = new String[]{"user"};
+                // 如果没有分配角色，给默认角色
+                roleCodes = new String[]{"user"};
+                System.out.println("====== [AuthController] getUserInfo - userId: " + user.getId() + ", no roles assigned, using default ======");
             }
 
             // 暂时返回空按钮权限列表
@@ -423,12 +490,14 @@ public class AuthController {
                     String.valueOf(user.getId()),
                     user.getUsername(),
                     user.getRealName(),
-                    roles,
+                    roleCodes,
                     buttons
             );
 
             return Result.success(response);
         } catch (Exception e) {
+            System.err.println("====== [AuthController] getUserInfo error: " + e.getMessage() + " ======");
+            e.printStackTrace();
             return Result.error("获取用户信息失败: " + e.getMessage());
         }
     }

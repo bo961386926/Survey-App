@@ -1,4 +1,4 @@
-package com.qhiot.survey.service;
+package com.qhiot.survey.service.impl;
 
 import com.aliyun.dysmsapi20170525.Client;
 import com.aliyun.dysmsapi20170525.models.SendSmsRequest;
@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 @ConditionalOnProperty(name = "aliyun.sms.enabled", havingValue = "true", matchIfMissing = false)
-public class AliyunSmsCodeServiceImpl implements SmsCodeService {
+public class AliyunSmsCodeServiceImpl implements com.qhiot.survey.service.SmsCodeService {
 
     private final StringRedisTemplate redisTemplate;
 
@@ -60,7 +60,7 @@ public class AliyunSmsCodeServiceImpl implements SmsCodeService {
     }
 
     @Override
-    public boolean sendSmsCode(String phone, String scene) {
+    public boolean sendSmsCode(String phone, String scene) throws BusinessException {
         // 检查发送间隔
         String intervalKey = SMS_CODE_PREFIX + "interval:" + scene + ":" + phone;
         if (Boolean.TRUE.equals(redisTemplate.hasKey(intervalKey))) {

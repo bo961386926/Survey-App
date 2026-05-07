@@ -212,7 +212,8 @@ const local: App.I18n.Schema = {
     system_message: 'Message Center',
     system_log: 'Operation Log',
     system_help: 'Help Documentation',
-    system_role: 'Role Management'
+    system_role: 'Role Management',
+    system_dict: 'Data Dictionary'
   },
   page: {
     login: {
@@ -471,7 +472,7 @@ const local: App.I18n.Schema = {
     },
     pwd: {
       required: 'Please enter password',
-      invalid: '6-18 characters, including letters, numbers, and underscores'
+      invalid: '6-18 characters, including letters, numbers, underscores, or special characters (-@#$%^&*!)'
     },
     confirmPwd: {
       required: 'Please enter password again',

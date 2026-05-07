@@ -2,6 +2,7 @@ package com.qhiot.survey.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qhiot.survey.common.Result;
+import com.qhiot.survey.common.annotation.OperationLog;
 import com.qhiot.survey.entity.SysDictionaryData;
 import com.qhiot.survey.service.SysDictionaryDataService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -48,12 +49,14 @@ public class SysDictionaryDataController {
 
     @Operation(summary = "创建字典项")
     @PostMapping("/create")
+    @OperationLog(module = "数据字典", action = "创建字典项", description = "创建字典项: #data.dataName", riskLevel = 1)
     public Result<SysDictionaryData> create(@RequestBody SysDictionaryData data) {
         return Result.success(sysDictionaryDataService.insert(data));
     }
 
     @Operation(summary = "更新字典项")
     @PutMapping("/update/{id}")
+    @OperationLog(module = "数据字典", action = "更新字典项", description = "更新字典项ID: #id", riskLevel = 1)
     public Result<SysDictionaryData> update(@PathVariable Long id, @RequestBody SysDictionaryData data) {
         data.setId(id);
         return Result.success(sysDictionaryDataService.updateSelective(data));
@@ -61,6 +64,7 @@ public class SysDictionaryDataController {
 
     @Operation(summary = "删除字典项")
     @DeleteMapping("/delete/{id}")
+    @OperationLog(module = "数据字典", action = "删除字典项", description = "删除字典项ID: #id", riskLevel = 2)
     public Result<Void> delete(@PathVariable Long id) {
         sysDictionaryDataService.deleteById(id);
         return Result.success();
@@ -86,6 +90,7 @@ public class SysDictionaryDataController {
 
     @Operation(summary = "刷新字典缓存")
     @PostMapping("/refresh-cache")
+    @OperationLog(module = "数据字典", action = "刷新缓存", description = "刷新字典缓存", riskLevel = 1)
     public Result<Void> refreshCache() {
         sysDictionaryDataService.refreshCache();
         return Result.success();

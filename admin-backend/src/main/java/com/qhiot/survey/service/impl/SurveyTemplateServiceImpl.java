@@ -3,6 +3,7 @@ package com.qhiot.survey.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qhiot.survey.common.BusinessException;
 import com.qhiot.survey.common.enums.TemplateStatus;
 import com.qhiot.survey.entity.SurveyPointTemplateBinding;
@@ -12,6 +13,7 @@ import com.qhiot.survey.mapper.SurveyPointTemplateBindingMapper;
 import com.qhiot.survey.mapper.SurveyTemplateMapper;
 import com.qhiot.survey.mapper.SurveyTemplateVersionMapper;
 import com.qhiot.survey.service.SurveyTemplateService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Service
 public class SurveyTemplateServiceImpl extends ServiceImpl<SurveyTemplateMapper, SurveyTemplate> implements SurveyTemplateService {
 
@@ -30,6 +33,8 @@ public class SurveyTemplateServiceImpl extends ServiceImpl<SurveyTemplateMapper,
 
     @Autowired
     private SurveyPointTemplateBindingMapper surveyPointTemplateBindingMapper;
+    
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public Page<SurveyTemplate> listByPage(String keyword, Integer status, Integer pageNum, Integer pageSize) {
@@ -241,5 +246,90 @@ public class SurveyTemplateServiceImpl extends ServiceImpl<SurveyTemplateMapper,
         config.put("linkageRules", version.getLinkageRulesJson());
         
         return config;
+    }
+
+    @Override
+    @Transactional
+    public void saveDraft(Long id, Map<String, Object> draftData) {
+        SurveyTemplate template = getById(id);
+        if (template == null) {
+            throw new BusinessException("模板不存在");
+        }
+
+        try {
+            String fieldsJson = draftData.get("fields") != null
+                    ? objectMapper.writeValueAsString(draftData.get("fields"))
+                    : "[]";
+            String rulesJson = draftData.get("rules") != null
+                    ? objectMapper.writeValueAsString(draftData.get("rules"))
+                    : "{}";
+            String linkageRulesJson = draftData.get("linkageRules") != null
+                    ? objectMapper.writeValueAsString(draftData.get("linkageRules"))
+                    : "[]";
+
+            if (draftData.containsKey("templateName")) {
+                template.setTemplateName(draftData.get("templateName").toString());
+                updateById(template);
+            }
+
+            LambdaQueryWrapper<SurveyTemplateVersion> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(SurveyTemplateVersion::getTemplateId, id)
+                    .eq(SurveyTemplateVersion::getStatus, 0);
+            SurveyTemplateVersion draftVersion = surveyTemplateVersionMapper.selectOne(wrapper);
+
+            if (draftVersion != null) {
+                draftVersion.setFieldsJson(fieldsJson);
+                draftVersion.setRulesJson(rulesJson);
+                draftVersion.setLinkageRulesJson(linkageRulesJson);
+                surveyTemplateVersionMapper.updateById(draftVersion);
+            } else {
+                LambdaQueryWrapper<SurveyTemplateVersion> maxWrapper = new LambdaQueryWrapper<>();
+                maxWrapper.eq(SurveyTemplateVersion::getTemplateId, id)
+                        .orderByDesc(SurveyTemplateVersion::getVersionNo)
+                        .last("LIMIT 1");
+                SurveyTemplateVersion latest = surveyTemplateVersionMapper.selectOne(maxWrapper);
+                int newVersionNo = latest != null ? latest.getVersionNo() + 1 : 1;
+
+                draftVersion = new SurveyTemplateVersion();
+                draftVersion.setTemplateId(id);
+                draftVersion.setVersionNo(newVersionNo);
+                draftVersion.setFieldsJson(fieldsJson);
+                draftVersion.setRulesJson(rulesJson);
+                draftVersion.setLinkageRulesJson(linkageRulesJson);
+                draftVersion.setStatus(0);
+                surveyTemplateVersionMapper.insert(draftVersion);
+            }
+        } catch (Exception e) {
+            log.error("保存模板草稿失败", e);
+            throw new BusinessException("保存模板草稿失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Map<String, Object> previewTemplate(Long id) {
+        SurveyTemplate template = getById(id);
+        if (template == null) {
+            throw new BusinessException("模板不存在");
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("templateId", id);
+        result.put("templateName", template.getTemplateName());
+
+        if (template.getCurrentVersionId() != null) {
+            SurveyTemplateVersion version = surveyTemplateVersionMapper.selectById(template.getCurrentVersionId());
+            if (version != null) {
+                result.put("fields", version.getFieldsJson());
+                result.put("rules", version.getRulesJson());
+                result.put("linkageRules", version.getLinkageRulesJson());
+                result.put("versionNo", version.getVersionNo());
+            }
+        } else {
+            result.put("fields", "[]");
+            result.put("rules", "{}");
+            result.put("linkageRules", "[]");
+        }
+
+        return result;
     }
 }

@@ -151,7 +151,13 @@ async function refreshCaptcha() {
 refreshCaptcha();
 
 async function handleSubmit() {
-  await validate();
-  await authStore.login(model.userName, model.password, model.captcha, captchaKey.value);
+  try {
+    await validate();
+    await authStore.login(model.userName, model.password, model.captcha, captchaKey.value);
+    // 登录成功后刷新验证码
+    refreshCaptcha();
+  } catch (err) {
+    // 表单验证失败时不做额外处理
+  }
 }
 </script>

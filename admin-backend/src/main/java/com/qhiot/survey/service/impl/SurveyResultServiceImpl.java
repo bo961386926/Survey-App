@@ -35,7 +35,6 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
     public List<SurveyResult> getResultsByPointId(Long pointId) {
         return lambdaQuery()
                 .eq(SurveyResult::getPointId, pointId)
-                .eq(SurveyResult::getIsDeleted, YesNo.NO.getCode())
                 .orderByDesc(SurveyResult::getVersionNo)
                 .list();
     }
@@ -44,7 +43,6 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
     public SurveyResult getLatestResultByPointId(Long pointId) {
         return lambdaQuery()
                 .eq(SurveyResult::getPointId, pointId)
-                .eq(SurveyResult::getIsDeleted, YesNo.NO.getCode())
                 .orderByDesc(SurveyResult::getVersionNo)
                 .last("LIMIT 1")
                 .one();
@@ -53,16 +51,15 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
     @Override
     @Transactional
     public SurveyResult createResult(SurveyResult result) {
-        // 检查点位是否存在
+        // 检查点位是否存在（@TableLogic 自动过滤已删除点位）
         SurveyPoint point = surveyPointMapper.selectById(result.getPointId());
-        if (point == null || point.getIsDeleted() == YesNo.YES.getCode()) {
+        if (point == null) {
             throw new BusinessException("点位不存在或已作废");
         }
 
         // 设置版本号
         Integer maxVersionNo = lambdaQuery()
                 .eq(SurveyResult::getPointId, result.getPointId())
-                .eq(SurveyResult::getIsDeleted, YesNo.NO.getCode())
                 .select(SurveyResult::getVersionNo)
                 .list()
                 .stream()
@@ -82,8 +79,9 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
     @Override
     @Transactional
     public SurveyResult updateResult(Long id, SurveyResult result, Integer expectedVersion) {
+        // @TableLogic 自动过滤已删除记录，getById 为 null 则不存在
         SurveyResult existing = getById(id);
-        if (existing == null || existing.getIsDeleted() == YesNo.YES.getCode()) {
+        if (existing == null) {
             throw new BusinessException("勘查结果不存在");
         }
 
@@ -110,41 +108,38 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
         if (result == null) {
             throw new BusinessException("勘查结果不存在");
         }
-        // 逻辑删除
-        result.setIsDeleted(YesNo.YES.getCode());
-        return updateById(result);
+        // 逻辑删除（@TableLogic 注解在实体上，调用 removeById 生效）
+        return removeById(id);
     }
 
     @Override
     public PageResult<SurveyResult> queryAuditPage(Long projectId, Long sectionId, Integer status, Integer pageNum, Integer pageSize) {
         Page<SurveyResult> page = new Page<>(pageNum, pageSize);
-        
+
         LambdaQueryWrapper<SurveyResult> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SurveyResult::getIsDeleted, YesNo.NO.getCode());
-        
+
         if (status != null) {
             wrapper.eq(SurveyResult::getResultStatus, status);
         }
-        
-        // 关联点位表进行项目/标段筛选
+
+        // 关联点位表进行项目/标段筛选（@TableLogic 自动过滤已删除点位）
         if (projectId != null || sectionId != null) {
             List<Long> pointIds = surveyPointMapper.selectList(
                     new LambdaQueryWrapper<SurveyPoint>()
-                            .eq(SurveyPoint::getIsDeleted, YesNo.NO.getCode())
                             .eq(projectId != null, SurveyPoint::getProjectId, projectId)
                             .eq(sectionId != null, SurveyPoint::getSectionId, sectionId)
             ).stream().map(SurveyPoint::getId).collect(Collectors.toList());
-            
+
             if (pointIds.isEmpty()) {
                 return new PageResult<>(Collections.emptyList(), 0L, (int) page.getCurrent(), (int) page.getSize(), 0);
             }
             wrapper.in(SurveyResult::getPointId, pointIds);
         }
-        
+
         wrapper.orderByDesc(SurveyResult::getSubmitTime);
-        
+
         Page<SurveyResult> resultPage = baseMapper.selectPage(page, wrapper);
-        
+
         int totalPages = (int) Math.ceil((double) resultPage.getTotal() / resultPage.getSize());
         return new PageResult<>(
                 resultPage.getRecords(),
@@ -159,7 +154,7 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
     @Transactional
     public boolean passAudit(Long id, String auditRemark, Long auditorId) {
         SurveyResult result = getById(id);
-        if (result == null || result.getIsDeleted() == YesNo.YES.getCode()) {
+        if (result == null) {
             throw new BusinessException("勘查结果不存在");
         }
 
@@ -190,7 +185,7 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
     @Transactional
     public boolean rejectAudit(Long id, String auditRemark, Long auditorId) {
         SurveyResult rejectedResult = getById(id);
-        if (rejectedResult == null || rejectedResult.getIsDeleted() == YesNo.YES.getCode()) {
+        if (rejectedResult == null) {
             throw new BusinessException("勘查结果不存在");
         }
 
@@ -244,7 +239,6 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
     public List<SurveyResult> getResultsByUser(Long surveyUserId) {
         return lambdaQuery()
                 .eq(SurveyResult::getSurveyUserId, surveyUserId)
-                .eq(SurveyResult::getIsDeleted, YesNo.NO.getCode())
                 .orderByDesc(SurveyResult::getCreateTime)
                 .list();
     }
@@ -253,7 +247,7 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
     @Transactional
     public boolean submitForAudit(Long id, Long userId) {
         SurveyResult result = getById(id);
-        if (result == null || result.getIsDeleted() == YesNo.YES.getCode()) {
+        if (result == null) {
             throw new BusinessException("勘查结果不存在");
         }
 
@@ -278,7 +272,7 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
         if (result.getId() != null) {
             // 更新已有草稿
             SurveyResult existing = getById(result.getId());
-            if (existing == null || existing.getIsDeleted() == YesNo.YES.getCode()) {
+            if (existing == null) {
                 throw new BusinessException("勘查结果不存在");
             }
 

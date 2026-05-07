@@ -245,13 +245,16 @@ declare namespace Api {
       projectCode: string;
       manager: string;
       region: string;
-      status: ProjectStatus | string;
+      status: ProjectStatus | string | number;
       startDate: string;
       endDate: string;
       templateCount: number;
-      pointTotal: number;
-      pointDone: number;
-      auditPending: number;
+      pointCount: number;
+      completedCount: number;
+      pendingAuditCount: number;
+      pointTotal?: number; // 兼容旧字段
+      pointDone?: number; // 兼容旧字段
+      auditPending?: number; // 兼容旧字段
       description?: string;
       clientName?: string;
     }
@@ -286,6 +289,7 @@ declare namespace Api {
 
     interface ProjectEditParams {
       projectName: string;
+      projectCode: string;
       clientName?: string;
       startDate?: string;
       endDate?: string;

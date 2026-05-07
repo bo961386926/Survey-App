@@ -2,6 +2,7 @@ package com.qhiot.survey.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qhiot.survey.common.Result;
+import com.qhiot.survey.common.annotation.OperationLog;
 import com.qhiot.survey.entity.SurveyPoint;
 import com.qhiot.survey.service.SurveyPointService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,18 +58,21 @@ public class SurveyPointController {
 
     @Operation(summary = "创建点位")
     @PostMapping("/create")
+    @OperationLog(module = "点位管理", action = "创建", description = "创建点位: #point.pointName", riskLevel = 0)
     public Result<SurveyPoint> createPoint(@RequestBody SurveyPoint point) {
         return Result.success(surveyPointService.createPoint(point));
     }
 
     @Operation(summary = "更新点位")
     @PutMapping("/update/{id}")
+    @OperationLog(module = "点位管理", action = "更新", description = "更新点位ID: #id", riskLevel = 0)
     public Result<SurveyPoint> updatePoint(@PathVariable Long id, @RequestBody SurveyPoint point) {
         return Result.success(surveyPointService.updatePoint(id, point));
     }
 
     @Operation(summary = "删除点位")
     @DeleteMapping("/delete/{id}")
+    @OperationLog(module = "点位管理", action = "删除", description = "删除点位ID: #id", riskLevel = 2)
     public Result<Void> deletePoint(@PathVariable Long id) {
         surveyPointService.deletePoint(id);
         return Result.success();
@@ -76,6 +80,7 @@ public class SurveyPointController {
 
     @Operation(summary = "批量创建点位")
     @PostMapping("/batch")
+    @OperationLog(module = "点位管理", action = "批量创建", description = "批量创建点位, 数量: #points.size()", riskLevel = 0)
     public Result<Boolean> batchCreatePoints(@RequestBody List<SurveyPoint> points) {
         boolean success = surveyPointService.batchCreatePoints(points);
         return success ? Result.success(true) : Result.error("批量创建失败");
@@ -90,6 +95,7 @@ public class SurveyPointController {
 
     @Operation(summary = "Excel导入点位")
     @PostMapping("/import")
+    @OperationLog(module = "点位管理", action = "导入", description = "Excel导入点位, 项目ID: #projectId", riskLevel = 1)
     public Result<Map<String, Object>> importFromExcel(
             @RequestParam("file") MultipartFile file,
             @RequestParam Long projectId) {
@@ -98,6 +104,7 @@ public class SurveyPointController {
 
     @Operation(summary = "批量分配点位")
     @PostMapping("/batch-assign")
+    @OperationLog(module = "点位管理", action = "批量分配", description = "批量分配点位, 项目ID: #projectId, 点位数量: #pointIds.size(), 分配给用户ID: #assigneeId", riskLevel = 1)
     public Result<Void> batchAssign(
             @RequestParam Long projectId,
             @RequestBody List<Long> pointIds,
@@ -108,6 +115,7 @@ public class SurveyPointController {
 
     @Operation(summary = "点位作废")
     @PostMapping("/{id}/invalidate")
+    @OperationLog(module = "点位管理", action = "作废", description = "点位作废, 点位ID: #id, 原因: #reason", riskLevel = 1)
     public Result<Void> invalidatePoint(@PathVariable Long id, @RequestParam String reason) {
         surveyPointService.invalidatePoint(id, reason);
         return Result.success();
@@ -121,6 +129,7 @@ public class SurveyPointController {
 
     @Operation(summary = "批量设置排口类型")
     @PostMapping("/batch-set-outfall-type")
+    @OperationLog(module = "点位管理", action = "批量设置排口", description = "批量设置排口类型, 点位数量: #pointIds.size(), 排口类型: #outfallType", riskLevel = 0)
     public Result<Void> batchSetOutfallType(
             @RequestBody List<Long> pointIds,
             @RequestParam String outfallType) {

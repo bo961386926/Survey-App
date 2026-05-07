@@ -2,20 +2,12 @@ import { request } from '../request';
 
 /** get audit list */
 export function fetchGetAuditList(params?: Api.Audit.AuditSearchParams) {
-  const statusMap: Record<string, number> = {
-    pending: 0,
-    approved: 1,
-    rejected: 2
-  };
-
   return request<Api.Audit.AuditList>({
-    url: '/result/audit/page',
+    url: '/audit/pending',
     method: 'get',
     params: {
       pageNum: params?.current || 1,
       pageSize: params?.size || 10,
-      status: params?.status ? statusMap[params.status] : undefined,
-      projectId: params?.projectId,
       keyword: params?.keyword
     }
   });
@@ -24,7 +16,7 @@ export function fetchGetAuditList(params?: Api.Audit.AuditSearchParams) {
 /** get audit detail */
 export function fetchGetAuditDetail(resultId: string | number) {
   return request<Api.Audit.AuditDetail>({
-    url: `/result/${resultId}`,
+    url: `/audit/detail/${resultId}`,
     method: 'get'
   });
 }
@@ -32,10 +24,11 @@ export function fetchGetAuditDetail(resultId: string | number) {
 /** approve audit */
 export function fetchApproveAudit(data: { resultId: number; comment?: string }) {
   return request({
-    url: `/result/audit/${data.resultId}/pass`,
+    url: `/audit/pass`,
     method: 'post',
     params: {
-      auditRemark: data.comment
+      resultId: data.resultId,
+      comment: data.comment || ''
     }
   });
 }
@@ -43,10 +36,11 @@ export function fetchApproveAudit(data: { resultId: number; comment?: string }) 
 /** reject audit */
 export function fetchRejectAudit(data: { resultId: number; rejectReason: string }) {
   return request({
-    url: `/result/audit/${data.resultId}/reject`,
+    url: `/audit/reject`,
     method: 'post',
     params: {
-      auditRemark: data.rejectReason
+      resultId: data.resultId,
+      comment: data.rejectReason
     }
   });
 }
@@ -54,16 +48,18 @@ export function fetchRejectAudit(data: { resultId: number; rejectReason: string 
 /** batch approve audits */
 export function fetchBatchApproveAudits(data: { resultIds: number[] }) {
   return request({
-    url: '/audit/batch-approve',
+    url: '/audit/batch-pass',
     method: 'post',
-    data
+    params: {
+      resultIds: data.resultIds.join(',')
+    }
   });
 }
 
 /** get version history */
 export function fetchGetVersionHistory(pointId: number) {
   return request<Api.Audit.VersionHistory[]>({
-    url: `/audit/versions/${pointId}`,
+    url: `/audit/records?pointId=${pointId}`,
     method: 'get'
   });
 }

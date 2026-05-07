@@ -1,6 +1,7 @@
 package com.qhiot.survey.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.qhiot.survey.common.annotation.OperationLog;
 import com.qhiot.survey.common.result.Result;
 import com.qhiot.survey.entity.LocationCorrectionLog;
 import com.qhiot.survey.service.LocationCorrectionService;
@@ -39,6 +40,7 @@ public class LocationCorrectionController {
 
     @Operation(summary = "保存纠偏日志")
     @PostMapping
+    @OperationLog(module = "位置纠偏", action = "保存纠偏", description = "保存位置纠偏日志, 点位ID: #log.pointId", riskLevel = 0)
     public Result<Void> saveCorrectionLog(@RequestBody LocationCorrectionLog log) {
         locationCorrectionService.saveCorrectionLog(log);
         return Result.success();

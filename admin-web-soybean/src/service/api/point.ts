@@ -8,7 +8,8 @@ export function fetchGetPointList(params?: Api.Point.PointSearchParams) {
     params: {
       pageNum: params?.current || 1,
       pageSize: params?.size || 10,
-      projectName: params?.projectName,
+      projectId: params?.projectId,
+      sectionId: params?.sectionId,
       status: params?.status,
       keyword: params?.keyword
     }

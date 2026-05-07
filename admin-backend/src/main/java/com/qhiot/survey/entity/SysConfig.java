@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Schema(description = "系统配置")
 public class SysConfig {
 
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "配置ID")
     private Long id;
 

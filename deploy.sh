@@ -16,6 +16,7 @@ echo ""
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
+CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # 检查Docker是否安装
@@ -30,90 +31,115 @@ if ! docker compose version &> /dev/null; then
     exit 1
 fi
 
-# 定义docker-compose命令
-DC_CMD="docker compose"
-
 echo -e "${GREEN}✓ Docker环境检查通过${NC}"
 echo ""
 
 # 检查.env文件
 if [ ! -f .env ]; then
-    echo -e "${YELLOW}⚠ 未找到.env文件，从.env.example复制...${NC}"
-    cp .env.example .env
-    echo -e "${YELLOW}请编辑.env文件配置环境变量${NC}"
-    echo ""
+    if [ -f .env.example ]; then
+        echo -e "${YELLOW}⚠ 未找到.env文件，从.env.example复制...${NC}"
+        cp .env.example .env
+        echo -e "${YELLOW}请编辑.env文件配置环境变量（建议修改默认密码）${NC}"
+        echo ""
+    else
+        echo -e "${RED}错误: 缺少 .env.example 文件，无法生成配置文件${NC}"
+        exit 1
+    fi
 fi
 
-# 停止并清理旧容器
-echo "📦 停止旧容器..."
-$DC_CMD down
+# 询问是否清理旧数据
+echo -e "${YELLOW}是否清理旧的 Docker 数据卷？【注意：会删除所有数据库和缓存数据】${NC}"
+read -p "是否清理？(y/N): " clean_volumes
+echo ""
 
-# 清理未使用的镜像
-echo "🧹 清理未使用的镜像..."
-docker system prune -f
+# 停止并清理旧容器
+echo -e "${CYAN}[1/4] 停止旧容器...${NC}"
+if [ "$clean_volumes" = "y" ] || [ "$clean_volumes" = "Y" ]; then
+    docker compose down -v
+    echo -e "${GREEN}✓ 旧容器和数据卷已清理${NC}"
+else
+    docker compose down
+    echo -e "${GREEN}✓ 旧容器已停止${NC}"
+fi
+echo ""
 
 # 构建并启动服务
+echo -e "${CYAN}[2/4] 开始构建和启动服务...${NC}"
+docker compose up -d --build
+echo -e "${GREEN}✓ 服务已启动${NC}"
 echo ""
-echo "🚀 开始构建和启动服务..."
-$DC_CMD up -d --build
 
-# 等待服务启动
-echo ""
-echo "⏳ 等待服务启动..."
-sleep 10
-
-# 检查服务状态
-echo ""
-echo "📊 检查服务状态..."
-$DC_CMD ps
+# 等待服务就绪
+echo -e "${CYAN}[3/4] 等待服务就绪...${NC}"
+echo "等待MySQL和Redis健康检查通过..."
+sleep 15
 
 # 健康检查
 echo ""
-echo "🏥 执行健康检查..."
+echo -e "${CYAN}[4/4] 执行健康检查...${NC}"
+ALL_HEALTHY=true
+
+# 检查所有容器状态
+echo ""
+echo "容器运行状态:"
+docker compose ps
+
+echo ""
 
 # 检查MySQL
 echo -n "  MySQL: "
-if $DC_CMD exec -T mysql mysqladmin ping -h localhost &> /dev/null; then
+if docker compose exec -T mysql mysqladmin ping -h localhost -u root -p"${DB_ROOT_PASSWORD:-root}" &> /dev/null; then
     echo -e "${GREEN}✓ 运行正常${NC}"
 else
     echo -e "${RED}✗ 启动失败${NC}"
+    ALL_HEALTHY=false
 fi
 
 # 检查Redis
 echo -n "  Redis: "
-if $DC_CMD exec -T redis redis-cli -a redis_password ping &> /dev/null; then
+REDIS_PASS=${REDIS_PASSWORD:-redis_password}
+if docker compose exec -T redis redis-cli -a "$REDIS_PASS" ping 2>/dev/null | grep -q "PONG"; then
     echo -e "${GREEN}✓ 运行正常${NC}"
 else
     echo -e "${RED}✗ 启动失败${NC}"
+    ALL_HEALTHY=false
 fi
 
-# 检查后端服务
+# 检查后端服务（通过宿主端口 8081）
 echo -n "  Backend: "
-sleep 20  # 等待后端完全启动
-if curl -s http://localhost:8080/api/v1/health | grep -q "UP"; then
+sleep 5  # 给后端更多启动时间
+BACKEND_PORT=${BACKEND_PORT:-8081}
+if curl -s "http://localhost:${BACKEND_PORT}/api/v1/health" | grep -q "UP"; then
     echo -e "${GREEN}✓ 运行正常${NC}"
 else
     echo -e "${YELLOW}⚠ 可能还在启动中，请稍后检查${NC}"
+    echo -e "${YELLOW}  查看日志: docker compose logs -f admin-backend${NC}"
+    ALL_HEALTHY=false
 fi
 
 echo ""
 echo "=========================================="
-echo -e "${GREEN}  部署完成！${NC}"
+if [ "$ALL_HEALTHY" = true ]; then
+    echo -e "${GREEN}  所有服务部署完成！${NC}"
+else
+    echo -e "${YELLOW}  部署完成（部分服务可能仍在上电）${NC}"
+fi
 echo "=========================================="
 echo ""
 echo "📱 访问地址："
-echo "   - 后端API: http://localhost:8080"
-echo "   - 健康检查: http://localhost:8080/api/v1/health"
-echo "   - API文档: http://localhost:8080/doc.html"
+echo "   - 后端API:       http://localhost:${BACKEND_PORT:-8081}"
+echo "   - 健康检查:      http://localhost:${BACKEND_PORT:-8081}/api/v1/health"
+echo "   - API文档:       http://localhost:${BACKEND_PORT:-8081}/doc.html"
 echo ""
 echo "📋 常用命令："
-echo "   - 查看日志: docker-compose logs -f admin-backend"
-echo "   - 停止服务: docker-compose down"
-echo "   - 重启服务: docker-compose restart"
+echo "   - 查看日志:      docker compose logs -f admin-backend"
+echo "   - 查看全部日志:  docker compose logs -f"
+echo "   - 停止服务:      docker compose down"
+echo "   - 重启服务:      docker compose restart"
 echo ""
 echo "📝 数据库连接信息："
-echo "   - Host: localhost:3306"
-echo "   - Database: survey_db"
-echo "   - Username: survey_user"
-echo "   - Password: survey_password"
+echo "   - Host:      localhost:${MYSQL_PORT:-3306}"
+echo "   - Database:  ${DB_NAME:-survey_db}"
+echo "   - Username:  ${DB_USERNAME:-survey_user}"
+echo "   - Password:  ${DB_PASSWORD:-survey_password}"
 echo ""

@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Schema(description = "协作访问日志")
 public class CollabAccessLog {
 
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "日志ID")
     private Long id;
 

@@ -1,5 +1,6 @@
 package com.qhiot.survey.controller;
 
+import com.qhiot.survey.common.annotation.OperationLog;
 import com.qhiot.survey.common.result.Result;
 import com.qhiot.survey.entity.ProjectMember;
 import com.qhiot.survey.service.ProjectMemberService;
@@ -34,6 +35,7 @@ public class ProjectMemberController {
     @Operation(summary = "添加项目成员")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
+    @OperationLog(module = "项目成员", action = "添加", description = "添加项目成员, 项目ID: #projectId, 用户ID: #userId, 角色: #role", riskLevel = 1)
     public Result<Boolean> addMember(
             @PathVariable Long projectId,
             @Parameter(description = "用户ID") @RequestParam Long userId,
@@ -45,6 +47,7 @@ public class ProjectMemberController {
     @Operation(summary = "批量添加项目成员")
     @PostMapping("/batch")
     @PreAuthorize("hasRole('ADMIN')")
+    @OperationLog(module = "项目成员", action = "批量添加", description = "批量添加项目成员, 项目ID: #projectId, 数量: #userIds.size()", riskLevel = 1)
     public Result<Integer> batchAddMembers(
             @PathVariable Long projectId,
             @RequestBody Map<String, Object> request) {
@@ -58,6 +61,7 @@ public class ProjectMemberController {
     @Operation(summary = "移除项目成员")
     @DeleteMapping("/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
+    @OperationLog(module = "项目成员", action = "移除", description = "移除项目成员, 项目ID: #projectId, 用户ID: #userId", riskLevel = 1)
     public Result<Boolean> removeMember(@PathVariable Long projectId, @PathVariable Long userId) {
         boolean success = projectMemberService.removeMember(projectId, userId);
         return success ? Result.success(true) : Result.error("移除失败");
@@ -66,6 +70,7 @@ public class ProjectMemberController {
     @Operation(summary = "更新成员角色")
     @PutMapping("/{userId}/role")
     @PreAuthorize("hasRole('ADMIN')")
+    @OperationLog(module = "项目成员", action = "更新角色", description = "更新项目成员角色, 项目ID: #projectId, 用户ID: #userId, 新角色: #role", riskLevel = 1)
     public Result<Boolean> updateMemberRole(
             @PathVariable Long projectId,
             @PathVariable Long userId,

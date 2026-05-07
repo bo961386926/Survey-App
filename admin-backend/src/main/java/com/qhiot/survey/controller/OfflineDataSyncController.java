@@ -1,6 +1,7 @@
 package com.qhiot.survey.controller;
 
 import com.qhiot.survey.common.Result;
+import com.qhiot.survey.common.annotation.OperationLog;
 import com.qhiot.survey.entity.OfflineDataSync;
 import com.qhiot.survey.service.OfflineDataSyncService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +25,7 @@ public class OfflineDataSyncController {
 
     @Operation(summary = "批量接收离线数据")
     @PostMapping("/receive")
+    @OperationLog(module = "离线数据同步", action = "接收数据", description = "批量接收离线数据, 设备ID: #deviceId, 数据条数: #dataList.size()", riskLevel = 0)
     public Result<Map<String, Object>> receiveOfflineData(
             @RequestHeader("Device-Id") String deviceId,
             @RequestParam Long userId,
@@ -45,12 +47,14 @@ public class OfflineDataSyncController {
 
     @Operation(summary = "同步单条数据")
     @PostMapping("/sync/{syncId}")
+    @OperationLog(module = "离线数据同步", action = "同步数据", description = "同步单条数据, syncId: #syncId", riskLevel = 0)
     public Result<Map<String, Object>> syncData(@PathVariable Long syncId) {
         return Result.success(offlineDataSyncService.syncData(syncId));
     }
 
     @Operation(summary = "批量同步数据")
     @PostMapping("/sync/batch")
+    @OperationLog(module = "离线数据同步", action = "批量同步", description = "批量同步数据, 数量: #syncIds.size()", riskLevel = 0)
     public Result<Map<String, Object>> batchSyncData(@RequestBody List<Long> syncIds) {
         return Result.success(offlineDataSyncService.batchSyncData(syncIds));
     }
@@ -63,6 +67,7 @@ public class OfflineDataSyncController {
 
     @Operation(summary = "处理数据冲突")
     @PostMapping("/conflict/{syncId}")
+    @OperationLog(module = "离线数据同步", action = "解决冲突", description = "处理数据冲突, syncId: #syncId, 解决方案: #resolution", riskLevel = 1)
     public Result<Map<String, Object>> resolveConflict(
             @PathVariable Long syncId,
             @RequestParam String resolution,
@@ -74,12 +79,14 @@ public class OfflineDataSyncController {
 
     @Operation(summary = "重试失败的同步")
     @PostMapping("/retry/{syncId}")
+    @OperationLog(module = "离线数据同步", action = "重试同步", description = "重试失败的同步, syncId: #syncId", riskLevel = 0)
     public Result<Map<String, Object>> retrySync(@PathVariable Long syncId) {
         return Result.success(offlineDataSyncService.retrySync(syncId));
     }
 
     @Operation(summary = "清理过期同步记录")
     @PostMapping("/cleanup")
+    @OperationLog(module = "离线数据同步", action = "清理数据", description = "清理过期同步记录, 保留天数: #days", riskLevel = 1)
     public Result<Integer> cleanupExpiredRecords(
             @RequestParam(defaultValue = "30") int days) {
         return Result.success(offlineDataSyncService.cleanupExpiredRecords(days));

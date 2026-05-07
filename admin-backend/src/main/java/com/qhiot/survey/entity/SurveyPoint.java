@@ -2,6 +2,7 @@ package com.qhiot.survey.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import java.io.Serializable;
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 public class SurveyPoint implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     
     /**
@@ -70,6 +71,7 @@ public class SurveyPoint implements Serializable {
     /**
      * 1已删除 0未删除
      */
+    @TableLogic
     private Integer isDeleted;
     
     private LocalDateTime createTime;

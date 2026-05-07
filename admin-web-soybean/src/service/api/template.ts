@@ -1,9 +1,71 @@
 import { request } from '../request';
 
+/** Base URL prefix */
+const TEMPLATE_BASE = '/template';
+
+/** Field JSON schema type for design */
+export interface FieldOption {
+  label: string;
+  value: string;
+}
+
+export interface LinkageCondition {
+  fieldId: string;
+  operator: 'eq' | 'neq' | 'in' | 'contains';
+  value: any;
+}
+
+export interface LinkageRule {
+  action: 'show' | 'hide' | 'clear' | 'require';
+  conditions: LinkageCondition[];
+}
+
+export interface FieldValidation {
+  min?: number;
+  max?: number;
+  pattern?: string;
+  maxLength?: number;
+  minLength?: number;
+}
+
+export interface OptionSource {
+  type: 'static' | 'dict';
+  dictCode?: string;
+}
+
+export interface ImageConfig {
+  cameraOnly: boolean;
+  maxCount: number;
+  maxSize: number;
+}
+
+export interface FieldSchema {
+  id: string;
+  type: 'input' | 'textarea' | 'number' | 'select' | 'radio' | 'checkbox' | 'switch' | 'date' | 'image' | 'location' | 'divider';
+  label: string;
+  placeholder?: string;
+  required: boolean;
+  disabled: boolean;
+  hidden: boolean;
+  defaultValue?: any;
+  validation?: FieldValidation;
+  options?: FieldOption[];
+  optionSource?: OptionSource;
+  imageConfig?: ImageConfig;
+  linkageRules?: LinkageRule[];
+}
+
+export interface TemplateSaveDraft {
+  templateName: string;
+  fields: FieldSchema[];
+  rules?: string;
+  linkageRules?: string;
+}
+
 /** get template list */
 export function fetchGetTemplateList(params?: Api.Template.TemplateSearchParams) {
   return request<Api.Template.TemplateList>({
-    url: '/template/page',
+    url: `${TEMPLATE_BASE}/page`,
     method: 'get',
     params: {
       pageNum: params?.current || 1,
@@ -16,7 +78,7 @@ export function fetchGetTemplateList(params?: Api.Template.TemplateSearchParams)
 /** get template detail */
 export function fetchGetTemplateDetail(templateId: string | number) {
   return request<Api.Template.TemplateDetail>({
-    url: `/template/${templateId}`,
+    url: `${TEMPLATE_BASE}/detail/${templateId}`,
     method: 'get'
   });
 }
@@ -24,7 +86,7 @@ export function fetchGetTemplateDetail(templateId: string | number) {
 /** create template */
 export function fetchCreateTemplate(data: Api.Template.TemplateEdit) {
   return request<Api.Template.TemplateDetail>({
-    url: '/template',
+    url: `${TEMPLATE_BASE}/create`,
     method: 'post',
     data
   });
@@ -33,7 +95,7 @@ export function fetchCreateTemplate(data: Api.Template.TemplateEdit) {
 /** update template */
 export function fetchUpdateTemplate(templateId: string | number, data: Api.Template.TemplateEdit) {
   return request<Api.Template.TemplateDetail>({
-    url: `/template/${templateId}`,
+    url: `${TEMPLATE_BASE}/update/${templateId}`,
     method: 'put',
     data
   });
@@ -42,31 +104,49 @@ export function fetchUpdateTemplate(templateId: string | number, data: Api.Templ
 /** delete template */
 export function fetchDeleteTemplate(templateId: string | number) {
   return request({
-    url: `/template/${templateId}`,
+    url: `${TEMPLATE_BASE}/delete/${templateId}`,
     method: 'delete'
   });
 }
 
+/** save template draft (save design state) */
+export function fetchSaveTemplateDraft(templateId: string | number, data: TemplateSaveDraft) {
+  return request({
+    url: `${TEMPLATE_BASE}/draft/${templateId}`,
+    method: 'put',
+    data
+  });
+}
+
 /** publish template (create version) */
-export function fetchPublishTemplate(templateId: number) {
+export function fetchPublishTemplate(templateId: number, data: TemplateSaveDraft) {
   return request<Api.Template.TemplateVersion>({
-    url: `/template/${templateId}/publish`,
-    method: 'post'
+    url: `${TEMPLATE_BASE}/${templateId}/publish`,
+    method: 'post',
+    data
   });
 }
 
 /** get template versions */
 export function fetchGetTemplateVersions(templateId: number) {
   return request<Api.Template.TemplateVersion[]>({
-    url: `/template/${templateId}/versions`,
+    url: `${TEMPLATE_BASE}/${templateId}/versions`,
     method: 'get'
   });
 }
 
-/** preview template */
+/** preview template (mobile form preview data) */
 export function fetchPreviewTemplate(templateId: number) {
-  return request<Api.Template.TemplatePreview>({
-    url: `/template/${templateId}/preview`,
+  return request<{fields: FieldSchema[]}>({
+    url: `${TEMPLATE_BASE}/${templateId}/preview`,
+    method: 'get'
+  });
+}
+
+/** get template list (simple) */
+export function fetchGetTemplateSimpleList() {
+  return request<Api.Template.TemplateInfo[]>({
+    url: `${TEMPLATE_BASE}/list`,
     method: 'get'
   });
 }

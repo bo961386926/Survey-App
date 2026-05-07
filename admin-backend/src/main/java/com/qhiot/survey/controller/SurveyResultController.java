@@ -1,13 +1,17 @@
 package com.qhiot.survey.controller;
 
 import com.qhiot.survey.common.Result;
+import com.qhiot.survey.common.annotation.OperationLog;
 import com.qhiot.survey.dto.PageResult;
 import com.qhiot.survey.entity.SurveyResult;
+import com.qhiot.survey.entity.SysUser;
 import com.qhiot.survey.service.SurveyResultService;
+import com.qhiot.survey.service.SysUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,6 +27,7 @@ import java.util.Map;
 public class SurveyResultController {
 
     private final SurveyResultService surveyResultService;
+    private final SysUserService sysUserService;
 
     @Operation(summary = "获取勘查结果列表")
     @GetMapping("/list")
@@ -89,6 +94,7 @@ public class SurveyResultController {
     @Operation(summary = "审核通过")
     @PostMapping("/audit/{id}/pass")
     @PreAuthorize("hasRole('AUDITOR')")
+    @OperationLog(module = "审核管理", action = "审核通过", description = "审核通过, 结果ID: #id", riskLevel = 1)
     public Result<Boolean> passAudit(@PathVariable Long id,
                                       @RequestParam(required = false) String auditRemark) {
         // 获取当前审核员ID（从SecurityContext）
@@ -100,6 +106,7 @@ public class SurveyResultController {
     @Operation(summary = "审核驳回")
     @PostMapping("/audit/{id}/reject")
     @PreAuthorize("hasRole('AUDITOR')")
+    @OperationLog(module = "审核管理", action = "审核驳回", description = "审核驳回, 结果ID: #id", riskLevel = 1)
     public Result<Boolean> rejectAudit(@PathVariable Long id,
                                         @RequestParam String auditRemark) {
         // 获取当前审核员ID（从SecurityContext）
@@ -111,6 +118,7 @@ public class SurveyResultController {
     @Operation(summary = "批量审核通过")
     @PostMapping("/audit/batch-pass")
     @PreAuthorize("hasRole('AUDITOR')")
+    @OperationLog(module = "审核管理", action = "批量审核通过", description = "批量审核通过, 数量: #ids.size()", riskLevel = 1)
     public Result<Boolean> batchPassAudit(@RequestBody List<Long> ids,
                                            @RequestParam(required = false) String auditRemark) {
         // 获取当前审核员ID（从SecurityContext）
@@ -122,6 +130,7 @@ public class SurveyResultController {
     @Operation(summary = "提交审核")
     @PostMapping("/submit/{id}")
     @PreAuthorize("hasRole('COLLECTOR')")
+    @OperationLog(module = "勘查管理", action = "提交审核", description = "提交审核, 结果ID: #id", riskLevel = 0)
     public Result<Boolean> submitForAudit(@PathVariable Long id) {
         Long userId = getCurrentUserId();
         boolean success = surveyResultService.submitForAudit(id, userId);
@@ -155,7 +164,11 @@ public class SurveyResultController {
      * 获取当前登录用户ID
      */
     private Long getCurrentUserId() {
-        // TODO: 从SecurityContext中获取当前用户ID
-        return 1L;
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        SysUser user = sysUserService.getUserByUsername(username);
+        if (user == null) {
+            throw new RuntimeException("用户未登录");
+        }
+        return user.getId();
     }
 }

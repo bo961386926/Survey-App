@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 public class SysUser implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
     
     private String username;
@@ -32,6 +32,11 @@ public class SysUser implements Serializable {
     
     private String email;
     
+    /**
+     * @deprecated 已废弃，请使用 sys_user_role 表管理用户角色（支持多角色）
+     * 此字段仅用于向后兼容，新版本不再使用
+     */
+    @Deprecated
     private Integer role;
     
     private Integer status;

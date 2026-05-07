@@ -2,6 +2,7 @@ package com.qhiot.survey.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qhiot.survey.common.Result;
+import com.qhiot.survey.common.annotation.OperationLog;
 import com.qhiot.survey.entity.CollabEntry;
 import com.qhiot.survey.service.CollabEntryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,18 +40,21 @@ public class CollabEntryController {
 
     @Operation(summary = "创建协作入口")
     @PostMapping
+    @OperationLog(module = "协作入口", action = "创建", description = "创建协作入口: #entry.entryName", riskLevel = 1)
     public Result<CollabEntry> create(@RequestBody CollabEntry entry) {
         return Result.success(collabEntryService.createEntry(entry));
     }
 
     @Operation(summary = "更新协作入口")
     @PutMapping("/{id}")
+    @OperationLog(module = "协作入口", action = "更新", description = "更新协作入口ID: #id", riskLevel = 1)
     public Result<CollabEntry> update(@PathVariable Long id, @RequestBody CollabEntry entry) {
         return Result.success(collabEntryService.updateEntry(id, entry));
     }
 
     @Operation(summary = "撤销协作入口")
     @PutMapping("/{id}/revoke")
+    @OperationLog(module = "协作入口", action = "撤销", description = "撤销协作入口ID: #id", riskLevel = 2)
     public Result<Void> revoke(@PathVariable Long id) {
         collabEntryService.revokeEntry(id);
         return Result.success();
@@ -58,6 +62,7 @@ public class CollabEntryController {
 
     @Operation(summary = "重置Token")
     @PutMapping("/{id}/reset-token")
+    @OperationLog(module = "协作入口", action = "重置Token", description = "重置协作入口Token, ID: #id", riskLevel = 2)
     public Result<String> resetToken(@PathVariable Long id) {
         return Result.success(collabEntryService.resetToken(id));
     }

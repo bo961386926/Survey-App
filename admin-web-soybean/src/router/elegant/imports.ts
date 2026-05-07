@@ -29,6 +29,7 @@ export const views: Record<LastLevelRouteKey, RouteComponent | (() => Promise<Ro
   point_map: () => import("@/views/point/map/index.vue"),
   project_detail: () => import("@/views/project/detail/[id].vue"),
   project_list: () => import("@/views/project/list/index.vue"),
+  system_dict: () => import("@/views/system/dict/index.vue"),
   system_help: () => import("@/views/system/help/index.vue"),
   system_log: () => import("@/views/system/log/index.vue"),
   system_message: () => import("@/views/system/message/index.vue"),

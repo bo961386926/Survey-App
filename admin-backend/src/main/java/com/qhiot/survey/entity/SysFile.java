@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Schema(description = "文件信息")
 public class SysFile {
 
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "文件ID")
     private Long id;
 

@@ -33,7 +33,6 @@ public class SurveyPointServiceImpl extends ServiceImpl<SurveyPointMapper, Surve
     public List<SurveyPoint> getPointsByProjectId(Long projectId) {
         return lambdaQuery()
                 .eq(SurveyPoint::getProjectId, projectId)
-                .eq(SurveyPoint::getIsDeleted, YesNo.NO.getCode())
                 .orderByAsc(SurveyPoint::getPointCode)
                 .list();
     }
@@ -41,10 +40,9 @@ public class SurveyPointServiceImpl extends ServiceImpl<SurveyPointMapper, Surve
     @Override
     @Transactional
     public SurveyPoint createPoint(SurveyPoint point) {
-        // 检查点位编号是否重复
+        // 检查点位编号是否重复（@TableLogic 自动过滤已删除记录）
         Long count = lambdaQuery()
                 .eq(SurveyPoint::getPointCode, point.getPointCode())
-                .eq(SurveyPoint::getIsDeleted, YesNo.NO.getCode())
                 .count();
         if (count > 0) {
             throw new BusinessException("点位编号已存在");
@@ -83,7 +81,6 @@ public class SurveyPointServiceImpl extends ServiceImpl<SurveyPointMapper, Surve
     public List<SurveyPoint> getPointsByStatus(Integer status) {
         return lambdaQuery()
                 .eq(SurveyPoint::getStatus, status)
-                .eq(SurveyPoint::getIsDeleted, YesNo.NO.getCode())
                 .list();
     }
 
@@ -97,8 +94,7 @@ public class SurveyPointServiceImpl extends ServiceImpl<SurveyPointMapper, Surve
     public Page<SurveyPoint> listByPage(Long projectId, Long sectionId, String keyword, Integer status, Integer pageNum, Integer pageSize) {
         Page<SurveyPoint> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<SurveyPoint> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SurveyPoint::getIsDeleted, YesNo.NO.getCode());
-        
+
         if (projectId != null) {
             wrapper.eq(SurveyPoint::getProjectId, projectId);
         }

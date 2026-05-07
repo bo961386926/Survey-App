@@ -127,9 +127,14 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
             throw new BusinessException(ResultCode.PROJECT_NOT_FOUND);
         }
         
-        // 只有草稿状态的项目可以删除
-        if (project.getStatus() != STATUS_DRAFT) {
-            throw new BusinessException("只有草稿状态的项目可以删除");
+        // 已归档的项目不允许删除
+        if (project.getStatus() == STATUS_ARCHIVED) {
+            throw new BusinessException("已归档的项目不允许删除");
+        }
+        
+        // 进行中的项目需要谨慎删除
+        if (project.getStatus() == STATUS_IN_PROGRESS) {
+            throw new BusinessException("进行中的项目不能删除，请先暂停或完成项目");
         }
         
         return removeById(id);
@@ -137,7 +142,14 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
 
     @Override
     public Project getProjectDetail(Long id) {
-        return getById(id);
+        log.info("====== [项目服务] 查询项目详情 - projectId: {} ======", id);
+        Project project = getById(id);
+        if (project != null) {
+            log.info("====== [项目服务] 找到项目 - projectId: {}, projectName: {} ======", id, project.getProjectName());
+        } else {
+            log.warn("====== [项目服务] 项目不存在 - projectId: {} ======", id);
+        }
+        return project;
     }
 
     @Override

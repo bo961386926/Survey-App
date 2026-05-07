@@ -104,23 +104,30 @@ const initMap = async () => {
       throw new Error('AMap对象未定义，请检查API Key是否正确');
     }
 
-    // Create map instance
+    // Create map instance with pure satellite view
     console.log('[AMap Component] Creating map instance...');
     map = new (window as any).AMap.Map(mapContainerRef.value, {
       zoom: props.zoom,
       center: props.center,
       resizeEnable: true,
-      viewMode: '2D',
-      mapStyle: 'amap://styles/normal'
+      viewMode: '3D',
+      layers: [new (window as any).AMap.TileLayer.Satellite()],
+      mapStyle: 'amap://styles/satellite'
     });
 
     console.log('[AMap Component] Map instance created:', map);
 
     // Load and add controls
-    (window as any).AMap.plugin(['AMap.Scale', 'AMap.ToolBar'], () => {
+    (window as any).AMap.plugin(['AMap.Scale', 'AMap.ToolBar', 'AMap.MapType'], () => {
       map.addControl(new (window as any).AMap.Scale());
       map.addControl(new (window as any).AMap.ToolBar({
         position: 'RB'
+      }));
+      // 添加地图类型切换控件（支持标准地图/卫星图/路网图切换）
+      map.addControl(new (window as any).AMap.MapType({
+        defaultType: 0,
+        showRoad: true,
+        showTraffic: false
       }));
       console.log('[AMap Component] Map controls added');
     });

@@ -6,7 +6,7 @@
         <h1 class="text-20px font-bold text-[var(--color-text-primary)] mb-1">用户与角色管理</h1>
         <p class="text-13px text-[var(--color-text-secondary)]">账号、角色、权限边界、项目范围与启停状态统一管理</p>
       </div>
-      <a-button type="primary" @click="handleAddUser" class="rounded-6px">
+      <a-button v-if="isAdmin" type="primary" @click="handleAddUser" class="rounded-6px">
         <template #icon><PlusOutlined /></template>
         新增用户
       </a-button>
@@ -21,7 +21,7 @@
             <UsergroupAddOutlined class="text-16px text-[var(--color-primary)]" />
           </div>
         </div>
-        <div class="text-28px font-bold text-[var(--color-text-primary)]">3</div>
+        <div class="text-28px font-bold text-[var(--color-text-primary)]">{{ stats.total }}</div>
       </div>
       <div class="bg-[var(--bg-card)] border border-[var(--color-border)] rounded-8px p-4">
         <div class="flex items-center justify-between mb-2">
@@ -30,7 +30,7 @@
             <SafetyCertificateOutlined class="text-16px text-[var(--color-warning)]" />
           </div>
         </div>
-        <div class="text-28px font-bold text-[var(--color-text-primary)]">1</div>
+        <div class="text-28px font-bold text-[var(--color-text-primary)]">{{ stats.admin }}</div>
       </div>
       <div class="bg-[var(--bg-card)] border border-[var(--color-border)] rounded-8px p-4">
         <div class="flex items-center justify-between mb-2">
@@ -39,7 +39,7 @@
             <SecurityScanOutlined class="text-16px text-[var(--color-primary)]" />
           </div>
         </div>
-        <div class="text-28px font-bold text-[var(--color-text-primary)]">1</div>
+        <div class="text-28px font-bold text-[var(--color-text-primary)]">{{ stats.auditor }}</div>
       </div>
       <div class="bg-[var(--bg-card)] border border-[var(--color-border)] rounded-8px p-4">
         <div class="flex items-center justify-between mb-2">
@@ -48,7 +48,7 @@
             <UserOutlined class="text-16px text-[var(--color-success)]" />
           </div>
         </div>
-        <div class="text-28px font-bold text-[var(--color-text-primary)]">0</div>
+        <div class="text-28px font-bold text-[var(--color-text-primary)]">{{ stats.collector }}</div>
       </div>
     </div>
 
@@ -200,9 +200,9 @@
 
               <template v-if="column.key === 'action'">
                 <div class="flex gap-1">
-                  <a-button type="link" size="small" @click="handleEdit(record)">编辑</a-button>
-                  <a-button type="link" size="small" @click="handleResetPassword(record)">重置密码</a-button>
-                  <a-button type="link" size="small" danger @click="handleDisable(record)">停用</a-button>
+                  <a-button v-if="isAdmin" type="link" size="small" @click="handleEdit(record)">编辑</a-button>
+                  <a-button v-if="isAdmin" type="link" size="small" @click="handleResetPassword(record)">重置密码</a-button>
+                  <a-button v-if="isAdmin" type="link" size="small" danger @click="handleDisable(record)">停用</a-button>
                 </div>
               </template>
             </template>
@@ -311,92 +311,152 @@
       v-model:open="showAddUserModal"
       title="新增用户"
       :footer="null"
-      width="600px"
+      width="720px"
       :closable="true"
+      centered
     >
-      <div class="mb-4">
-        <p class="text-13px text-[var(--color-text-secondary)]">创建新账号并分配角色</p>
+      <div class="-mx-6 -mt-4 bg-gradient-to-r from-[var(--color-primary)] to-[rgba(22,119,255,0.7)] px-6 py-4 mb-4">
+        <div class="flex items-center gap-3 text-white">
+          <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+            <UserAddOutlined class="text-xl" />
+          </div>
+          <div>
+            <div class="font-600">创建新账号</div>
+            <div class="text-12px text-white/80">为新成员分配系统访问权限</div>
+          </div>
+        </div>
       </div>
 
-      <a-form layout="vertical" class="space-y-5">
-        <!-- Username -->
-        <a-form-item label="登录账号" required>
-          <a-input
-            v-model:value="newUserForm.username"
-            placeholder="请输入登录用户名"
-            size="large"
-          />
-        </a-form-item>
+      <div class="flex gap-6">
+        <!-- Left: Basic Info -->
+        <div class="flex-1">
+          <div class="text-14px font-600 text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+            <div class="w-1 h-4 bg-[var(--color-primary)] rounded-full"></div>
+            基本信息
+          </div>
+          
+          <a-form layout="vertical" class="space-y-4">
+            <!-- Username -->
+            <a-form-item label="登录账号" required>
+              <a-input
+                v-model:value="newUserForm.username"
+                placeholder="用于登录系统的唯一标识"
+                size="large"
+              >
+                <template #prefix><UserOutlined class="text-[var(--color-text-placeholder)]" /></template>
+              </a-input>
+            </a-form-item>
 
-        <!-- Name -->
-        <a-form-item label="姓名" required>
-          <a-input
-            v-model:value="newUserForm.realName"
-            placeholder="请输入真实姓名"
-            size="large"
-          />
-        </a-form-item>
+            <!-- Name -->
+            <a-form-item label="姓名" required>
+              <a-input
+                v-model:value="newUserForm.realName"
+                placeholder="成员的真实姓名"
+                size="large"
+              >
+                <template #prefix><IdcardOutlined class="text-[var(--color-text-placeholder)]" /></template>
+              </a-input>
+            </a-form-item>
 
-        <!-- Password -->
-        <a-form-item label="初始密码" required>
-          <a-input-password
-            v-model:value="newUserForm.password"
-            placeholder="请输入初始登录密码"
-            size="large"
-          />
-        </a-form-item>
+            <!-- Password -->
+            <a-form-item label="初始密码" required>
+              <a-input-password
+                v-model:value="newUserForm.password"
+                placeholder="登录密码（至少8位）"
+                size="large"
+              >
+                <template #prefix><LockOutlined class="text-[var(--color-text-placeholder)]" /></template>
+              </a-input-password>
+            </a-form-item>
+          </a-form>
 
-        <!-- Email -->
-        <a-form-item label="邮箱">
-          <a-input
-            v-model:value="newUserForm.email"
-            placeholder="user@example.com"
-            size="large"
-          />
-        </a-form-item>
+          <div class="text-14px font-600 text-[var(--color-text-primary)] mb-3 mt-6 flex items-center gap-2">
+            <div class="w-1 h-4 bg-[var(--color-primary)] rounded-full"></div>
+            联系方式
+          </div>
 
-        <!-- Phone -->
-        <a-form-item label="手机号">
-          <a-input
-            v-model:value="newUserForm.phone"
-            placeholder="请输入联系电话"
-            size="large"
-          />
-        </a-form-item>
+          <a-form layout="vertical" class="space-y-4">
+            <!-- Email -->
+            <a-form-item label="邮箱">
+              <a-input
+                v-model:value="newUserForm.email"
+                placeholder="用于接收通知"
+                size="large"
+              >
+                <template #prefix><MailOutlined class="text-[var(--color-text-placeholder)]" /></template>
+              </a-input>
+            </a-form-item>
 
-        <!-- Role Selection -->
-        <a-form-item label="分配角色">
-          <div class="space-y-3">
+            <!-- Phone -->
+            <a-form-item label="手机号">
+              <a-input
+                v-model:value="newUserForm.phone"
+                placeholder="紧急联系号码"
+                size="large"
+              >
+                <template #prefix><PhoneOutlined class="text-[var(--color-text-placeholder)]" /></template>
+              </a-input>
+            </a-form-item>
+          </a-form>
+        </div>
+
+        <!-- Right: Role Selection -->
+        <div class="w-280px">
+          <div class="text-14px font-600 text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+            <div class="w-1 h-4 bg-[var(--color-warning)] rounded-full"></div>
+            分配角色
+          </div>
+
+          <div class="space-y-2">
             <div
               v-for="role in roleOptions"
-              :key="role.key"
+              :key="role.value"
               :class="[
-                'border rounded-8px p-4 cursor-pointer transition-all',
-                newUserForm.role === role.value
-                  ? 'border-[var(--color-primary)] bg-[rgba(22,119,255,0.05)]'
-                  : 'border-[var(--color-border)] hover:border-[var(--color-primary)]'
+                'border rounded-lg p-3 cursor-pointer transition-all',
+                newUserForm.roleIds.includes(role.value)
+                  ? 'border-[var(--color-primary)] bg-[rgba(22,119,255,0.08)] shadow-sm'
+                  : 'border-[var(--color-border)] hover:border-[var(--color-primary)] hover:bg-[var(--bg-card-alt)]'
               ]"
-              @click="newUserForm.role = role.value"
+              @click="toggleNewUserRole(role.value)"
             >
-              <div class="flex items-start gap-3">
-                <div class="mt-1">
-                  <a-radio :checked="newUserForm.role === role.value" />
+              <div class="flex items-center gap-3">
+                <a-checkbox 
+                  :checked="newUserForm.roleIds.includes(role.value)"
+                  @change="() => toggleNewUserRole(role.value)"
+                  @click.stop
+                />
+                <div :class="[
+                  'w-8 h-8 rounded-lg flex items-center justify-center',
+                  newUserForm.roleIds.includes(role.value) ? 'bg-[var(--color-primary)] text-white' : 'bg-[var(--bg-card-alt)] text-[var(--color-text-secondary)]'
+                ]">
+                  <component :is="getRoleIcon(role.key)" />
                 </div>
                 <div class="flex-1">
-                  <div class="text-14px font-600 text-[var(--color-text-primary)] mb-1">
+                  <div class="text-13px font-500 text-[var(--color-text-primary)]">
                     {{ role.name }}
                   </div>
-                  <div class="text-12px text-[var(--color-text-secondary)]">
+                  <div class="text-11px text-[var(--color-text-secondary)] truncate">
                     {{ role.description }}
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </a-form-item>
-      </a-form>
 
-      <div class="flex gap-3 mt-6">
+          <!-- Role Permission Tips -->
+          <div class="mt-4 p-3 bg-[rgba(250,173,20,0.08)] rounded-lg border border-[rgba(250,173,20,0.2)]">
+            <div class="text-11px text-[var(--color-warning)] flex items-start gap-2">
+              <ExclamationCircleOutlined class="mt-0.5" />
+              <div>
+                <div class="font-500 mb-1">角色权限说明</div>
+                <div class="text-[var(--color-text-secondary)]">不同角色拥有不同的功能权限，创建后可随时修改</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-6 pt-4 border-t border-[var(--color-border)]">
         <a-button block size="large" @click="showAddUserModal = false">取消</a-button>
         <a-button type="primary" block size="large" @click="handleCreateUser">创建用户</a-button>
       </div>
@@ -436,12 +496,171 @@
         <a-button type="primary" block @click="handleConfirmRiskSettings">确认</a-button>
       </div>
     </a-modal>
+
+    <!-- Edit User Modal -->
+    <a-modal
+      v-model:open="showEditUserModal"
+      title="编辑用户"
+      :footer="null"
+      width="720px"
+      :closable="true"
+      centered
+    >
+      <div class="-mx-6 -mt-4 bg-gradient-to-r from-[var(--color-primary)] to-[rgba(22,119,255,0.7)] px-6 py-4 mb-4">
+        <div class="flex items-center gap-3 text-white">
+          <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+            <EditOutlined class="text-xl" />
+          </div>
+          <div>
+            <div class="font-600">编辑用户信息</div>
+            <div class="text-12px text-white/80">修改成员的基本信息和权限</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-6">
+        <!-- Left: Basic Info -->
+        <div class="flex-1">
+          <div class="text-14px font-600 text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+            <div class="w-1 h-4 bg-[var(--color-primary)] rounded-full"></div>
+            基本信息
+          </div>
+          
+          <a-form layout="vertical" class="space-y-4">
+            <!-- Username (readonly) -->
+            <a-form-item label="登录账号">
+              <a-input
+                v-model:value="editUserForm.username"
+                size="large"
+                disabled
+              >
+                <template #prefix><UserOutlined class="text-[var(--color-text-placeholder)]" /></template>
+              </a-input>
+              <div class="text-11px text-[var(--color-text-placeholder)] mt-1">登录账号不可修改</div>
+            </a-form-item>
+
+            <!-- Name -->
+            <a-form-item label="姓名" required>
+              <a-input
+                v-model:value="editUserForm.realName"
+                placeholder="成员的真实姓名"
+                size="large"
+              >
+                <template #prefix><IdcardOutlined class="text-[var(--color-text-placeholder)]" /></template>
+              </a-input>
+            </a-form-item>
+
+            <!-- Password -->
+            <a-form-item label="重置密码">
+              <a-input-password
+                v-model:value="editUserForm.password"
+                placeholder="留空则保持原密码不变"
+                size="large"
+              >
+                <template #prefix><LockOutlined class="text-[var(--color-text-placeholder)]" /></template>
+              </a-input-password>
+              <div class="text-11px text-[var(--color-text-secondary)] mt-1">输入新密码将覆盖原密码</div>
+            </a-form-item>
+          </a-form>
+
+          <div class="text-14px font-600 text-[var(--color-text-primary)] mb-3 mt-6 flex items-center gap-2">
+            <div class="w-1 h-4 bg-[var(--color-primary)] rounded-full"></div>
+            联系方式
+          </div>
+
+          <a-form layout="vertical" class="space-y-4">
+            <!-- Email -->
+            <a-form-item label="邮箱">
+              <a-input
+                v-model:value="editUserForm.email"
+                placeholder="用于接收通知"
+                size="large"
+              >
+                <template #prefix><MailOutlined class="text-[var(--color-text-placeholder)]" /></template>
+              </a-input>
+            </a-form-item>
+
+            <!-- Phone -->
+            <a-form-item label="手机号">
+              <a-input
+                v-model:value="editUserForm.phone"
+                placeholder="紧急联系号码"
+                size="large"
+              >
+                <template #prefix><PhoneOutlined class="text-[var(--color-text-placeholder)]" /></template>
+              </a-input>
+            </a-form-item>
+          </a-form>
+        </div>
+
+        <!-- Right: Role Selection -->
+        <div class="w-280px">
+          <div class="text-14px font-600 text-[var(--color-text-primary)] mb-3 flex items-center gap-2">
+            <div class="w-1 h-4 bg-[var(--color-warning)] rounded-full"></div>
+            分配角色
+          </div>
+
+          <div class="space-y-2">
+            <div
+              v-for="role in roleOptions"
+              :key="role.value"
+              :class="[
+                'border rounded-lg p-3 cursor-pointer transition-all',
+                editUserForm.roleIds.includes(role.value)
+                  ? 'border-[var(--color-primary)] bg-[rgba(22,119,255,0.08)] shadow-sm'
+                  : 'border-[var(--color-border)] hover:border-[var(--color-primary)] hover:bg-[var(--bg-card-alt)]'
+              ]"
+              @click="toggleEditUserRole(role.value)"
+            >
+              <div class="flex items-center gap-3">
+                <a-checkbox 
+                  :checked="editUserForm.roleIds.includes(role.value)"
+                  @change="() => toggleEditUserRole(role.value)"
+                  @click.stop
+                />
+                <div :class="[
+                  'w-8 h-8 rounded-lg flex items-center justify-center',
+                  editUserForm.roleIds.includes(role.value) ? 'bg-[var(--color-primary)] text-white' : 'bg-[var(--bg-card-alt)] text-[var(--color-text-secondary)]'
+                ]">
+                  <component :is="getRoleIcon(role.key)" />
+                </div>
+                <div class="flex-1">
+                  <div class="text-13px font-500 text-[var(--color-text-primary)]">
+                    {{ role.name }}
+                  </div>
+                  <div class="text-11px text-[var(--color-text-secondary)] truncate">
+                    {{ role.description }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Role Permission Tips -->
+          <div class="mt-4 p-3 bg-[rgba(250,173,20,0.08)] rounded-lg border border-[rgba(250,173,20,0.2)]">
+            <div class="text-11px text-[var(--color-warning)] flex items-start gap-2">
+              <ExclamationCircleOutlined class="mt-0.5" />
+              <div>
+                <div class="font-500 mb-1">权限变更提示</div>
+                <div class="text-[var(--color-text-secondary)]">修改角色将影响用户的系统访问权限</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-6 pt-4 border-t border-[var(--color-border)]">
+        <a-button block size="large" @click="showEditUserModal = false">取消</a-button>
+        <a-button type="primary" block size="large" @click="handleUpdateUser">保存修改</a-button>
+      </div>
+    </a-modal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { message, Modal } from 'ant-design-vue';
+import { useAuth } from '@/hooks/common/auth';
 import {
   PlusOutlined,
   UsergroupAddOutlined,
@@ -449,15 +668,27 @@ import {
   SecurityScanOutlined,
   UserOutlined,
   CheckCircleOutlined,
+  CheckCircleFilled,
   WarningOutlined,
   FolderOutlined,
   LockOutlined,
   ClockCircleOutlined,
-  SettingOutlined
+  SettingOutlined,
+  EditOutlined,
+  UserAddOutlined,
+  IdcardOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  ExclamationCircleOutlined,
+  CrownOutlined,
+  TeamOutlined,
+  AuditOutlined,
+  EnvironmentOutlined
 } from '@ant-design/icons-vue';
 import { 
   fetchGetUserList, 
   fetchCreateUser, 
+  fetchUpdateUser,
   fetchUpdateUserStatus, 
   fetchResetPassword,
   fetchDeleteUser 
@@ -465,11 +696,14 @@ import {
 
 defineOptions({ name: 'SystemUser' });
 
+const { isAdmin } = useAuth();
+
 const loading = ref(false);
 const selectedRole = ref('admin');
 const searchKeyword = ref('');
 const showRiskModal = ref(false);
 const showAddUserModal = ref(false);
+const showEditUserModal = ref(false);
 
 const newUserForm = ref({
   username: '',
@@ -477,61 +711,86 @@ const newUserForm = ref({
   password: '',
   email: '',
   phone: '',
-  role: 2, // Default to Project Manager
+  roleIds: [] as number[], // 支持多角色，默认为空数组
+});
+
+const editUserForm = ref({
+  id: null as number | null,
+  username: '',
+  realName: '',
+  password: '',
+  email: '',
+  phone: '',
+  roleIds: [] as number[], // 支持多角色，默认为空数组
 });
 
 const userList = ref<Api.SystemManage.User[]>([]);
 
-const roleList = ref([
+// Statistics computed from userList
+const stats = computed(() => {
+  const allUsers = userList.value || [];
+  return {
+    total: allUsers.length,
+    admin: allUsers.filter(u => u.role === 1).length,
+    auditor: allUsers.filter(u => u.role === 3).length,
+    collector: allUsers.filter(u => u.role === 4).length
+  };
+});
+
+const roleList = computed(() => [
+  {
+    key: 'all',
+    name: '全部用户',
+    count: stats.value.total,
+    permissions: '查看所有用户信息'
+  },
   {
     key: 'admin',
     name: '管理员',
-    count: 1,
+    count: stats.value.admin,
     permissions: '项目创建 / 模板配置 / 全局导出 / 权限配置'
   },
   {
     key: 'manager',
     name: '项目经理',
-    count: 0,
+    count: userList.value.filter(u => u.role === 2).length,
     permissions: '项目进度监控 / 成员管理 / 任务指派'
   },
   {
     key: 'auditor',
     name: '审核员',
-    count: 1,
+    count: stats.value.auditor,
     permissions: '审核反馈 / 版本对比 / PDF 生成'
   },
   {
     key: 'collector',
     name: '采集员',
-    count: 1,
+    count: stats.value.collector,
     permissions: '地图打点 / 表单填报 / 拍照上传 / 草稿保存'
-  },
-  {
-    key: 'third_party',
-    name: '第三方协作',
-    count: 0,
-    permissions: '指定点位范围 / 协助填报 / 上传图片\n不可审核 / 不可删除 / 不可全局导出'
   }
 ]);
 
 const roleOptions = computed(() => [
   {
+    key: 'admin',
     value: 1,
     name: '管理员',
     description: '项目创建、模板配置、全局导出、权限配置'
   },
   {
+    key: 'manager',
     value: 2,
     name: '项目经理',
     description: '项目进度监控、成员管理、任务指派'
   },
   {
+    key: 'auditor',
     value: 3,
     name: '审核员',
     description: '审核反馈、版本对比、PDF 生成'
   },
   {
+    key: 'collector',
     value: 4,
     name: '采集员',
     description: '地图打点、表单填报、拍照上传'
@@ -626,15 +885,27 @@ const getRoleColor = (role: number) => {
   return colorMap[role] || 'default';
 };
 
+// 角色图标映射
+const getRoleIcon = (roleKey: string) => {
+  const iconMap: Record<string, any> = {
+    'admin': CrownOutlined,
+    'manager': TeamOutlined,
+    'auditor': AuditOutlined,
+    'collector': EnvironmentOutlined
+  };
+  return iconMap[roleKey] || UserOutlined;
+};
+
 const initData = async () => {
   loading.value = true;
   
-  // Map role key to number if needed
+  // Map role key to number if needed (only for specific roles)
   let roleNum: number | undefined = undefined;
   if (selectedRole.value === 'admin') roleNum = 1;
-  else if (selectedRole.value === 'manager') roleNum = 2; // Fixed mapping
+  else if (selectedRole.value === 'manager') roleNum = 2;
   else if (selectedRole.value === 'auditor') roleNum = 3;
   else if (selectedRole.value === 'collector') roleNum = 4;
+  // 'all' role will fetch all users (no role filter)
 
   const { data, error } = await fetchGetUserList({
     pageNum: 1,
@@ -643,7 +914,7 @@ const initData = async () => {
     role: roleNum
   });
   if (!error && data) {
-    userList.value = data.records;
+    userList.value = data.records || [];
   }
   loading.value = false;
 };
@@ -666,7 +937,7 @@ const handleAddUser = () => {
     password: '',
     email: '',
     phone: '',
-    role: 2,
+    roleIds: [], // 重置为空数组
   };
 };
 
@@ -685,7 +956,43 @@ const handleCreateUser = async () => {
 };
 
 const handleEdit = (record: any) => {
-  message.info('编辑功能开发中');
+  console.log('====== [前端] 编辑用户 - record:', record);
+  console.log('====== [前端] record.id:', record.id, 'type:', typeof record.id);
+  
+  showEditUserModal.value = true;
+  editUserForm.value = {
+    id: record.id,
+    username: record.username,
+    realName: record.realName || record.real_name || '',
+    password: '', // Don't pre-fill password
+    email: record.email || '',
+    phone: record.phone || '',
+    roleIds: record.roleIds || [] // 使用角色ID数组
+  };
+  
+  console.log('====== [前端] editUserForm:', editUserForm.value);
+};
+
+const handleUpdateUser = async () => {
+  if (!editUserForm.value.realName) {
+    message.warning('请填写姓名');
+    return;
+  }
+  
+  if (!editUserForm.value.id) {
+    message.error('用户ID不存在，请刷新页面后重试');
+    console.error('====== [前端] 用户ID为空:', editUserForm.value);
+    return;
+  }
+  
+  console.log('====== [前端] 提交更新用户:', editUserForm.value);
+
+  const { error } = await fetchUpdateUser(editUserForm.value);
+  if (!error) {
+    message.success('用户信息已更新');
+    showEditUserModal.value = false;
+    initData();
+  }
 };
 
 const handleResetPassword = (record: any) => {
@@ -720,5 +1027,25 @@ const handleDisable = (record: any) => {
 
 const handleConfirmRiskSettings = () => {
   showRiskModal.value = false;
+};
+
+// 切换新用户角色（多选）
+const toggleNewUserRole = (roleId: number) => {
+  const index = newUserForm.value.roleIds.indexOf(roleId);
+  if (index > -1) {
+    newUserForm.value.roleIds.splice(index, 1);
+  } else {
+    newUserForm.value.roleIds.push(roleId);
+  }
+};
+
+// 切换编辑用户角色（多选）
+const toggleEditUserRole = (roleId: number) => {
+  const index = editUserForm.value.roleIds.indexOf(roleId);
+  if (index > -1) {
+    editUserForm.value.roleIds.splice(index, 1);
+  } else {
+    editUserForm.value.roleIds.push(roleId);
+  }
 };
 </script>

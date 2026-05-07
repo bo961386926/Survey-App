@@ -83,7 +83,8 @@
     <div class="flex-1 bg-[var(--bg-card)] border border-[var(--color-border)] rounded-8px overflow-hidden shadow-[var(--shadow-card)] flex flex-col">
       <a-table
         :columns="columns"
-        :data-source="filteredLogs"
+        :data-source="logData"
+        :loading="loading"
         :pagination="pagination"
         class="log-table"
         :scroll="{ y: 'calc(100vh - 320px)' }"
@@ -139,7 +140,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { message } from 'ant-design-vue';
 import { 
   ReloadOutlined, 
   SearchOutlined, 
@@ -149,6 +151,7 @@ import {
   EnvironmentOutlined, 
   LoginOutlined 
 } from '@ant-design/icons-vue';
+import { getOperationLogPage, countByModule, countByRiskLevel } from '@/api/log';
 
 // Define components for dynamic rendering
 const iconComponents: Record<string, any> = {
@@ -161,10 +164,11 @@ const iconComponents: Record<string, any> = {
 
 defineOptions({ name: 'SystemLog' });
 
-const total = ref(20);
+const total = ref(0);
 const todayCount = ref(0);
-const deleteCount = ref(1);
+const deleteCount = ref(0);
 const activeAction = ref('');
+const loading = ref(false);
 
 const actionTypes = [
   { key: 'create', label: '创建', color: 'var(--color-success)', bgColor: 'rgba(0,180,42,0.1)', borderColor: 'rgba(0,180,42,0.3)' },
@@ -185,8 +189,19 @@ const filters = ref({
 const pagination = ref({
   current: 1,
   pageSize: 10,
-  total: 20,
-  showSizeChanger: false
+  total: 0,
+  showSizeChanger: true,
+  showTotal: (total) => `共 ${total} 条`,
+  onChange: (page, pageSize) => {
+    pagination.value.current = page;
+    pagination.value.pageSize = pageSize;
+    loadLogs();
+  },
+  onShowSizeChange: (current, size) => {
+    pagination.value.current = current;
+    pagination.value.pageSize = size;
+    loadLogs();
+  }
 });
 
 const columns = [
@@ -198,197 +213,152 @@ const columns = [
   { title: '时间', key: 'time', width: 150 }
 ];
 
-const logData = ref([
-  {
-    id: '1',
-    operator: '张管理',
-    operatorInitial: '张',
-    operatorColor: 'var(--color-primary)',
-    role: '管理员',
-    module: '项目管理',
-    moduleIcon: 'FolderOutlined',
-    moduleColor: 'var(--color-primary)',
-    actionType: '创建',
-    actionColor: 'var(--color-success)',
-    actionBg: 'rgba(0,180,42,0.1)',
-    actionBorderColor: 'rgba(0,180,42,0.3)',
-    actionKey: 'create',
-    target: 'A1标段排污口勘查项目',
-    time: '3天前'
-  },
-  {
-    id: '2',
-    operator: '刘晨',
-    operatorInitial: '刘',
-    operatorColor: 'var(--color-primary)',
-    role: '勘查员',
-    module: '勘查审核',
-    moduleIcon: 'AuditOutlined',
-    moduleColor: 'var(--color-primary)',
-    actionType: '提交',
-    actionColor: 'var(--color-primary)',
-    actionBg: 'rgba(22,119,255,0.1)',
-    actionBorderColor: 'rgba(22,119,255,0.3)',
-    actionKey: 'submit',
-    target: '西闸口 001',
-    time: '3天前'
-  },
-  {
-    id: '3',
-    operator: '王审核',
-    operatorInitial: '王',
-    operatorColor: 'var(--color-primary)',
-    role: '审核员',
-    module: '勘查审核',
-    moduleIcon: 'AuditOutlined',
-    moduleColor: 'var(--color-primary)',
-    actionType: '通过',
-    actionColor: 'var(--color-success)',
-    actionBg: 'rgba(0,180,42,0.1)',
-    actionBorderColor: 'rgba(0,180,42,0.3)',
-    actionKey: 'approve',
-    target: '东排口 003',
-    time: '3天前'
-  },
-  {
-    id: '4',
-    operator: '张管理',
-    operatorInitial: '张',
-    operatorColor: 'var(--color-primary)',
-    role: '管理员',
-    module: '表单模板',
-    moduleIcon: 'FormOutlined',
-    moduleColor: 'var(--color-warning)',
-    actionType: '更新',
-    actionColor: 'var(--color-warning)',
-    actionBg: 'rgba(255,193,7,0.1)',
-    actionBorderColor: 'rgba(255,193,7,0.3)',
-    actionKey: 'update',
-    target: '排污口标准模板 v2',
-    time: '3天前'
-  },
-  {
-    id: '5',
-    operator: '李勘查',
-    operatorInitial: '李',
-    operatorColor: 'var(--color-success)',
-    role: '勘查员',
-    module: '勘查审核',
-    moduleIcon: 'AuditOutlined',
-    moduleColor: 'var(--color-primary)',
-    actionType: '提交',
-    actionColor: 'var(--color-primary)',
-    actionBg: 'rgba(22,119,255,0.1)',
-    actionBorderColor: 'rgba(22,119,255,0.3)',
-    actionKey: 'submit',
-    target: '北闸口 007',
-    time: '3天前'
-  },
-  {
-    id: '6',
-    operator: '王审核',
-    operatorInitial: '王',
-    operatorColor: 'var(--color-primary)',
-    role: '审核员',
-    module: '勘查审核',
-    moduleIcon: 'AuditOutlined',
-    moduleColor: 'var(--color-primary)',
-    actionType: '驳回',
-    actionColor: 'var(--color-danger)',
-    actionBg: 'rgba(245,63,63,0.1)',
-    actionBorderColor: 'rgba(245,63,63,0.3)',
-    actionKey: 'reject',
-    target: '西闸口 001',
-    time: '4天前'
-  },
-  {
-    id: '7',
-    operator: '张管理',
-    operatorInitial: '张',
-    operatorColor: 'var(--color-primary)',
-    role: '管理员',
-    module: '点位管理',
-    moduleIcon: 'EnvironmentOutlined',
-    moduleColor: 'var(--color-success)',
-    actionType: '创建',
-    actionColor: 'var(--color-success)',
-    actionBg: 'rgba(0,180,42,0.1)',
-    actionBorderColor: 'rgba(0,180,42,0.3)',
-    actionKey: 'create',
-    target: '南排口 012',
-    time: '4天前'
-  },
-  {
-    id: '8',
-    operator: '张管理',
-    operatorInitial: '张',
-    operatorColor: 'var(--color-primary)',
-    role: '管理员',
-    module: '点位管理',
-    moduleIcon: 'EnvironmentOutlined',
-    moduleColor: 'var(--color-success)',
-    actionType: '删除',
-    actionColor: 'var(--color-danger)',
-    actionBg: 'rgba(245,63,63,0.1)',
-    actionBorderColor: 'rgba(245,63,63,0.3)',
-    actionKey: 'delete',
-    target: '废弃点位 X01',
-    time: '4天前'
-  },
-  {
-    id: '9',
-    operator: '刘晨',
-    operatorInitial: '刘',
-    operatorColor: 'var(--color-primary)',
-    role: '勘查员',
-    module: '登录认证',
-    moduleIcon: 'LoginOutlined',
-    moduleColor: 'var(--color-text-secondary)',
-    actionType: '登录',
-    actionColor: 'var(--color-text-secondary)',
-    actionBg: 'var(--bg-hover)',
-    actionBorderColor: 'var(--color-border)',
-    actionKey: 'login',
-    target: '—',
-    time: '5天前'
-  }
-]);
+const logData = ref([]);
 
-const filteredLogs = computed(() => {
-  let result = logData.value;
-  
-  // Filter by action type
-  if (activeAction.value) {
-    result = result.filter(log => log.actionKey === activeAction.value);
+// 加载日志数据
+const loadLogs = async () => {
+  loading.value = true;
+  try {
+    const params = {
+      pageNum: pagination.value.current,
+      pageSize: pagination.value.pageSize,
+      keyword: filters.value.keyword || undefined
+    };
+    
+    // 如果有动作类型筛选，添加到参数中
+    if (activeAction.value) {
+      params.module = activeAction.value; // 临时使用module字段过滤
+    }
+    
+    const res = await getOperationLogPage(params);
+    if (res.code === 200 && res.data) {
+      logData.value = res.data.records || [];
+      pagination.value.total = res.data.total || 0;
+      total.value = res.data.total || 0;
+      
+      // 格式化数据以适配前端显示
+      logData.value = logData.value.map(item => formatLogItem(item));
+    }
+  } catch (error) {
+    console.error('加载日志失败:', error);
+    message.error('加载日志失败');
+  } finally {
+    loading.value = false;
   }
+};
+
+// 格式化日志项
+const formatLogItem = (item) => {
+  const actionMap = {
+    '创建': { key: 'create', color: 'var(--color-success)', bg: 'rgba(0,180,42,0.1)', borderColor: 'rgba(0,180,42,0.3)' },
+    '更新': { key: 'update', color: 'var(--color-warning)', bg: 'rgba(255,193,7,0.1)', borderColor: 'rgba(255,193,7,0.3)' },
+    '删除': { key: 'delete', color: 'var(--color-danger)', bg: 'rgba(245,63,63,0.1)', borderColor: 'rgba(245,63,63,0.3)' },
+    '提交': { key: 'submit', color: 'var(--color-primary)', bg: 'rgba(22,119,255,0.1)', borderColor: 'rgba(22,119,255,0.3)' },
+    '通过': { key: 'approve', color: 'var(--color-success)', bg: 'rgba(0,180,42,0.1)', borderColor: 'rgba(0,180,42,0.3)' },
+    '驳回': { key: 'reject', color: 'var(--color-danger)', bg: 'rgba(245,63,63,0.1)', borderColor: 'rgba(245,63,63,0.3)' },
+    '导出': { key: 'export', color: 'var(--color-text-secondary)', bg: 'var(--bg-hover)', borderColor: 'var(--color-border)' },
+    '登录': { key: 'login', color: 'var(--color-text-secondary)', bg: 'var(--bg-hover)', borderColor: 'var(--color-border)' }
+  };
   
-  // Filter by keyword
-  if (filters.value.keyword) {
-    const keyword = filters.value.keyword.toLowerCase();
-    result = result.filter(log =>
-      log.operator.toLowerCase().includes(keyword) ||
-      log.target.toLowerCase().includes(keyword)
-    );
+  const moduleIconMap = {
+    '项目管理': 'FolderOutlined',
+    '勘查审核': 'AuditOutlined',
+    '表单模板': 'FormOutlined',
+    '模板管理': 'FormOutlined',
+    '点位管理': 'EnvironmentOutlined',
+    '登录认证': 'LoginOutlined',
+    '用户管理': 'LoginOutlined'
+  };
+  
+  const actionInfo = actionMap[item.action] || actionMap['创建'];
+  const moduleIcon = moduleIconMap[item.module] || 'FolderOutlined';
+  
+  // 获取操作人首字
+  const operatorInitial = item.username ? item.username.charAt(0) : '?';
+  
+  // 生成随机颜色
+  const colors = ['var(--color-primary)', 'var(--color-success)', 'var(--color-warning)', 'var(--color-info)'];
+  const operatorColor = colors[item.userId % colors.length] || 'var(--color-primary)';
+  
+  return {
+    id: item.id,
+    operator: item.username || '未知',
+    operatorInitial,
+    operatorColor,
+    role: '-', // 后端未返回角色信息
+    module: item.module || '未知',
+    moduleIcon,
+    moduleColor: 'var(--color-primary)',
+    actionType: item.action || '未知',
+    actionColor: actionInfo.color,
+    actionBg: actionInfo.bg,
+    actionBorderColor: actionInfo.borderColor,
+    actionKey: actionInfo.key,
+    target: item.description || '-',
+    time: formatTime(item.createTime)
+  };
+};
+
+// 格式化时间
+const formatTime = (timeStr) => {
+  if (!timeStr) return '-';
+  
+  const now = new Date();
+  const time = new Date(timeStr);
+  const diff = now - time;
+  
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  
+  if (minutes < 1) return '刚刚';
+  if (minutes < 60) return `${minutes}分钟前`;
+  if (hours < 24) return `${hours}小时前`;
+  if (days < 30) return `${days}天前`;
+  
+  return time.toLocaleDateString('zh-CN');
+};
+
+// 加载统计数据
+const loadStatistics = async () => {
+  try {
+    // 加载风险等级统计
+    const riskRes = await countByRiskLevel();
+    if (riskRes.code === 200 && riskRes.data) {
+      deleteCount.value = riskRes.data['2'] || 0; // 高风险操作数
+    }
+    
+    // TODO: 可以从其他接口获取更多统计数据
+    todayCount.value = 0; // 暂时设置为0，后续可以添加今日统计接口
+  } catch (error) {
+    console.error('加载统计失败:', error);
   }
-  
-  return result;
-});
+};
 
 const handleSearch = () => {
-  // Implement search logic
-  console.log('Searching with:', filters.value);
+  pagination.value.current = 1;
+  loadLogs();
 };
 
 const handleReset = () => {
   filters.value.keyword = '';
   filters.value.dateRange = undefined;
   activeAction.value = '';
+  pagination.value.current = 1;
+  loadLogs();
 };
 
 const refreshData = () => {
-  // Implement refresh logic
-  console.log('Refreshing data...');
+  loadLogs();
+  loadStatistics();
+  message.success('刷新成功');
 };
+
+// 组件挂载时加载数据
+onMounted(() => {
+  loadLogs();
+  loadStatistics();
+});
 </script>
 
 <style scoped>

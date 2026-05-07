@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# Maven 构建输出
+target/
+*.jar
+*.war
+*.class
+
+# IDE 文件
+.idea/
+*.iml
+.vscode/
+*~
+
+# OS 文件
+.DS_Store
+Thumbs.db
+
+# 日志
+logs/
+*.log
+
+# 环境文件
+.env
+.env.*
+
+# Docker 自身
+Dockerfile
+Dockerfile.fast
+
+# 文档和报告（减少构建上下文体积）
+*.md
+*.pdf
+*.sh

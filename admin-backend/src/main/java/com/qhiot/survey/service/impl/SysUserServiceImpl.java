@@ -76,11 +76,24 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateUser(SysUser user) {
+        log.info("====== [用户服务] 开始更新用户 - userId: {} ======", user.getId());
+        
         SysUser existing = getById(user.getId());
         if (existing == null) {
-            throw new BusinessException("用户不存在");
+            log.error("====== [用户服务] 用户不存在 - userId: {} ======", user.getId());
+            throw new BusinessException("用户不存在，ID: " + user.getId());
         }
-        return updateById(user);
+        
+        log.info("====== [用户服务] 找到用户 - userId: {}, username: {} ======", existing.getId(), existing.getUsername());
+        boolean success = updateById(user);
+        
+        if (success) {
+            log.info("====== [用户服务] 用户更新成功 - userId: {} ======", user.getId());
+        } else {
+            log.error("====== [用户服务] 用户更新失败 - userId: {} ======", user.getId());
+        }
+        
+        return success;
     }
 
     @Override

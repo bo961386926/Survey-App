@@ -5,13 +5,17 @@
 FROM maven:3.9.6-eclipse-temurin-17 AS builder
 WORKDIR /build
 
-# 先复制pom.xml利用Docker缓存层
+# 配置 Maven 镜像加速（可选，取消注释即可使用阿里云镜像）
+# RUN mkdir -p /root/.m2 && \
+#     echo '<settings><mirrors><mirror><id>aliyun</id><mirrorOf>central</mirrorOf><name>Aliyun Maven Mirror</name><url>https://maven.aliyun.com/repository/public</url></mirror></mirrors></settings>' > /root/.m2/settings.xml
+
+# 先复制 pom.xml 利用 Docker 缓存层
 COPY pom.xml .
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:go-offline -B --no-transfer-progress
 
 # 复制源代码并编译
 COPY src ./src
-RUN mvn clean package -DskipTests -B
+RUN mvn clean package -DskipTests -B --no-transfer-progress
 
 # ========================================
 # 阶段2: 运行环境
@@ -24,8 +28,16 @@ RUN groupadd -r appgroup && useradd -r -g appgroup appuser
 
 WORKDIR /app
 
+# 创建日志目录并设置权限
+RUN mkdir -p /app/logs && chown -R appuser:appgroup /app/logs
+
+# 安装 wget（用于健康检查）和 curl（用于调试）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    wget curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
 # 从构建阶段复制jar包
-COPY --from=builder /build/target/survey-admin-1.0.0.jar app.jar
+COPY --from=builder /build/target/*.jar app.jar
 
 # 设置时区
 ENV TZ=Asia/Shanghai
@@ -50,5 +62,7 @@ ENTRYPOINT ["java", \
   "-XX:+HeapDumpOnOutOfMemoryError", \
   "-XX:HeapDumpPath=/app/logs/heap_dump.hprof", \
   "-Djava.security.egd=file:/dev/./urandom", \
+  "-Dfile.encoding=UTF-8", \
+  "-Duser.timezone=Asia/Shanghai", \
   "-jar", "app.jar", \
   "--spring.profiles.active=prod"]

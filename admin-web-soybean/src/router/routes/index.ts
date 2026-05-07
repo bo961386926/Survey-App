@@ -121,6 +121,17 @@ const customRoutes: CustomRoute[] = [
           icon: 'material-symbols:help-outline-rounded',
           order: 5
         }
+      },
+      {
+        name: 'system_dict',
+        path: '/system/dict',
+        component: 'view.system_dict',
+        meta: {
+          title: 'system_dict',
+          i18nKey: 'route.system_dict',
+          icon: 'material-symbols:dictionary',
+          order: 6
+        }
       }
     ]
   },

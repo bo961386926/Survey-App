@@ -30,6 +30,17 @@ export function setupLoading() {
     })
     .join('\n');
 
+  // $t 在 i18n 初始化前调用可能返回 key 本身，设置兜底标题
+  let appTitle = '系统加载中';
+  try {
+    const translated = $t('system.title');
+    if (translated && translated !== 'system.title') {
+      appTitle = translated;
+    }
+  } catch {
+    // i18n 未就绪时使用默认标题
+  }
+
   const loading = `
 <div class="fixed-center flex-col bg-layout" style="${cssVars}">
   <div class="w-128px h-128px">
@@ -40,7 +51,7 @@ export function setupLoading() {
       ${dot}
     </div>
   </div>
-  <h2 class="text-28px font-500 text-primary">${$t('system.title')}</h2>
+  <h2 class="text-28px font-500 text-primary">${appTitle}</h2>
 </div>`;
 
   const app = document.getElementById('app');

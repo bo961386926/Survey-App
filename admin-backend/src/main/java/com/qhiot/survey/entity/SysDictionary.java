@@ -17,7 +17,7 @@ public class SysDictionary implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 字典ID */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /** 字典代码（唯一标识） */

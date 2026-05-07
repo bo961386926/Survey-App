@@ -9,6 +9,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.stream.Collectors;
@@ -79,6 +80,15 @@ public class GlobalExceptionHandler {
     public Result<?> handleNoResourceFoundException(NoResourceFoundException e) {
         log.warn("资源不存在: {}", e.getResourcePath());
         return Result.error(ResultCode.NOT_FOUND.getCode(), "资源不存在");
+    }
+
+    /**
+     * 处理权限不足
+     */
+    @ExceptionHandler(AccessDeniedException.class)
+    public Result<?> handleAccessDeniedException(AccessDeniedException e, HttpServletRequest request) {
+        log.warn("权限不足: URI={}, message={}", request.getRequestURI(), e.getMessage());
+        return Result.error(403, "权限不足");
     }
 
     /**
