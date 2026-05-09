@@ -82,6 +82,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         project.setProjectCode(request.getProjectCode());
         project.setManager(request.getManager());
         project.setRegion(request.getRegion());
+        project.setClientName(request.getClientName());
+        project.setDescription(request.getDescription());
         project.setStartDate(request.getStartDate());
         project.setEndDate(request.getEndDate());
         project.setStatus(STATUS_DRAFT);
@@ -112,6 +114,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         project.setProjectCode(request.getProjectCode());
         project.setManager(request.getManager());
         project.setRegion(request.getRegion());
+        project.setClientName(request.getClientName());
+        project.setDescription(request.getDescription());
         project.setStartDate(request.getStartDate());
         project.setEndDate(request.getEndDate());
         project.setUpdateTime(LocalDateTime.now());

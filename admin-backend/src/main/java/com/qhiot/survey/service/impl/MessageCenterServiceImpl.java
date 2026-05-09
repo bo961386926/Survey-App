@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qhiot.survey.entity.MessageCenter;
 import com.qhiot.survey.entity.SysUser;
+import com.qhiot.survey.entity.SysUserRole;
 import com.qhiot.survey.mapper.MessageCenterMapper;
 import com.qhiot.survey.mapper.SysUserMapper;
+import com.qhiot.survey.mapper.SysUserRoleMapper;
 import com.qhiot.survey.service.MessageCenterService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +18,7 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 消息中心服务实现类
@@ -26,6 +29,7 @@ import java.util.List;
 public class MessageCenterServiceImpl extends ServiceImpl<MessageCenterMapper, MessageCenter> implements MessageCenterService {
 
     private final SysUserMapper sysUserMapper;
+    private final SysUserRoleMapper sysUserRoleMapper;
 
     @Override
     public Page<MessageCenter> listByPage(Long userId, Integer type, Integer pageNum, Integer pageSize) {
@@ -83,23 +87,36 @@ public class MessageCenterServiceImpl extends ServiceImpl<MessageCenterMapper, M
 
     @Override
     public int pushMessageToRoles(String title, String content, String type, String roles) {
-        // 查询符合条件的用户
-        LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SysUser::getStatus, 1); // 只推送给启用状态的用户
-        
         if (StringUtils.hasText(roles)) {
-            // 解析角色列表
-            List<Integer> roleList = Arrays.stream(roles.split(","))
+            // 解析角色ID列表（sys_role.id）
+            List<Long> roleIdList = Arrays.stream(roles.split(","))
                     .map(String::trim)
                     .filter(StringUtils::hasText)
-                    .map(Integer::parseInt)
+                    .map(Long::parseLong)
                     .toList();
-            wrapper.in(SysUser::getRole, roleList);
+            if (roleIdList.isEmpty()) {
+                return 0;
+            }
+            // 通过 sys_user_role 关联表查询具有指定角色的用户ID
+            List<SysUserRole> userRoles = sysUserRoleMapper.selectList(
+                    new LambdaQueryWrapper<SysUserRole>().in(SysUserRole::getRoleId, roleIdList)
+            );
+            if (userRoles.isEmpty()) {
+                return 0;
+            }
+            List<Long> userIds = userRoles.stream()
+                    .map(SysUserRole::getUserId)
+                    .distinct()
+                    .toList();
+            // 推送给这些用户
+            return pushMessageToUsers(title, content, type, userIds);
         }
         
+        // 未指定角色，推送给所有启用用户
+        LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SysUser::getStatus, 1);
         List<SysUser> users = sysUserMapper.selectList(wrapper);
         
-        // 为每个用户创建消息
         int count = 0;
         for (SysUser user : users) {
             try {
@@ -109,7 +126,6 @@ public class MessageCenterServiceImpl extends ServiceImpl<MessageCenterMapper, M
                 log.error("推送消息给用户失败: userId={}", user.getId(), e);
             }
         }
-        
         return count;
     }
 

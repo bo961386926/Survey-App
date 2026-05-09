@@ -1,0 +1,708 @@
+/**
+ * 赛博朋克科技风 UI 主题系统
+ * 设计风格：科技未来风，赛博朋克低饱和变体
+ * 核心元素：玻璃拟态、发光边框、全息投影、粒子动效
+ */
+
+/* ============================================
+   1. 赛博朋克色彩系统
+   ============================================ */
+:root {
+  /* 主色调 - 深灰 + 科技蓝 */
+  --cp-bg-primary: #0D1117;       /* 主背景 - 深空灰 */
+  --cp-bg-secondary: #161B22;     /* 次级背景 - 碳灰 */
+  --cp-bg-tertiary: #21262D;      /* 三级背景 - 铁灰 */
+  --cp-bg-card: #1C2333;          /* 卡片背景 - 深蓝灰 */
+  --cp-bg-glass: rgba(22, 27, 34, 0.75);  /* 玻璃拟态背景 */
+
+  /* 科技蓝系列 */
+  --cp-primary: #4A9EFF;          /* 主色 - 科技蓝 */
+  --cp-primary-light: #6DB8FF;    /* 主色亮 */
+  --cp-primary-dark: #2D7BE0;     /* 主色暗 */
+  --cp-primary-glow: rgba(74, 158, 255, 0.4);  /* 主色光晕 */
+
+  /* 荧光紫（点缀色） */
+  --cp-accent: #B266FF;           /* 点缀色 - 荧光紫 */
+  --cp-accent-light: #C988FF;     /* 点缀色亮 */
+  --cp-accent-dark: #8B40CC;      /* 点缀色暗 */
+  --cp-accent-glow: rgba(178, 102, 255, 0.4);  /* 点缀色光晕 */
+
+  /* 荧光绿 */
+  --cp-success: #39FF14;          /* 成功色 - 荧光绿 */
+  --cp-success-glow: rgba(57, 255, 20, 0.3);
+
+  /* 功能色 */
+  --cp-warning: #FFD700;          /* 警告色 - 亮金 */
+  --cp-warning-glow: rgba(255, 215, 0, 0.3);
+  --cp-danger: #FF3860;           /* 危险色 - 霓虹红 */
+  --cp-danger-glow: rgba(255, 56, 96, 0.3);
+
+  /* 文字颜色 */
+  --cp-text-primary: #E6EDF3;     /* 主文本 - 亮白 */
+  --cp-text-secondary: #8B949E;   /* 次要文本 - 银灰 */
+  --cp-text-muted: #545D68;       /* 弱化文本 - 暗灰 */
+  --cp-text-glow: rgba(230, 237, 243, 0.1);
+
+  /* 边框颜色 */
+  --cp-border: rgba(74, 158, 255, 0.2);      /* 默认边框 - 淡蓝 */
+  --cp-border-hover: rgba(74, 158, 255, 0.5); /* 悬停边框 - 亮蓝 */
+  --cp-border-accent: rgba(178, 102, 255, 0.4); /* 点缀边框 - 紫 */
+  --cp-border-glow: rgba(74, 158, 255, 0.6);    /* 发光边框 */
+
+  /* 阴影系统 */
+  --cp-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --cp-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --cp-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --cp-shadow-glow: 0 0 20px var(--cp-primary-glow);
+  --cp-shadow-glow-accent: 0 0 20px var(--cp-accent-glow);
+
+  /* 渐变背景 */
+  --cp-gradient-primary: linear-gradient(135deg, var(--cp-primary), var(--cp-accent));
+  --cp-gradient-bg: linear-gradient(180deg, var(--cp-bg-primary) 0%, var(--cp-bg-secondary) 100%);
+  --cp-gradient-card: linear-gradient(180deg, rgba(28, 35, 51, 0.9) 0%, rgba(22, 27, 34, 0.95) 100%);
+
+  /* 模糊效果 */
+  --cp-blur-sm: blur(4px);
+  --cp-blur-md: blur(10px);
+  --cp-blur-lg: blur(20px);
+
+  /* 动画时间 */
+  --cp-transition-fast: 0.15s ease;
+  --cp-transition-normal: 0.3s ease;
+  --cp-transition-slow: 0.5s ease;
+  --cp-transition-bounce: 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* ============================================
+   2. 全局背景 - 科技网格
+   ============================================ */
+.cyber-bg {
+  background: var(--cp-gradient-bg);
+  position: relative;
+  overflow: hidden;
+}
+
+.cyber-bg::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(rgba(74, 158, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(74, 158, 255, 0.03) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 扫描线效果 */
+.cyber-bg::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(74, 158, 255, 0.01) 2px,
+    rgba(74, 158, 255, 0.01) 4px
+  );
+  pointer-events: none;
+  z-index: 0;
+  animation: scanline 8s linear infinite;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(100px); }
+}
+
+/* ============================================
+   3. 玻璃拟态卡片组件
+   ============================================ */
+.cyber-card {
+  background: var(--cp-bg-glass);
+  backdrop-filter: var(--cp-blur-md);
+  -webkit-backdrop-filter: var(--cp-blur-md);
+  border: 1px solid var(--cp-border);
+  border-radius: 12px;
+  box-shadow: var(--cp-shadow-md);
+  position: relative;
+  overflow: hidden;
+  transition: all var(--cp-transition-normal);
+}
+
+/* 卡片边框发光效果 */
+.cyber-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 12px;
+  padding: 1px;
+  background: linear-gradient(135deg, transparent, var(--cp-border), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  transition: all var(--cp-transition-normal);
+}
+
+.cyber-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--cp-border-hover);
+  box-shadow: var(--cp-shadow-lg), var(--cp-shadow-glow);
+}
+
+.cyber-card:hover::before {
+  background: linear-gradient(135deg, var(--cp-primary-glow), var(--cp-accent-glow), var(--cp-primary-glow));
+}
+
+/* 卡片头部 */
+.cyber-card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--cp-border);
+  position: relative;
+}
+
+.cyber-card-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cp-primary), transparent);
+  opacity: 0.5;
+}
+
+.cyber-card-body {
+  padding: 20px;
+}
+
+/* ============================================
+   4. 赛博朋克按钮系统
+   ============================================ */
+.cyber-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--cp-text-primary);
+  background: transparent;
+  border: 1px solid var(--cp-border);
+  border-radius: 6px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all var(--cp-transition-normal);
+  text-decoration: none;
+  outline: none;
+}
+
+/* 按钮呼吸灯效果 */
+.cyber-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--cp-gradient-primary);
+  opacity: 0;
+  transition: opacity var(--cp-transition-normal);
+  animation: breathe 2s ease-in-out infinite;
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 0.1; }
+  50% { opacity: 0.2; }
+}
+
+.cyber-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--cp-border-hover);
+  box-shadow: 0 0 15px var(--cp-primary-glow);
+}
+
+.cyber-btn:hover::before {
+  opacity: 0.15;
+}
+
+.cyber-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 0 5px var(--cp-primary-glow);
+}
+
+/* 主按钮 */
+.cyber-btn-primary {
+  background: var(--cp-primary);
+  border-color: var(--cp-primary);
+  color: #fff;
+}
+
+.cyber-btn-primary:hover {
+  background: var(--cp-primary-light);
+  border-color: var(--cp-primary-light);
+  box-shadow: 0 0 20px var(--cp-primary-glow), 0 0 40px var(--cp-primary-glow);
+}
+
+/* 点缀按钮 */
+.cyber-btn-accent {
+  background: transparent;
+  border-color: var(--cp-accent);
+  color: var(--cp-accent);
+}
+
+.cyber-btn-accent:hover {
+  background: var(--cp-accent);
+  color: #fff;
+  box-shadow: 0 0 20px var(--cp-accent-glow);
+}
+
+/* 危险按钮 */
+.cyber-btn-danger {
+  border-color: var(--cp-danger);
+  color: var(--cp-danger);
+}
+
+.cyber-btn-danger:hover {
+  background: var(--cp-danger);
+  color: #fff;
+  box-shadow: 0 0 20px var(--cp-danger-glow);
+}
+
+/* ============================================
+   5. 赛博朋克输入框系统
+   ============================================ */
+.cyber-input {
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: var(--cp-text-primary);
+  background: rgba(13, 17, 23, 0.6);
+  border: 1px solid var(--cp-border);
+  border-radius: 6px;
+  outline: none;
+  transition: all var(--cp-transition-normal);
+}
+
+.cyber-input::placeholder {
+  color: var(--cp-text-muted);
+}
+
+/* 输入框聚焦效果 - 科技光标 */
+.cyber-input:focus {
+  border-color: var(--cp-primary);
+  background: rgba(13, 17, 23, 0.8);
+  box-shadow: 0 0 0 3px var(--cp-primary-glow);
+  caret-color: var(--cp-primary);
+}
+
+.cyber-input:focus::after {
+  content: '';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 20px;
+  background: var(--cp-primary);
+  animation: cursor-blink 1.5s ease-in-out infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.cyber-input:hover:not(:focus) {
+  border-color: var(--cp-border-hover);
+}
+
+/* 禁用状态 */
+.cyber-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: rgba(33, 38, 45, 0.5);
+}
+
+/* ============================================
+   6. 赛博朋克下拉菜单
+   ============================================ */
+.cyber-select {
+  width: 100%;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: var(--cp-text-primary);
+  background: rgba(13, 17, 23, 0.6);
+  border: 1px solid var(--cp-border);
+  border-radius: 6px;
+  outline: none;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%234A9EFF' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  transition: all var(--cp-transition-normal);
+}
+
+.cyber-select:hover {
+  border-color: var(--cp-border-hover);
+  box-shadow: 0 0 10px var(--cp-primary-glow);
+}
+
+.cyber-select:focus {
+  border-color: var(--cp-primary);
+  box-shadow: 0 0 0 3px var(--cp-primary-glow);
+}
+
+/* 下拉选项 */
+.cyber-select option {
+  background: var(--cp-bg-secondary);
+  color: var(--cp-text-primary);
+  padding: 8px;
+}
+
+/* ============================================
+   7. 全息投影弹窗效果
+   ============================================ */
+.cyber-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  background: var(--cp-bg-glass);
+  backdrop-filter: var(--cp-blur-lg);
+  -webkit-backdrop-filter: var(--cp-blur-lg);
+  border: 1px solid var(--cp-border);
+  border-radius: 16px;
+  box-shadow: var(--cp-shadow-lg), var(--cp-shadow-glow);
+  z-index: 1000;
+  opacity: 0;
+  animation: hologram-enter 0.4s ease forwards;
+  overflow: hidden;
+}
+
+@keyframes hologram-enter {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9) rotateX(10deg);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.02) rotateX(-2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1) rotateX(0);
+  }
+}
+
+.cyber-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--cp-border);
+  border-radius: 50%;
+  color: var(--cp-text-secondary);
+  cursor: pointer;
+  transition: all var(--cp-transition-fast);
+}
+
+.cyber-modal-close:hover {
+  border-color: var(--cp-danger);
+  color: var(--cp-danger);
+  box-shadow: 0 0 10px var(--cp-danger-glow);
+}
+
+/* 遮罩层 */
+.cyber-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--cp-bg-mask);
+  backdrop-filter: var(--cp-blur-sm);
+  z-index: 999;
+  animation: overlay-fade-in 0.3s ease forwards;
+}
+
+@keyframes overlay-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ============================================
+   8. 赛博朋克表格
+   ============================================ */
+.cyber-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--cp-bg-glass);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cyber-table thead th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--cp-text-secondary);
+  background: rgba(13, 17, 23, 0.8);
+  border-bottom: 1px solid var(--cp-border);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cyber-table tbody tr {
+  transition: all var(--cp-transition-fast);
+}
+
+.cyber-table tbody tr:hover {
+  background: rgba(74, 158, 255, 0.05);
+}
+
+.cyber-table tbody td {
+  padding: 14px 16px;
+  font-size: 14px;
+  color: var(--cp-text-primary);
+  border-bottom: 1px solid rgba(74, 158, 255, 0.1);
+}
+
+.cyber-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ============================================
+   9. 赛博朋克标签/徽章
+   ============================================ */
+.cyber-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--cp-text-primary);
+  background: rgba(74, 158, 255, 0.1);
+  border: 1px solid var(--cp-border);
+  border-radius: 20px;
+  transition: all var(--cp-transition-fast);
+}
+
+.cyber-tag:hover {
+  border-color: var(--cp-border-hover);
+  box-shadow: 0 0 8px var(--cp-primary-glow);
+}
+
+.cyber-tag-success {
+  background: rgba(57, 255, 20, 0.1);
+  border-color: var(--cp-success);
+  color: var(--cp-success);
+}
+
+.cyber-tag-warning {
+  background: rgba(255, 215, 0, 0.1);
+  border-color: var(--cp-warning);
+  color: var(--cp-warning);
+}
+
+.cyber-tag-danger {
+  background: rgba(255, 56, 96, 0.1);
+  border-color: var(--cp-danger);
+  color: var(--cp-danger);
+}
+
+/* ============================================
+   10. 赛博朋克加载动画
+   ============================================ */
+.cyber-loader {
+  width: 100%;
+  height: 3px;
+  background: rgba(13, 17, 23, 0.5);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+}
+
+.cyber-loader::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 50%;
+  height: 100%;
+  background: var(--cp-gradient-primary);
+  animation: loader-slide 1.5s ease-in-out infinite;
+}
+
+@keyframes loader-slide {
+  0% { left: -50%; }
+  100% { left: 100%; }
+}
+
+/* 圆形加载器 */
+.cyber-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--cp-border);
+  border-top-color: var(--cp-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   11. 赛博朋克导航栏
+   ============================================ */
+.cyber-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom: 1px solid transparent;
+  z-index: 100;
+  transition: all var(--cp-transition-normal);
+}
+
+.cyber-nav.scrolled {
+  background: var(--cp-bg-glass);
+  backdrop-filter: var(--cp-blur-md);
+  border-bottom-color: var(--cp-border);
+  box-shadow: var(--cp-shadow-sm);
+}
+
+/* ============================================
+   12. 视差滚动效果
+   ============================================ */
+.parallax-layer {
+  transition: transform 0.1s ease-out;
+  will-change: transform;
+}
+
+.parallax-layer[data-speed="0.5"] {
+  transform: translateY(calc(var(--scroll-y) * 0.5));
+}
+
+.parallax-layer[data-speed="0.3"] {
+  transform: translateY(calc(var(--scroll-y) * 0.3));
+}
+
+/* ============================================
+   13. 粒子爆炸微动效
+   ============================================ */
+@keyframes particle-burst {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+.cyber-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--cp-primary);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* ============================================
+   14. 边框脉冲闪烁
+   ============================================ */
+@keyframes border-pulse {
+  0%, 100% {
+    box-shadow: 0 0 5px var(--cp-primary-glow);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--cp-primary-glow), 0 0 40px var(--cp-primary-glow);
+  }
+}
+
+.cyber-border-pulse {
+  animation: border-pulse 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   15. 工具类
+   ============================================ */
+/* 文字发光 */
+.text-glow {
+  text-shadow: 0 0 10px var(--cp-primary-glow);
+}
+
+.text-glow-accent {
+  text-shadow: 0 0 10px var(--cp-accent-glow);
+}
+
+/* 边框发光 */
+.glow-border {
+  box-shadow: 0 0 10px var(--cp-primary-glow);
+}
+
+.glow-border-accent {
+  box-shadow: 0 0 10px var(--cp-accent-glow);
+}
+
+/* 渐变文字 */
+.gradient-text {
+  background: var(--cp-gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 悬浮上浮效果 */
+.hover-lift {
+  transition: transform var(--cp-transition-normal);
+}
+
+.hover-lift:hover {
+  transform: translateY(-3px);
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cp-bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--cp-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--cp-primary);
+}

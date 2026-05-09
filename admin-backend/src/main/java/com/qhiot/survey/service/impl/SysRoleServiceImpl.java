@@ -5,10 +5,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qhiot.survey.common.BusinessException;
 import com.qhiot.survey.entity.SysRole;
+import com.qhiot.survey.entity.SysRolePermission;
 import com.qhiot.survey.entity.SysUserRole;
 import com.qhiot.survey.mapper.SysRoleMapper;
+import com.qhiot.survey.mapper.SysRolePermissionMapper;
 import com.qhiot.survey.mapper.SysUserRoleMapper;
 import com.qhiot.survey.service.SysRoleService;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,11 +25,17 @@ import java.util.List;
 /**
  * 角色服务实现类
  */
+@Slf4j
 @Service
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
 
+    private static final Logger logger = LoggerFactory.getLogger(SysRoleServiceImpl.class);
+    
     @Autowired
     private SysUserRoleMapper sysUserRoleMapper;
+
+    @Autowired
+    private SysRolePermissionMapper sysRolePermissionMapper;
 
     @Override
     public Page<SysRole> listByPage(String keyword, Integer pageNum, Integer pageSize) {
@@ -102,17 +113,55 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     @Override
     @Transactional
     public void assignRoleToUser(Long userId, List<Long> roleIds) {
+        logger.info("====== [角色分配] 开始分配角色 - userId: {}, roleIds: {} ======",
+                userId,
+                roleIds);
+        
         // 先删除用户原有角色
-        sysUserRoleMapper.delete(
+        int deletedCount = sysUserRoleMapper.delete(
                 new LambdaQueryWrapper<SysUserRole>().eq(SysUserRole::getUserId, userId)
         );
-        // 添加新角色
-        for (Long roleId : roleIds) {
-            SysUserRole userRole = new SysUserRole();
-            userRole.setUserId(userId);
-            userRole.setRoleId(roleId);
-            sysUserRoleMapper.insert(userRole);
+        logger.info("====== [角色分配] 删除旧角色记录 - userId: {}, 删除数量: {} ======", userId, deletedCount);
+        
+        // 检查并清理可能存在的重复记录（防御性编程）
+        sysUserRoleMapper.delete(
+                new LambdaQueryWrapper<SysUserRole>()
+                        .eq(SysUserRole::getUserId, userId)
+                        .notIn(SysUserRole::getRoleId, roleIds != null ? roleIds : List.of())
+        );
+        
+        // 添加新角色（先去重）
+        if (roleIds != null && !roleIds.isEmpty()) {
+            // 去重
+            List<Long> uniqueRoleIds = roleIds.stream().distinct().toList();
+            logger.info("====== [角色分配] 去重后角色列表 - userId: {}, roleIds: {} ======", userId, uniqueRoleIds);
+            
+            for (Long roleId : uniqueRoleIds) {
+                // 过滤空值（前端可能传递 null/undefined）
+                if (roleId == null) {
+                    logger.warn("====== [角色分配] 跳过空 roleId - userId: {} ======", userId);
+                    continue;
+                }
+                // 检查是否已存在（防止并发问题）
+                Long count = sysUserRoleMapper.selectCount(
+                        new LambdaQueryWrapper<SysUserRole>()
+                                .eq(SysUserRole::getUserId, userId)
+                                .eq(SysUserRole::getRoleId, roleId)
+                );
+                
+                if (count == 0) {
+                    SysUserRole userRole = new SysUserRole();
+                    userRole.setUserId(userId);
+                    userRole.setRoleId(roleId);
+                    sysUserRoleMapper.insert(userRole);
+                    logger.info("====== [角色分配] 插入角色记录 - userId: {}, roleId: {} ======", userId, roleId);
+                } else {
+                    logger.warn("====== [角色分配] 角色记录已存在，跳过 - userId: {}, roleId: {} ======", userId, roleId);
+                }
+            }
         }
+        
+        logger.info("====== [角色分配] 角色分配完成 - userId: {} ======", userId);
     }
 
     @Override
@@ -130,15 +179,34 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateRolePermissions(Long roleId, List<String> permissions) {
         SysRole existing = getById(roleId);
         if (existing == null) {
             throw new BusinessException("角色不存在");
         }
+        // 1. 更新 sys_role.permissions 字符串字段（保持向后兼容）
         SysRole update = new SysRole();
         update.setId(roleId);
         update.setPermissions(String.join(",", permissions));
         updateById(update);
+
+        // 2. 同步更新 sys_role_permission 关联表
+        sysRolePermissionMapper.delete(
+                new LambdaQueryWrapper<SysRolePermission>().eq(SysRolePermission::getRoleId, roleId)
+        );
+        if (permissions != null && !permissions.isEmpty()) {
+            for (String permCode : permissions) {
+                String trimmed = permCode.trim();
+                if (!trimmed.isEmpty()) {
+                    SysRolePermission rolePerm = new SysRolePermission();
+                    rolePerm.setRoleId(roleId);
+                    rolePerm.setPermCode(trimmed);
+                    rolePerm.setCreateTime(LocalDateTime.now());
+                    sysRolePermissionMapper.insert(rolePerm);
+                }
+            }
+        }
     }
 
     @Override

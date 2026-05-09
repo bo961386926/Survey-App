@@ -36,11 +36,11 @@ DELETE FROM sys_role WHERE role_code IN ('ADMIN', 'PROJECT_MANAGER', 'AUDITOR', 
 
 -- 插入正确的角色数据
 INSERT INTO sys_role (role_code, role_name, permissions, sort, status, create_time, update_time) VALUES
-('ADMIN', '超级管理员', '["*"]', 1, 1, NOW(), NOW()),
-('PROJECT_MANAGER', '项目经理', '["project:view", "project:create", "project:update", "point:view", "point:create", "point:update", "task:view"]', 2, 1, NOW(), NOW()),
-('AUDITOR', '审核员', '["point:view", "point:audit", "task:view", "result:view"]', 3, 1, NOW(), NOW()),
-('COLLECTOR', '采集员', '["point:view", "point:create", "point:update", "task:view", "task:complete"]', 4, 1, NOW(), NOW()),
-('THIRD_PARTY', '第三方协作', '["point:view", "task:view"]', 5, 1, NOW(), NOW());
+('ADMIN', '超级管理员', '*', 1, 1, NOW(), NOW()),
+('PROJECT_MANAGER', '项目经理', 'project:view,project:create,project:update,point:view,point:create,point:update,task:view', 2, 1, NOW(), NOW()),
+('AUDITOR', '审核员', 'point:view,point:audit,task:view,result:view', 3, 1, NOW(), NOW()),
+('COLLECTOR', '采集员', 'point:view,point:create,point:update,task:view,task:complete', 4, 1, NOW(), NOW()),
+('THIRD_PARTY', '第三方协作', 'point:view,task:view', 5, 1, NOW(), NOW());
 
 -- =============================================
 -- 第3步：为 admin 用户分配 ADMIN 角色

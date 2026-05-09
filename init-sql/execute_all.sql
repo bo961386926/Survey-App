@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS project (
   project_code VARCHAR(50) UNIQUE COMMENT '项目编号',
   manager VARCHAR(30) COMMENT '负责人',
   region VARCHAR(100) COMMENT '所属区域',
+  client_name VARCHAR(200) COMMENT '委托单位',
+  description TEXT COMMENT '项目描述/备注',
   start_date DATE COMMENT '开始日期',
   end_date DATE COMMENT '结束日期',
   status TINYINT DEFAULT 0 COMMENT '0草稿 1进行中 2已暂停 3已完成 4已归档',
@@ -504,13 +506,13 @@ INSERT IGNORE INTO sys_user (username, password, real_name, role, status) VALUES
 ('reviewer1', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '陈美丽', 3, 1),
 ('reviewer2', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '刘强', 3, 1);
 
--- 插入默认角色
+-- 插入默认角色（permissions 使用逗号分隔字符串）
 INSERT IGNORE INTO sys_role (role_code, role_name, permissions, sort) VALUES
-('admin', '管理员', '["*"]', 1),
-('project_manager', '项目负责人', '["project:view","project:edit","point:view","point:edit","template:bind","export:project"]', 2),
-('auditor', '审核员', '["point:view","audit:view","audit:pass","audit:reject","export:audit"]', 3),
-('surveyor', '采集员', '["point:view","survey:create","survey:edit","survey:submit"]', 4),
-('collab', '第三方协作', '["point:view","survey:assist"]', 5);
+('admin', '管理员', '*', 1),
+('project_manager', '项目负责人', 'project:view,project:edit,point:view,point:edit,template:bind,export:project', 2),
+('auditor', '审核员', 'point:view,audit:view,audit:pass,audit:reject,export:audit', 3),
+('surveyor', '采集员', 'point:view,survey:create,survey:edit,survey:submit', 4),
+('collab', '第三方协作', 'point:view,survey:assist', 5);
 
 -- 为admin用户分配管理员角色
 INSERT IGNORE INTO sys_user_role (user_id, role_id) 

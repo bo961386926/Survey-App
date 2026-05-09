@@ -6,7 +6,7 @@
         <h1 class="text-24px font-bold text-[var(--color-text-primary)] mb-1">表单模板</h1>
         <p class="text-14px text-[var(--color-text-secondary)]">配置勘查表单字段，支持多种字段类型与联动逻辑</p>
       </div>
-      <a-button v-if="isAdmin" type="primary" @click="handleCreate" class="rounded-6px">
+      <a-button v-if="hasPermission('template:create')" type="primary" @click="handleCreate" class="rounded-6px">
         <template #icon><PlusOutlined /></template>
         新建模板
       </a-button>
@@ -18,7 +18,7 @@
     </div>
     <div v-else-if="templateList.length === 0" class="text-center py-20 text-[var(--color-text-secondary)]">
       <p class="text-16px mb-4">暂无模板</p>
-      <a-button v-if="isAdmin" type="primary" @click="handleCreate">创建第一个模板</a-button>
+      <a-button v-if="hasPermission('template:create')" type="primary" @click="handleCreate">创建第一个模板</a-button>
     </div>
     <div v-else class="grid grid-cols-2 gap-6">
       <div
@@ -164,12 +164,25 @@ import {
   SwitcherOutlined,
   PictureOutlined
 } from '@ant-design/icons-vue';
+
+// 字段类型到图标的映射
+const fieldIconMap: Record<string, any> = {
+  input: FontSizeOutlined,
+  textarea: FileTextOutlined,
+  number: NumberOutlined,
+  select: DownOutlined,
+  radio: CheckSquareOutlined,
+  checkbox: CheckSquareOutlined,
+  switch: SwitcherOutlined,
+  date: HistoryOutlined,
+  image: PictureOutlined
+};
 import { fetchGetTemplateList, fetchGetTemplateVersions, fetchPublishTemplate, fetchDeleteTemplate, fetchCreateTemplate } from '@/service/api';
 
 defineOptions({ name: 'TemplateList' });
 
 const router = useRouter();
-const { isAdmin } = useAuth();
+const { hasPermission } = useAuth();
 
 const loading = ref(false);
 const versionModalVisible = ref(false);
@@ -193,14 +206,20 @@ const loadTemplateList = async () => {
     const response = await fetchGetTemplateList({ current: 1, size: 100 });
     
     if (response.data) {
-      templateList.value = (response.data.records || []).map((tpl: any) => ({
-        id: tpl.templateId || tpl.id,
-        name: tpl.templateName || tpl.name,
-        fieldsCount: tpl.fieldCount || 0,
-        updatedAt: tpl.updatedAt || '-',
-        showActions: true,
-        fields: tpl.fields || []
-      }));
+      templateList.value = (response.data.records || []).map((tpl: any) => {
+        let fields: any[] = [];
+        try {
+          if (tpl.fieldsJson) fields = JSON.parse(tpl.fieldsJson);
+        } catch { /* ignore parse error */ }
+        return {
+          id: tpl.id,
+          name: tpl.templateName,
+          fieldsCount: fields.length,
+          updatedAt: tpl.updateTime ? new Date(tpl.updateTime).toLocaleDateString() : '-',
+          showActions: true,
+          fields: fields.map((f: any) => ({ name: f.label, required: f.required, icon: fieldIconMap[f.type] || FileTextOutlined }))
+        };
+      });
     }
   } catch (error) {
     console.error('Failed to load templates:', error);
@@ -218,7 +237,7 @@ const handleVersions = async (template: any) => {
   // Load version history
   versionLoading.value = true;
   try {
-    const templateId = Number(template.id.replace('TPL-', '')) || template.id;
+    const templateId = Number(template.id) || template.id;
     const response = await fetchGetTemplateVersions(templateId);
     
     if (response.data) {
@@ -255,7 +274,12 @@ const handlePublishVersion = async (version: any) => {
     onOk: async () => {
       try {
         const templateId = Number(selectedTemplate.value.id.replace('TPL-', '')) || selectedTemplate.value.id;
-        const response = await fetchPublishTemplate(templateId);
+        const response = await fetchPublishTemplate(templateId, {
+          templateName: selectedTemplate.value.name,
+          fields: version.fields || [],
+          rules: '{}',
+          linkageRules: '[]'
+        });
         
         if (!response.error) {
           message.success('发布成功');
@@ -301,8 +325,8 @@ const handleCreate = async () => {
   try {
     const response = await fetchCreateTemplate({
       templateName: '新模板',
-      templateCode: `TPL_${Date.now()}`,
-      fieldsCount: 0
+      templateCode: `TPL_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      description: '新创建的模板'
     } as any);
     
     if (!response.error && response.data) {
@@ -311,12 +335,12 @@ const handleCreate = async () => {
       // 跳转到新创建的模板设计器
       router.push(`/template/design/${templateId}`);
     } else {
-      message.error('创建模板失败');
+      message.error(response.message || '创建模板失败');
       loading.value = false;
     }
   } catch (error) {
     console.error('Create template failed:', error);
-    message.error('创建模板失败');
+    message.error('创建模板失败：' + (error.message || '未知错误'));
     loading.value = false;
   }
 };

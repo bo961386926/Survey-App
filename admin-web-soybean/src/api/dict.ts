@@ -2,6 +2,8 @@ import { request } from '@/service/request';
 
 /**
  * 数据字典管理 API
+ * 前端请求路径前缀: /dict
+ * 后端控制器基础路径: /api/v1/dict (通过代理 /proxy-default 自动添加)
  */
 
 /**
@@ -9,7 +11,7 @@ import { request } from '@/service/request';
  */
 export function fetchGetDictList(params: any) {
   return request({
-    url: '/api/v1/dict/page',
+    url: '/dict/page',
     method: 'get',
     params
   });
@@ -20,7 +22,7 @@ export function fetchGetDictList(params: any) {
  */
 export function fetchGetEnabledDicts() {
   return request({
-    url: '/api/v1/dict/enabled',
+    url: '/dict/enabled',
     method: 'get'
   });
 }
@@ -30,7 +32,7 @@ export function fetchGetEnabledDicts() {
  */
 export function fetchGetDictDetail(id: number | string) {
   return request({
-    url: `/api/v1/dict/${id}`,
+    url: `/dict/${id}`,
     method: 'get'
   });
 }
@@ -40,7 +42,7 @@ export function fetchGetDictDetail(id: number | string) {
  */
 export function fetchCreateDict(data: any) {
   return request({
-    url: '/api/v1/dict',
+    url: '/dict',
     method: 'post',
     data
   });
@@ -51,7 +53,7 @@ export function fetchCreateDict(data: any) {
  */
 export function fetchUpdateDict(id: number | string, data: any) {
   return request({
-    url: `/api/v1/dict/${id}`,
+    url: `/dict/${id}`,
     method: 'put',
     data
   });
@@ -62,7 +64,7 @@ export function fetchUpdateDict(id: number | string, data: any) {
  */
 export function fetchDeleteDict(id: number | string) {
   return request({
-    url: `/api/v1/dict/${id}`,
+    url: `/dict/${id}`,
     method: 'delete'
   });
 }
@@ -72,7 +74,7 @@ export function fetchDeleteDict(id: number | string) {
  */
 export function fetchGetDictItems(dictId: number | string) {
   return request({
-    url: `/api/v1/dict/${dictId}/items`,
+    url: `/dict/${dictId}/items`,
     method: 'get'
   });
 }
@@ -82,7 +84,7 @@ export function fetchGetDictItems(dictId: number | string) {
  */
 export function fetchGetDictItemsByCode(dictCode: string) {
   return request({
-    url: `/api/v1/dict/code/${dictCode}/items`,
+    url: `/dict/code/${dictCode}/items`,
     method: 'get'
   });
 }
@@ -92,7 +94,7 @@ export function fetchGetDictItemsByCode(dictCode: string) {
  */
 export function fetchBatchSaveDictItems(dictId: number | string, items: any[]) {
   return request({
-    url: `/api/v1/dict/${dictId}/items/batch`,
+    url: `/dict/${dictId}/items/batch`,
     method: 'post',
     data: items
   });

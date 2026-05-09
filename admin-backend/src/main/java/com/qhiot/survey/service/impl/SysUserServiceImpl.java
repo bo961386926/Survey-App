@@ -6,9 +6,15 @@ import com.qhiot.survey.common.BusinessException;
 import com.qhiot.survey.common.util.ExcelUtil;
 import com.qhiot.survey.common.util.PasswordGenerator;
 import com.qhiot.survey.dto.PageResult;
+import com.qhiot.survey.entity.SysRole;
 import com.qhiot.survey.entity.SysUser;
+import com.qhiot.survey.entity.Project;
+import com.qhiot.survey.entity.ProjectMember;
 import com.qhiot.survey.mapper.SysUserMapper;
+import com.qhiot.survey.service.SysRoleService;
 import com.qhiot.survey.service.SysUserService;
+import com.qhiot.survey.service.ProjectMemberService;
+import com.qhiot.survey.service.ProjectService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +28,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -29,10 +36,18 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     private final PasswordEncoder passwordEncoder;
     private final StringRedisTemplate redisTemplate;
+    private final ProjectMemberService projectMemberService;
+    private final ProjectService projectService;
+    private final SysRoleService sysRoleService;
 
-    public SysUserServiceImpl(PasswordEncoder passwordEncoder, StringRedisTemplate redisTemplate) {
+    public SysUserServiceImpl(PasswordEncoder passwordEncoder, StringRedisTemplate redisTemplate,
+                              ProjectMemberService projectMemberService, ProjectService projectService,
+                              SysRoleService sysRoleService) {
         this.passwordEncoder = passwordEncoder;
         this.redisTemplate = redisTemplate;
+        this.projectMemberService = projectMemberService;
+        this.projectService = projectService;
+        this.sysRoleService = sysRoleService;
     }
 
     /**
@@ -44,17 +59,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
      * 锁定时长（分钟）
      */
     private static final int LOCK_DURATION_MINUTES = 30;
-
-    /**
-     * 角色映射
-     */
-    private static final Map<String, Integer> ROLE_MAP = new HashMap<>();
-    static {
-        ROLE_MAP.put("超级管理员", 1);
-        ROLE_MAP.put("项目经理", 2);
-        ROLE_MAP.put("审核员", 3);
-        ROLE_MAP.put("采集员", 4);
-    }
 
     @Override
     public SysUser getUserByUsername(String username) {
@@ -108,16 +112,13 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
-    public PageResult<SysUser> queryUserPage(String username, Integer role, Integer status, Integer pageNum, Integer pageSize) {
+    public PageResult<SysUser> queryUserPage(String username, Integer status, Integer pageNum, Integer pageSize) {
         Page<SysUser> page = new Page<>(pageNum, pageSize);
         
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
         
         if (StringUtils.hasText(username)) {
             wrapper.like(SysUser::getUsername, username);
-        }
-        if (role != null) {
-            wrapper.eq(SysUser::getRole, role);
         }
         if (status != null) {
             wrapper.eq(SysUser::getStatus, status);
@@ -144,13 +145,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             log.info("Fetched {} users. First user realName: {}", users.size(), users.get(0).getRealName());
         }
         return users;
-    }
-
-    @Override
-    public List<SysUser> getUsersByRole(Integer role) {
-        return lambdaQuery()
-                .eq(SysUser::getRole, role)
-                .list();
     }
 
     @Override
@@ -277,7 +271,13 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 row.put("真实姓名", user.getRealName());
                 row.put("手机号", user.getPhone());
                 row.put("邮箱", user.getEmail());
-                row.put("角色", getRoleName(user.getRole()));
+                // 从 sys_user_role 关联表获取用户的所有角色名称
+                List<SysRole> roles = sysRoleService.getUserRoles(user.getId());
+                String roleNames = roles.stream()
+                        .map(SysRole::getRoleName)
+                        .filter(name -> name != null && !name.isEmpty())
+                        .collect(Collectors.joining("、"));
+                row.put("角色", roleNames.isEmpty() ? "未分配" : roleNames);
                 row.put("状态", user.getStatus() == 1 ? "启用" : "禁用");
                 dataList.add(row);
             }
@@ -329,7 +329,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 user.setRealName(realName);
                 user.setPhone(phone);
                 user.setEmail(email);
-                user.setRole(ROLE_MAP.getOrDefault(roleName, 4)); // 默认采集员
                 
                 // 生成强密码（12位，包含大小写字母、数字、特殊字符）
                 String strongPassword = PasswordGenerator.generateStrongPassword();
@@ -343,6 +342,20 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 user.setIsFirstLogin(1);
                 
                 if (save(user)) {
+                    // 如果 Excel 中指定了角色名称，通过 sys_user_role 分配角色
+                    if (StringUtils.hasText(roleName)) {
+                        // 查询 sys_role 表中匹配的角色
+                        List<SysRole> matchedRoles = sysRoleService.lambdaQuery()
+                                .eq(SysRole::getRoleName, roleName)
+                                .eq(SysRole::getStatus, 1)
+                                .list();
+                        if (!matchedRoles.isEmpty()) {
+                            List<Long> roleIds = matchedRoles.stream()
+                                    .map(SysRole::getId)
+                                    .toList();
+                            sysRoleService.assignRoleToUser(user.getId(), roleIds);
+                        }
+                    }
                     successCount++;
                 } else {
                     failCount++;
@@ -358,20 +371,33 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         result.put("fail", failCount);
         return result;
     }
-
-    /**
-     * 获取角色名称
-     */
-    private String getRoleName(Integer role) {
-        if (role == null) {
-            return "未知";
+    
+    @Override
+    public String getUserProjectNames(Long userId) {
+        if (userId == null) {
+            return "";
         }
-        switch (role) {
-            case 1: return "超级管理员";
-            case 2: return "项目经理";
-            case 3: return "审核员";
-            case 4: return "采集员";
-            default: return "未知";
+        
+        // 查询用户参与的项目ID列表
+        List<ProjectMember> members = projectMemberService.lambdaQuery()
+                .eq(ProjectMember::getUserId, userId)
+                .eq(ProjectMember::getStatus, 1) // 只查询启用的成员关系
+                .list();
+        
+        if (members == null || members.isEmpty()) {
+            return "";
         }
+        
+        // 获取项目名称
+        List<String> projectNames = members.stream()
+                .map(member -> {
+                    Project project = projectService.getById(member.getProjectId());
+                    return project != null ? project.getProjectName() : null;
+                })
+                .filter(name -> name != null && !name.isEmpty())
+                .toList();
+        
+        // 用逗号分隔多个项目名称
+        return String.join("，", projectNames);
     }
 }

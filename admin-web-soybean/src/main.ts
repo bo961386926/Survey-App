@@ -5,6 +5,8 @@ import { setupStore } from './store';
 import { setupRouter } from './router';
 import { setupI18n } from './locales';
 import App from './App.vue';
+import permission from './directives/permission';
+import { vMouseGlow, vGlowBorder } from './directives/mouse-glow';
 
 /**
  * 带错误边界的应用启动函数
@@ -28,6 +30,11 @@ async function setupApp() {
     setupDayjs();
 
     const app = createApp(App);
+
+    // 注册全局指令
+    app.directive('permission', permission);
+    app.directive('mouse-glow', vMouseGlow);
+    app.directive('glow-border', vGlowBorder);
 
     setupStore(app);
 

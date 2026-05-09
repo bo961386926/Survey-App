@@ -2,6 +2,7 @@ package com.qhiot.survey.common.aspect;
 
 import com.qhiot.survey.common.annotation.OperationLog;
 import com.qhiot.survey.common.util.SecurityUtils;
+import com.qhiot.survey.security.LoginUser;
 import com.qhiot.survey.service.OperationLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,9 +14,13 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.ParserContext;
+import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -45,42 +50,92 @@ public class OperationLogAspect {
 
     /**
      * 方法成功返回后记录日志（异步）
+     * 注意：在主线程中获取用户信息和请求信息，然后传递给异步方法
+     * 只记录成功的操作，不记录失败的操作
      */
     @AfterReturning(pointcut = "operationLogPointcut()", returning = "result")
-    @Async("operationLogExecutor")
     public void doAfterReturning(JoinPoint joinPoint, Object result) {
         log.info("========== [操作日志-AOP] 方法执行成功，准备记录日志 ==========");
         log.info("[操作日志-AOP] 类名: {}", joinPoint.getSignature().getDeclaringTypeName());
         log.info("[操作日志-AOP] 方法名: {}", joinPoint.getSignature().getName());
-        recordLog(joinPoint, result, null);
+        
+        LogContext context = buildLogContext(joinPoint, result, null);
+        recordLogAsync(context, joinPoint, result, null);
     }
 
     /**
-     * 方法抛出异常后记录日志（异步）
+     * 注意：方法抛出异常时不记录操作日志
+     * 操作日志只记录成功的业务操作，失败的操作不应出现在操作日志中
+     * 异常信息应该由专门的错误日志系统记录
      */
-    @AfterThrowing(pointcut = "operationLogPointcut()", throwing = "exception")
+
+    /**
+     * 构建日志上下文（在主线程中调用，获取用户信息和请求信息）
+     */
+    private LogContext buildLogContext(JoinPoint joinPoint, Object result, Exception exception) {
+        LogContext context = new LogContext();
+        
+        // 调试：打印 SecurityContext 状态
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        log.info("[操作日志-调试] SecurityContext 状态: {}", auth != null ? "存在" : "不存在");
+        if (auth != null) {
+            log.info("[操作日志-调试] Authentication 类型: {}", auth.getClass().getName());
+            log.info("[操作日志-调试] Principal 类型: {}", auth.getPrincipal().getClass().getName());
+            log.info("[操作日志-调试] Principal: {}", auth.getPrincipal());
+            log.info("[操作日志-调试] Name: {}", auth.getName());
+            log.info("[操作日志-调试] Authorities: {}", auth.getAuthorities());
+            
+            if (auth.getPrincipal() instanceof LoginUser loginUser) {
+                log.info("[操作日志-调试] LoginUser.userId: {}", loginUser.getUserId());
+                log.info("[操作日志-调试] LoginUser.username: {}", loginUser.getUsername());
+                log.info("[操作日志-调试] LoginUser.realName: {}", loginUser.getRealName());
+            } else {
+                log.warn("[操作日志-调试] Principal 不是 LoginUser 类型!");
+            }
+        }
+        
+        context.userId = SecurityUtils.getCurrentUserId();
+        context.username = SecurityUtils.getCurrentUsername();
+        
+        log.info("[操作日志-调试] SecurityUtils.getCurrentUserId(): {}", context.userId);
+        log.info("[操作日志-调试] SecurityUtils.getCurrentUsername(): {}", context.username);
+        
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes != null) {
+            HttpServletRequest request = attributes.getRequest();
+            context.ip = getClientIp(request);
+            context.userAgent = request.getHeader("User-Agent");
+            log.info("[操作日志-调试] 请求IP: {}", context.ip);
+        } else {
+            context.ip = "unknown";
+            context.userAgent = "unknown";
+            log.warn("[操作日志-调试] 无法获取 ServletRequestAttributes");
+        }
+        
+        return context;
+    }
+
+    /**
+     * 异步记录日志
+     */
     @Async("operationLogExecutor")
-    public void doAfterThrowing(JoinPoint joinPoint, Exception exception) {
-        log.warn("========== [操作日志-AOP] 方法执行异常，准备记录异常日志 ==========");
-        log.warn("[操作日志-AOP] 类名: {}", joinPoint.getSignature().getDeclaringTypeName());
-        log.warn("[操作日志-AOP] 方法名: {}", joinPoint.getSignature().getName());
-        log.warn("[操作日志-AOP] 异常信息: {}", exception.getMessage());
-        recordLog(joinPoint, null, exception);
+    public void recordLogAsync(LogContext context, JoinPoint joinPoint, Object result, Exception exception) {
+        log.info("[操作日志-异步] 开始异步记录日志 - userId: {}, username: {}", context.userId, context.username);
+        recordLog(context, joinPoint, result, exception);
     }
 
     /**
      * 记录操作日志
+     * 注意：只记录成功的操作，不记录异常信息
      */
-    private void recordLog(JoinPoint joinPoint, Object result, Exception exception) {
+    private void recordLog(LogContext context, JoinPoint joinPoint, Object result, Exception exception) {
         try {
             log.info("---------- [操作日志-记录] 开始记录操作日志 ----------");
             
-            // 获取方法签名
             MethodSignature signature = (MethodSignature) joinPoint.getSignature();
             Method method = signature.getMethod();
             log.info("[操作日志-记录] 目标方法: {}.{}", signature.getDeclaringTypeName(), method.getName());
             
-            // 获取注解
             OperationLog operationLog = method.getAnnotation(OperationLog.class);
             if (operationLog == null) {
                 log.warn("[操作日志-记录] 未找到@OperationLog注解，跳过记录");
@@ -89,69 +144,46 @@ public class OperationLogAspect {
             log.info("[操作日志-记录] 注解信息 - module: {}, action: {}, riskLevel: {}", 
                 operationLog.module(), operationLog.action(), operationLog.riskLevel());
 
-            // 获取当前用户信息
-            Long userId = SecurityUtils.getCurrentUserId();
-            String username = SecurityUtils.getCurrentUsername();
-            log.info("[操作日志-记录] 当前用户 - userId: {}, username: {}", userId, username);
+            log.info("[操作日志-记录] 当前用户 - userId: {}, username: {}", context.userId, context.username);
             
-            // 如果获取不到用户信息，可能是未登录或系统调用
-            if (userId == null || "system".equals(username)) {
-                log.warn("[操作日志-记录] 无法获取当前用户信息 (userId={}, username={})，跳过操作日志记录", userId, username);
+            if (context.userId == null || "system".equals(context.username)) {
+                log.warn("[操作日志-记录] 无法获取当前用户信息 (userId={}, username={})，跳过操作日志记录", context.userId, context.username);
                 return;
             }
 
-            // 获取请求信息
-            ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            String ip = "unknown";
-            String userAgent = "unknown";
-            
-            if (attributes != null) {
-                HttpServletRequest request = attributes.getRequest();
-                ip = getClientIp(request);
-                userAgent = request.getHeader("User-Agent");
-                log.info("[操作日志-记录] 请求信息 - IP: {}, UserAgent: {}", ip, userAgent);
-            } else {
-                log.warn("[操作日志-记录] 无法获取ServletRequestAttributes");
-            }
+            log.info("[操作日志-记录] 请求信息 - IP: {}, UserAgent: {}", context.ip, context.userAgent);
 
-            // 解析操作描述（支持SpEL表达式）
+            // 解析描述信息
             String description = parseDescription(operationLog.description(), joinPoint, result);
             
-            // 如果描述为空，使用默认描述
             if (description == null || description.isEmpty()) {
                 description = operationLog.action();
             }
-
-            // 如果是异常，在描述中添加异常信息
-            if (exception != null) {
-                description += " [失败: " + exception.getMessage() + "]";
-            }
             
             log.info("[操作日志-记录] 准备调用Service保存 - userId: {}, username: {}, module: {}, action: {}, description: {}, riskLevel: {}",
-                userId, username, operationLog.module(), operationLog.action(), description, operationLog.riskLevel());
+                context.userId, context.username, operationLog.module(), operationLog.action(), description, operationLog.riskLevel());
 
-            // 记录日志
             operationLogService.logOperation(
-                userId,
-                username,
+                context.userId,
+                context.username,
                 operationLog.module(),
                 operationLog.action(),
                 description,
-                ip,
-                userAgent,
+                context.ip,
+                context.userAgent,
                 operationLog.riskLevel()
             );
             
             log.info("========== [操作日志-记录] 操作日志记录成功 ==========\n");
                 
         } catch (Exception e) {
-            // 日志记录失败不应影响业务逻辑
             log.error("========== [操作日志-记录] 记录操作日志失败 ==========", e);
         }
     }
 
     /**
-     * 解析SpEL表达式
+     * 解析SpEL模板表达式
+     * 支持类似 "创建模板: #template.templateName" 这样的模板语法
      */
     private String parseDescription(String expression, JoinPoint joinPoint, Object result) {
         if (expression == null || expression.isEmpty()) {
@@ -159,31 +191,34 @@ public class OperationLogAspect {
         }
 
         try {
-            // 如果没有SpEL表达式，直接返回
             if (!expression.contains("#")) {
                 return expression;
             }
 
-            // 构建SpEL上下文
-            EvaluationContext context = new StandardEvaluationContext();
-            
-            // 添加方法参数到上下文
+            EvaluationContext spelContext = new StandardEvaluationContext();
+
             MethodSignature signature = (MethodSignature) joinPoint.getSignature();
             String[] parameterNames = signature.getParameterNames();
             Object[] args = joinPoint.getArgs();
-            
+
             if (parameterNames != null && args != null) {
                 for (int i = 0; i < parameterNames.length; i++) {
-                    context.setVariable(parameterNames[i], args[i]);
+                    spelContext.setVariable(parameterNames[i], args[i]);
                 }
             }
-            
-            // 添加返回值到上下文
-            context.setVariable("result", result);
 
-            // 解析表达式
-            return parser.parseExpression(expression).getValue(context, String.class);
-            
+            spelContext.setVariable("result", result);
+
+            // 将 #variable 形式的引用转换为 #{#variable} 模板语法
+            // 示例:
+            //   "创建模板: #template.templateName" -> "创建模板: #{#template.templateName}"
+            //   "数量: #ids.size()"                -> "数量: #{#ids.size()}"
+            String templateExpr = expression.replaceAll("#(\\w[\\w.]*(?:\\([^)]*\\))?)", "#{#$1}");
+
+            // 使用模板解析器，#{...} 内的内容作为SpEL表达式，外部作为纯文本
+            ParserContext templateCtx = new TemplateParserContext("#{", "}");
+            return parser.parseExpression(templateExpr, templateCtx).getValue(spelContext, String.class);
+
         } catch (Exception e) {
             log.warn("解析操作日志描述表达式失败: {}", expression, e);
             return expression;
@@ -211,11 +246,20 @@ public class OperationLogAspect {
             ip = request.getRemoteAddr();
         }
         
-        // 如果是多级代理，取第一个IP
         if (ip != null && ip.contains(",")) {
             ip = ip.split(",")[0].trim();
         }
         
         return ip;
+    }
+
+    /**
+     * 日志上下文（用于在主线程和异步线程之间传递数据）
+     */
+    private static class LogContext {
+        Long userId;
+        String username;
+        String ip;
+        String userAgent;
     }
 }

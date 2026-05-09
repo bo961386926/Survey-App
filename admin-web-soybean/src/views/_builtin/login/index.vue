@@ -59,13 +59,13 @@ const isLogin = computed(() => props.module === 'pwd-login' || props.module === 
       <!-- Left Side: Brand Visual -->
       <section class="hidden lg:flex flex-col justify-between p-48px relative overflow-hidden border-r border-divider bg-primary/5">
         <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(circle at 2px 2px, var(--color-text-primary) 1px, transparent 0); background-size: 24px 24px;"></div>
-        
+
         <div class="relative z-10">
           <header class="flex-y-center gap-12px mb-48px">
             <SystemLogo class="size-48px" />
             <h1 class="text-24px font-800 tracking-tight text-primary">{{ $t('system.title') }}</h1>
           </header>
-          
+
           <h2 class="text-36px font-800 leading-tight mb-24px text-primary">
             专业实地调研<br />
             及巡检作业平台
@@ -132,8 +132,8 @@ const isLogin = computed(() => props.module === 'pwd-login' || props.module === 
     <!-- Footer Meta -->
     <div class="fixed bottom-24px text-center w-full px-24px pointer-events-none z-20">
       <p class="text-12px text-secondary/80 font-500">
-        © 2024 {{ $t('system.title') }}. 安全、稳固、精准的行业数据标准。
-        <span class="mx-8px hidden md:inline">|</span> 
+        © 2026 {{ $t('system.title') }}. 安全、稳固、精准的行业数据标准。
+        <span class="mx-8px hidden md:inline">|</span>
         隐私条款 <span class="mx-8px">|</span> 服务协议
       </p>
     </div>

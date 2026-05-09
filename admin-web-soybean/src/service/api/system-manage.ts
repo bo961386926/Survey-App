@@ -16,7 +16,7 @@ export function fetchGetRoleList(params?: Api.SystemManage.RoleSearchParams) {
  */
 export function fetchGetAllRoles() {
   return request<Api.SystemManage.AllRole[]>({
-    url: '/systemManage/getAllRoles',
+    url: '/role/list',
     method: 'get'
   });
 }
@@ -67,18 +67,27 @@ export function fetchDeleteUser(id: number | string) {
 /** update user status */
 export function fetchUpdateUserStatus(id: number | string, status: number) {
   return request({
-    url: `/user/${id}/status`,
+    url: `/user/status/${id}`,
     method: 'put',
     params: { status }
   });
 }
 
+/** get user detail by id */
+export function fetchGetUserDetailById(id: string | number) {
+  return request<Api.SystemManage.User>({
+    url: `/user/${id}`,
+    method: 'get'
+  });
+}
+
 /** reset password */
 export function fetchResetPassword(id: number | string, password?: string) {
+  const defaultPwd = password || 'Survey@2026';
   return request({
-    url: `/user/${id}/password/reset`,
+    url: `/user/reset-password/${id}`,
     method: 'put',
-    params: { newPassword: password }
+    data: { newPassword: defaultPwd }
   });
 }
 

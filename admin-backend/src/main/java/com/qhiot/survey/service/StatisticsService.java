@@ -1,3 +1,4 @@
+
 package com.qhiot.survey.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class StatisticsService {
     @Autowired
     private SurveyResultService surveyResultService;
 
+    @Autowired
+    private com.qhiot.survey.mapper.SysUserRoleMapper sysUserRoleMapper;
+
     /**
      * 获取系统概览统计数据
      */
@@ -30,8 +34,18 @@ public class StatisticsService {
         // 用户统计
         long totalUsers = sysUserService.count();
         long activeUsers = sysUserService.lambdaQuery().eq(com.qhiot.survey.entity.SysUser::getStatus, 1).count();
-        long surveyors = sysUserService.lambdaQuery().eq(com.qhiot.survey.entity.SysUser::getRole, 2).count();
-        long reviewers = sysUserService.lambdaQuery().eq(com.qhiot.survey.entity.SysUser::getRole, 3).count();
+
+        // 统计勘察人员数量（角色ID为4）
+        long surveyors = sysUserRoleMapper.selectCount(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.qhiot.survey.entity.SysUserRole>()
+                        .eq(com.qhiot.survey.entity.SysUserRole::getRoleId, 4)
+        );
+
+        // 统计审核人员数量（角色ID为3）
+        long reviewers = sysUserRoleMapper.selectCount(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.qhiot.survey.entity.SysUserRole>()
+                        .eq(com.qhiot.survey.entity.SysUserRole::getRoleId, 3)
+        );
 
         // 项目统计
         long totalProjects = projectService.count();
@@ -44,27 +58,27 @@ public class StatisticsService {
         long approvedResults = surveyResultService.lambdaQuery().eq(com.qhiot.survey.entity.SurveyResult::getAuditStatus, 1).count();
 
         overview.put("userStats", Map.of(
-            "total", totalUsers,
-            "active", activeUsers,
-            "surveyors", surveyors,
-            "reviewers", reviewers
+                "total", totalUsers,
+                "active", activeUsers,
+                "surveyors", surveyors,
+                "reviewers", reviewers
         ));
 
         overview.put("projectStats", Map.of(
-            "total", totalProjects,
-            "active", activeProjects
+                "total", totalProjects,
+                "active", activeProjects
         ));
 
         overview.put("pointStats", Map.of(
-            "total", totalPoints,
-            "surveyed", surveyedPoints,
-            "completionRate", totalPoints > 0 ? (double) surveyedPoints / totalPoints * 100 : 0
+                "total", totalPoints,
+                "surveyed", surveyedPoints,
+                "completionRate", totalPoints > 0 ? (double) surveyedPoints / totalPoints * 100 : 0
         ));
 
         overview.put("auditStats", Map.of(
-            "pending", pendingAudit,
-            "approved", approvedResults,
-            "total", surveyResultService.count()
+                "pending", pendingAudit,
+                "approved", approvedResults,
+                "total", surveyResultService.count()
         ));
 
         return overview;
@@ -79,8 +93,8 @@ public class StatisticsService {
         long totalUsers = sysUserService.count();
         long activeUsers = sysUserService.lambdaQuery().eq(com.qhiot.survey.entity.SysUser::getStatus, 1).count();
         long newUsersThisMonth = sysUserService.lambdaQuery()
-            .apply("DATE_FORMAT(create_time, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')")
-            .count();
+                .apply("DATE_FORMAT(create_time, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m')")
+                .count();
 
         stats.put("totalUsers", totalUsers);
         stats.put("activeUsers", activeUsers);

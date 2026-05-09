@@ -1,31 +1,31 @@
 <template>
-  <div class="h-full flex flex-col bg-[var(--bg-page)] p-6">
+  <div class="h-full flex flex-col bg-[var(--bg-page)] p-4">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-3">
       <div>
-        <h1 class="text-24px font-bold text-[var(--color-text-primary)] mb-1">操作日志</h1>
-        <p class="text-14px text-[var(--color-text-secondary)]">
+        <h1 class="text-20px font-bold text-[var(--color-text-primary)] mb-0.5">操作日志</h1>
+        <p class="text-12px text-[var(--color-text-secondary)]">
           共 <span class="font-600 text-[var(--color-text-primary)]">{{ total }}</span> 条 ·
           今日 <span class="font-600 text-[var(--color-success)]">{{ todayCount }}</span> 条
         </p>
       </div>
-      <a-button @click="refreshData">
+      <a-button size="small" @click="refreshData">
         <template #icon><ReloadOutlined /></template>
         刷新
       </a-button>
     </div>
 
     <!-- Filter Bar -->
-    <div class="bg-[var(--bg-card)] border border-[var(--color-border)] rounded-8px p-4 mb-6 shadow-[var(--shadow-card)]">
+    <div class="bg-[var(--bg-card)] border border-[var(--color-border)] rounded-8px p-3 mb-3 shadow-[var(--shadow-card)]">
       <!-- Action Type Tags -->
-      <div class="flex items-center gap-2 mb-4">
-        <span class="text-13px text-[var(--color-text-secondary)] font-medium whitespace-nowrap">动作</span>
-        <div class="flex gap-2 flex-wrap">
+      <div class="flex items-center gap-1.5 mb-2">
+        <span class="text-12px text-[var(--color-text-secondary)] font-medium whitespace-nowrap">动作</span>
+        <div class="flex gap-1.5 flex-wrap">
           <a-tag
             :color="activeAction === '' ? 'blue' : 'default'"
             :style="activeAction === '' ? { background: 'var(--color-primary)', color: '#fff', borderColor: 'var(--color-primary)' } : {}"
-            class="cursor-pointer px-3 py-1"
-            @click="activeAction = ''"
+            class="cursor-pointer px-2 py-0.5 text-12px"
+            @click="handleActionFilter('')"
           >
             全部操作
           </a-tag>
@@ -34,48 +34,50 @@
             :key="action.key"
             :color="activeAction === action.key ? action.color : 'default'"
             :style="activeAction === action.key ? { background: action.bgColor, color: action.color, borderColor: action.borderColor } : {}"
-            class="cursor-pointer px-3 py-1"
-            @click="activeAction = action.key"
+            class="cursor-pointer px-2 py-0.5 text-12px"
+            @click="handleActionFilter(action.key)"
           >
             {{ action.label }}
           </a-tag>
         </div>
-        <div class="ml-auto flex gap-2">
-          <a-tag color="success" class="px-3 py-1">
-            <span class="inline-block w-6px h-6px rounded-full bg-[var(--color-success)] mr-1"></span>
+        <div class="ml-auto flex gap-1.5">
+          <a-tag color="success" class="px-2 py-0.5 text-12px">
+            <span class="inline-block w-5px h-5px rounded-full bg-[var(--color-success)] mr-1"></span>
             今日 {{ todayCount }}
           </a-tag>
-          <a-tag color="error" class="px-3 py-1">
-            <span class="inline-block w-6px h-6px rounded-full bg-[var(--color-danger)] mr-1"></span>
+          <a-tag color="error" class="px-2 py-0.5 text-12px">
+            <span class="inline-block w-5px h-5px rounded-full bg-[var(--color-danger)] mr-1"></span>
             删除 {{ deleteCount }}
           </a-tag>
         </div>
       </div>
 
       <!-- Search and Date Filter -->
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2">
         <a-input
           v-model:value="filters.keyword"
           placeholder="搜索操作人或对象..."
-          class="w-240px"
+          class="w-200px"
+          size="small"
           allow-clear
         >
           <template #prefix><SearchOutlined class="text-[var(--color-text-secondary)]" /></template>
         </a-input>
-        
+
         <a-range-picker
           v-model:value="filters.dateRange"
           :placeholder="['年/月/日', '年/月/日']"
-          class="!w-300px"
+          size="small"
+          class="!w-260px"
         />
-        
+
         <div class="flex-1"></div>
-        
-        <a-button @click="handleSearch">
+
+        <a-button size="small" @click="handleSearch">
           <template #icon><SearchOutlined /></template>
           搜索
         </a-button>
-        <a-button @click="handleReset">重置</a-button>
+        <a-button size="small" @click="handleReset">重置</a-button>
       </div>
     </div>
 
@@ -87,51 +89,48 @@
         :loading="loading"
         :pagination="pagination"
         class="log-table"
-        :scroll="{ y: 'calc(100vh - 320px)' }"
+        row-key="id"
       >
         <template #bodyCell="{ column, record, index }">
           <template v-if="column.key === 'index'">
-            <span class="text-13px text-[var(--color-text-secondary)]">{{ (pagination.current - 1) * pagination.pageSize + index + 1 }}</span>
+            <span class="text-12px text-[var(--color-text-secondary)]">{{ (pagination.current - 1) * pagination.pageSize + index + 1 }}</span>
           </template>
-          
+
           <template v-if="column.key === 'operator'">
             <div class="flex items-center gap-2">
               <div
-                class="w-32px h-32px rounded-full flex items-center justify-center text-14px text-white font-600"
+                class="w-24px h-24px rounded-full flex items-center justify-center text-11px text-white font-600"
                 :style="{ backgroundColor: record.operatorColor }"
               >
                 {{ record.operatorInitial }}
               </div>
-              <div>
-                <div class="font-500 text-14px text-[var(--color-text-primary)]">{{ record.operator }}</div>
-                <div class="text-12px text-[var(--color-text-secondary)]">{{ record.role }}</div>
-              </div>
+              <div class="font-500 text-13px text-[var(--color-text-primary)]">{{ record.operator }}</div>
             </div>
           </template>
-          
+
           <template v-if="column.key === 'module'">
             <div class="flex items-center gap-2">
-              <component :is="iconComponents[record.moduleIcon]" class="text-16px" :style="{ color: record.moduleColor }" />
+              <component :is="iconComponents[record.moduleIcon]" class="text-14px" :style="{ color: record.moduleColor }" />
               <span class="text-13px text-[var(--color-text-primary)]">{{ record.module }}</span>
             </div>
           </template>
-          
+
           <template v-if="column.key === 'actionType'">
             <a-tag
               :color="record.actionColor"
               :style="{ background: record.actionBg, color: record.actionColor, borderColor: record.actionBorderColor }"
-              class="px-2 py-0.5"
+              class="px-1.5 py-0"
             >
               {{ record.actionType }}
             </a-tag>
           </template>
-          
+
           <template v-if="column.key === 'target'">
             <span class="text-13px text-[var(--color-text-primary)]">{{ record.target }}</span>
           </template>
-          
+
           <template v-if="column.key === 'time'">
-            <span class="text-13px text-[var(--color-text-secondary)]">{{ record.time }}</span>
+            <span class="text-12px text-[var(--color-text-secondary)]">{{ record.time }}</span>
           </template>
         </template>
       </a-table>
@@ -140,18 +139,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
 import { message } from 'ant-design-vue';
-import { 
-  ReloadOutlined, 
-  SearchOutlined, 
-  FolderOutlined, 
-  AuditOutlined, 
-  FormOutlined, 
-  EnvironmentOutlined, 
-  LoginOutlined 
+import { onMounted, ref } from 'vue';
+import {
+  AuditOutlined,
+  EnvironmentOutlined,
+  FolderOutlined,
+  FormOutlined,
+  LoginOutlined,
+  ReloadOutlined,
+  SearchOutlined
 } from '@ant-design/icons-vue';
-import { getOperationLogPage, countByModule, countByRiskLevel } from '@/api/log';
+import { fetchCountByRiskLevel, fetchGetOperationLogPage } from '@/api/log';
 
 // Define components for dynamic rendering
 const iconComponents: Record<string, any> = {
@@ -164,6 +163,38 @@ const iconComponents: Record<string, any> = {
 
 defineOptions({ name: 'SystemLog' });
 
+// ============ Types ============
+// 后端返回的日志数据类型
+interface BackendLogItem {
+  id: number;
+  userId: number;
+  username: string;
+  module: string;
+  action: string;
+  detail: string;
+  createTime: string;
+}
+
+// 日志项类型
+interface LogItem {
+  id: number;
+  operator: string;
+  operatorInitial: string;
+  operatorColor: string;
+  role: string;
+  module: string;
+  moduleIcon: string;
+  moduleColor: string;
+  actionType: string;
+  actionColor: string;
+  actionBg: string;
+  actionBorderColor: string;
+  actionKey: string;
+  target: string;
+  time: string;
+}
+
+// ============ State ============
 const total = ref(0);
 const todayCount = ref(0);
 const deleteCount = ref(0);
@@ -188,17 +219,20 @@ const filters = ref({
 
 const pagination = ref({
   current: 1,
-  pageSize: 10,
+  pageSize: 20,
   total: 0,
   showSizeChanger: true,
-  showTotal: (total) => `共 ${total} 条`,
-  onChange: (page, pageSize) => {
+  showQuickJumper: true,
+  showTotal: (t: number) => `共 ${t} 条`,
+  hideOnSinglePage: false,
+  pageSizeOptions: ['10', '20', '50', '100'],
+  onChange: (page: number, pageSize: number) => {
     pagination.value.current = page;
     pagination.value.pageSize = pageSize;
     loadLogs();
   },
-  onShowSizeChange: (current, size) => {
-    pagination.value.current = current;
+  onShowSizeChange: (current: number, size: number) => {
+    pagination.value.current = 1;
     pagination.value.pageSize = size;
     loadLogs();
   }
@@ -213,79 +247,83 @@ const columns = [
   { title: '时间', key: 'time', width: 150 }
 ];
 
-const logData = ref([]);
+const logData = ref<LogItem[]>([]);
 
-// 加载日志数据
-const loadLogs = async () => {
-  loading.value = true;
-  try {
-    const params = {
-      pageNum: pagination.value.current,
-      pageSize: pagination.value.pageSize,
-      keyword: filters.value.keyword || undefined
-    };
-    
-    // 如果有动作类型筛选，添加到参数中
-    if (activeAction.value) {
-      params.module = activeAction.value; // 临时使用module字段过滤
-    }
-    
-    const res = await getOperationLogPage(params);
-    if (res.code === 200 && res.data) {
-      logData.value = res.data.records || [];
-      pagination.value.total = res.data.total || 0;
-      total.value = res.data.total || 0;
-      
-      // 格式化数据以适配前端显示
-      logData.value = logData.value.map(item => formatLogItem(item));
-    }
-  } catch (error) {
-    console.error('加载日志失败:', error);
-    message.error('加载日志失败');
-  } finally {
-    loading.value = false;
-  }
+// ============ Constants ============
+// 动作英文key到中文标签的映射
+const actionLabelMap: Record<string, string> = {
+  create: '创建', update: '更新', delete: '删除',
+  submit: '提交', approve: '通过', reject: '驳回',
+  export: '导出', login: '登录'
 };
 
-// 格式化日志项
-const formatLogItem = (item) => {
-  const actionMap = {
-    '创建': { key: 'create', color: 'var(--color-success)', bg: 'rgba(0,180,42,0.1)', borderColor: 'rgba(0,180,42,0.3)' },
-    '更新': { key: 'update', color: 'var(--color-warning)', bg: 'rgba(255,193,7,0.1)', borderColor: 'rgba(255,193,7,0.3)' },
-    '删除': { key: 'delete', color: 'var(--color-danger)', bg: 'rgba(245,63,63,0.1)', borderColor: 'rgba(245,63,63,0.3)' },
-    '提交': { key: 'submit', color: 'var(--color-primary)', bg: 'rgba(22,119,255,0.1)', borderColor: 'rgba(22,119,255,0.3)' },
-    '通过': { key: 'approve', color: 'var(--color-success)', bg: 'rgba(0,180,42,0.1)', borderColor: 'rgba(0,180,42,0.3)' },
-    '驳回': { key: 'reject', color: 'var(--color-danger)', bg: 'rgba(245,63,63,0.1)', borderColor: 'rgba(245,63,63,0.3)' },
-    '导出': { key: 'export', color: 'var(--color-text-secondary)', bg: 'var(--bg-hover)', borderColor: 'var(--color-border)' },
-    '登录': { key: 'login', color: 'var(--color-text-secondary)', bg: 'var(--bg-hover)', borderColor: 'var(--color-border)' }
-  };
-  
-  const moduleIconMap = {
-    '项目管理': 'FolderOutlined',
-    '勘查审核': 'AuditOutlined',
-    '表单模板': 'FormOutlined',
-    '模板管理': 'FormOutlined',
-    '点位管理': 'EnvironmentOutlined',
-    '登录认证': 'LoginOutlined',
-    '用户管理': 'LoginOutlined'
-  };
-  
+// 动作中文标签到颜色配置的映射
+const actionMap: Record<string, { key: string; color: string; bg: string; borderColor: string }> = {
+  '创建': { key: 'create', color: 'var(--color-success)', bg: 'rgba(0,180,42,0.1)', borderColor: 'rgba(0,180,42,0.3)' },
+  '更新': { key: 'update', color: 'var(--color-warning)', bg: 'rgba(255,193,7,0.1)', borderColor: 'rgba(255,193,7,0.3)' },
+  '删除': { key: 'delete', color: 'var(--color-danger)', bg: 'rgba(245,63,63,0.1)', borderColor: 'rgba(245,63,63,0.3)' },
+  '提交': { key: 'submit', color: 'var(--color-primary)', bg: 'rgba(22,119,255,0.1)', borderColor: 'rgba(22,119,255,0.3)' },
+  '通过': { key: 'approve', color: 'var(--color-success)', bg: 'rgba(0,180,42,0.1)', borderColor: 'rgba(0,180,42,0.3)' },
+  '驳回': { key: 'reject', color: 'var(--color-danger)', bg: 'rgba(245,63,63,0.1)', borderColor: 'rgba(245,63,63,0.3)' },
+  '导出': { key: 'export', color: 'var(--color-text-secondary)', bg: 'var(--bg-hover)', borderColor: 'var(--color-border)' },
+  '登录': { key: 'login', color: 'var(--color-text-secondary)', bg: 'var(--bg-hover)', borderColor: 'var(--color-border)' }
+};
+
+// 模块名称到图标名称的映射
+const moduleIconMap: Record<string, string> = {
+  '项目管理': 'FolderOutlined',
+  '勘查审核': 'AuditOutlined',
+  '表单模板': 'FormOutlined',
+  '模板管理': 'FormOutlined',
+  '点位管理': 'EnvironmentOutlined',
+  '登录认证': 'LoginOutlined',
+  '用户管理': 'LoginOutlined'
+};
+
+// 颜色数组
+const colorArray = ['#1677FF', '#00B42A', '#FF7D00', '#4E5969'];
+
+// ============ Utility Functions ============
+/**
+ * 格式化时间
+ * @param timeStr 时间字符串
+ * @returns 格式化后的时间字符串
+ */
+const formatTime = (timeStr: string): string => {
+  if (!timeStr) return '-';
+
+  const now = new Date();
+  const time = new Date(timeStr);
+  const diff = now.getTime() - time.getTime();
+
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return '刚刚';
+  if (minutes < 60) return `${minutes}分钟前`;
+  if (hours < 24) return `${hours}小时前`;
+  if (days < 30) return `${days}天前`;
+
+  return time.toLocaleDateString('zh-CN');
+};
+
+/**
+ * 格式化日志项
+ * @param item 后端返回的日志数据
+ * @returns 格式化后的日志项
+ */
+const formatLogItem = (item: BackendLogItem): LogItem => {
   const actionInfo = actionMap[item.action] || actionMap['创建'];
   const moduleIcon = moduleIconMap[item.module] || 'FolderOutlined';
-  
-  // 获取操作人首字
   const operatorInitial = item.username ? item.username.charAt(0) : '?';
-  
-  // 生成随机颜色
-  const colors = ['var(--color-primary)', 'var(--color-success)', 'var(--color-warning)', 'var(--color-info)'];
-  const operatorColor = colors[item.userId % colors.length] || 'var(--color-primary)';
-  
+  const operatorColor = colorArray[item.userId % colorArray.length] || '#1677FF';
+
   return {
     id: item.id,
     operator: item.username || '未知',
     operatorInitial,
     operatorColor,
-    role: '-', // 后端未返回角色信息
     module: item.module || '未知',
     moduleIcon,
     moduleColor: 'var(--color-primary)',
@@ -294,67 +332,90 @@ const formatLogItem = (item) => {
     actionBg: actionInfo.bg,
     actionBorderColor: actionInfo.borderColor,
     actionKey: actionInfo.key,
-    target: item.description || '-',
+    target: item.detail || '-',
     time: formatTime(item.createTime)
   };
 };
 
-// 格式化时间
-const formatTime = (timeStr) => {
-  if (!timeStr) return '-';
-  
-  const now = new Date();
-  const time = new Date(timeStr);
-  const diff = now - time;
-  
-  const minutes = Math.floor(diff / 60000);
-  const hours = Math.floor(diff / 3600000);
-  const days = Math.floor(diff / 86400000);
-  
-  if (minutes < 1) return '刚刚';
-  if (minutes < 60) return `${minutes}分钟前`;
-  if (hours < 24) return `${hours}小时前`;
-  if (days < 30) return `${days}天前`;
-  
-  return time.toLocaleDateString('zh-CN');
+// ============ Data Loading ============
+/**
+ * 加载日志数据
+ */
+const loadLogs = async (): Promise<void> => {
+  loading.value = true;
+  try {
+    const params: Record<string, any> = {
+      pageNum: pagination.value.current,
+      pageSize: pagination.value.pageSize
+    };
+
+    // 动作类型筛选
+    if (activeAction.value) {
+      params.keyword = actionLabelMap[activeAction.value] || activeAction.value;
+    } else {
+      params.keyword = filters.value.keyword || undefined;
+    }
+
+    const result = await fetchGetOperationLogPage(params);
+    const data = result?.data;
+
+    if (data) {
+      const records: BackendLogItem[] = data.records || [];
+      pagination.value.total = data.total || 0;
+      total.value = data.total || 0;
+      logData.value = records.map(item => formatLogItem(item));
+    }
+  } catch (error: any) {
+    console.error('加载日志失败:', error);
+    message.error(error?.message || '加载日志失败');
+  } finally {
+    loading.value = false;
+  }
 };
 
-// 加载统计数据
-const loadStatistics = async () => {
+/**
+ * 加载统计数据
+ */
+const loadStatistics = async (): Promise<void> => {
   try {
-    // 加载风险等级统计
-    const riskRes = await countByRiskLevel();
-    if (riskRes.code === 200 && riskRes.data) {
-      deleteCount.value = riskRes.data['2'] || 0; // 高风险操作数
+    const result = await fetchCountByRiskLevel();
+    const riskData = result?.data;
+    if (riskData) {
+      deleteCount.value = riskData['2'] || 0;
     }
-    
-    // TODO: 可以从其他接口获取更多统计数据
-    todayCount.value = 0; // 暂时设置为0，后续可以添加今日统计接口
-  } catch (error) {
+  } catch (error: any) {
     console.error('加载统计失败:', error);
   }
 };
 
-const handleSearch = () => {
+// ============ Event Handlers ============
+const handleActionFilter = (actionKey: string): void => {
+  activeAction.value = actionKey;
+  filters.value.keyword = '';
   pagination.value.current = 1;
   loadLogs();
 };
 
-const handleReset = () => {
-  filters.value.keyword = '';
-  filters.value.dateRange = undefined;
+const handleSearch = (): void => {
   activeAction.value = '';
   pagination.value.current = 1;
   loadLogs();
 };
 
-const refreshData = () => {
+const handleReset = (): void => {
+  filters.value.keyword = '';
+  activeAction.value = '';
+  pagination.value.current = 1;
+  loadLogs();
+};
+
+const refreshData = (): void => {
   loadLogs();
   loadStatistics();
   message.success('刷新成功');
 };
 
-// 组件挂载时加载数据
+// ============ Lifecycle ============
 onMounted(() => {
   loadLogs();
   loadStatistics();
@@ -362,22 +423,41 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 减小表格行的内边距 */
+.log-table :deep(.ant-table-cell) {
+  padding: 6px 12px !important;
+}
+
+/* 表头样式 */
 .log-table :deep(.ant-table-thead > tr > th) {
   background-color: var(--bg-card-alt);
   color: var(--color-text-secondary);
   font-weight: 500;
   border-bottom: 1px solid var(--color-divider);
+  padding: 8px 12px !important;
+  font-size: 13px;
 }
 
+/* 表格行间距 */
 .log-table :deep(.ant-table-tbody > tr > td) {
   border-bottom: 1px solid var(--color-divider);
 }
 
+/* 鼠标悬停效果 */
 .log-table :deep(.ant-table-tbody > tr:hover > td) {
   background-color: var(--bg-hover);
 }
 
+/* 分页区域优化 */
 .log-table :deep(.ant-pagination) {
-  margin: 16px;
+  margin: 12px 16px;
+}
+
+/* 优化操作对象列的文字显示 */
+.log-table :deep(.ant-table-tbody .ant-table-cell[aria-label="操作对象"]) {
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

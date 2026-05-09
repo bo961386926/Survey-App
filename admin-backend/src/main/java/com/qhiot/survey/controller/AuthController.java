@@ -1,5 +1,6 @@
 package com.qhiot.survey.controller;
 
+import com.qhiot.survey.common.annotation.OperationLog;
 import com.qhiot.survey.common.result.Result;
 import com.qhiot.survey.common.util.IpUtils;
 import com.qhiot.survey.common.util.JwtUtil;
@@ -333,6 +334,7 @@ public class AuthController {
 
     @Operation(summary = "修改密码")
     @PostMapping("/change-password")
+    @OperationLog(module = "认证管理", action = "修改密码", description = "用户修改密码", riskLevel = 2)
     public Result<Void> changePassword(@RequestBody ChangePasswordRequest request) {
         try {
             // 获取当前用户
@@ -368,6 +370,7 @@ public class AuthController {
 
     @Operation(summary = "重置密码（通过短信验证码）")
     @PostMapping("/reset-password")
+    @OperationLog(module = "认证管理", action = "重置密码", description = "用户重置密码", riskLevel = 2)
     public Result<Void> resetPassword(@Valid @RequestBody SmsResetPasswordRequest request) {
         try {
             // 验证短信验证码
@@ -432,13 +435,43 @@ public class AuthController {
             loginWarning = "您的账号近期有登录失败记录，请注意账号安全";
         }
         
+        // 从数据库查询用户的真实角色列表
+        List<SysRole> roles = sysRoleService.getUserRoles(user.getId());
+        
+        // 提取角色编码
+        String[] roleCodes = roles.stream()
+                .map(SysRole::getRoleCode)
+                .filter(code -> code != null && !code.isEmpty())
+                .toArray(String[]::new);
+        if (roleCodes.length == 0) {
+            roleCodes = new String[]{"user"};
+        }
+        
+        // 聚合所有角色的权限（去重）- 同时清理 JSON 格式遗留
+        java.util.Set<String> permissionSet = new java.util.HashSet<>();
+        for (SysRole role : roles) {
+            String perms = role.getPermissions();
+            if (perms != null && !perms.isEmpty()) {
+                for (String p : perms.split(",")) {
+                    String trimmed = p.trim().replace("[", "").replace("]", "").replace("\"", "");
+                    if (!trimmed.isEmpty()) {
+                        permissionSet.add(trimmed);
+                    }
+                }
+            }
+        }
+        // 展开通配符
+        String[] permissions = com.qhiot.survey.common.util.PermissionRegistry.expandWildcard(
+                permissionSet.toArray(new String[0]));
+        
         return new LoginResponse(
                 accessToken,
                 refreshToken,
                 user.getId(),
                 user.getUsername(),
                 user.getRealName(),
-                user.getRole(),
+                roleCodes,
+                permissions,
                 user.getIsFirstLogin() == 1,
                 loginWarning
         );
@@ -446,6 +479,7 @@ public class AuthController {
 
     @Operation(summary = "退出登录")
     @PostMapping("/logout")
+    @OperationLog(module = "认证管理", action = "退出登录", description = "用户退出登录", riskLevel = 0)
     public Result<Void> logout() {
         // 清除Security上下文
         SecurityContextHolder.clearContext();
@@ -483,14 +517,27 @@ public class AuthController {
                 System.out.println("====== [AuthController] getUserInfo - userId: " + user.getId() + ", no roles assigned, using default ======");
             }
 
-            // 暂时返回空按钮权限列表
+            // 聚合所有角色的权限（去重）
+            java.util.Set<String> permSet = new java.util.HashSet<>();
+            for (SysRole role : roles) {
+                String perms = role.getPermissions();
+                if (perms != null && !perms.isEmpty()) {
+                    for (String p : perms.split(",")) {
+                        String trimmed = p.trim().replace("[", "").replace("]", "").replace("\"", "");
+                        if (!trimmed.isEmpty()) permSet.add(trimmed);
+                    }
+                }
+            }
+            String[] permissions = permSet.toArray(new String[0]);
+
             String[] buttons = new String[]{};
 
-            UserInfoResponse response = new UserInfoResponse(
+            UserInfoResponse response = UserInfoResponse.create(
                     String.valueOf(user.getId()),
                     user.getUsername(),
                     user.getRealName(),
                     roleCodes,
+                    permissions,
                     buttons
             );
 

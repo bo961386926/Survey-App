@@ -31,7 +31,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import { pointApi, templateApi, resultApi, dictApi } from '@/utils/api'
+import { pointApi, templateApi, surveyResultApi as resultApi, dictApi } from '@/utils/api'
 import { saveDraft as saveDraftUtil, getDraft, clearDraft } from '@/utils/draft'
 import DynamicForm from '@/components/dynamic-form/dynamic-form.vue'
 
@@ -53,7 +53,13 @@ onMounted(() => {
   const cp = pages[pages.length - 1]
   pointId.value = cp.options.id
   mode.value = cp.options.mode || 'new'
-  if (pointId.value) { loadPointInfo(); loadTemplate(); loadFormData() }
+  if (pointId.value) {
+    // loadPointInfo 必须先完成，因为 loadTemplate 依赖 pointInfo
+    loadPointInfo().then(() => {
+      loadTemplate()
+      loadFormData()
+    })
+  }
 })
 
 async function loadPointInfo() {
@@ -64,10 +70,18 @@ async function loadPointInfo() {
 async function loadTemplate() {
   try {
     const outfallType = pointInfo.value?.outfallType
-    if (!outfallType) return
-    const res = await templateApi.getByOutfallType(outfallType)
-    template.value = res
-    const raw = res?.fieldsJson || res?.fields || '[]'
+    const projectId = pointInfo.value?.projectId
+    if (!outfallType || !projectId) return
+    // 1. 获取排口类型绑定的模板版本
+    const binding = await templateApi.getBinding({ projectId, outfallType })
+    if (!binding || !binding.templateVersionId) {
+      uni.showToast({ title: '该排口类型未绑定模板', icon: 'none' })
+      return
+    }
+    template.value = binding
+    // 2. 获取模板版本字段配置
+    const fieldConfig = await templateApi.getVersionFields(binding.templateVersionId)
+    const raw = fieldConfig?.fieldsJson || fieldConfig?.fields || '[]'
     formFields.value = typeof raw === 'string' ? JSON.parse(raw) : raw
     // 加载字典数据
     loadDictData()

@@ -33,8 +33,8 @@ declare namespace Api {
 
     /** common record */
     type CommonRecord<T = any> = {
-      /** record id */
-      id: number;
+      /** record id（后端Snowflake ID已序列化为字符串，兼容number类型） */
+      id: string | number;
       /** record creator */
       createBy: string;
       /** record create time */
@@ -58,10 +58,14 @@ declare namespace Api {
       accessToken?: string;
       token?: string;
       refreshToken: string;
-      userId: number;
+      /** 用户ID（后端 Snowflake ID 已序列化为字符串，避免前端精度丢失） */
+      userId: string;
       username: string;
       realName: string;
-      role: number;
+      /** 用户角色编码列表（从 sys_role 表获取，如 ["admin", "auditor"]） */
+      roleCodes?: string[];
+      /** 用户权限列表（从角色的 permissions 字段聚合，如 ["user:list", "user:create"]） */
+      permissions?: string[];
       isFirstLogin: boolean;
       loginWarning?: string;
     }
@@ -71,6 +75,8 @@ declare namespace Api {
       userName: string;
       realName: string;
       roles: string[];
+      /** 用户权限列表（RBAC 权限） */
+      permissions: string[];
       buttons: string[];
     }
   }
@@ -260,8 +266,8 @@ declare namespace Api {
     }
 
     type ProjectSearchParams = Partial<
-      Pick<ProjectInfo, 'projectName' | 'status' | 'manager'> & 
-      { keyword?: string } & 
+      Pick<ProjectInfo, 'projectName' | 'status' | 'manager'> &
+      { keyword?: string } &
       Common.CommonSearchParams
     >;
 
@@ -320,7 +326,7 @@ declare namespace Api {
       latestVersion: number;
       abnormalTags: string[];
       // Client-side fields for UI (optional mapping)
-      type?: string; 
+      type?: string;
     }
 
     interface PointMapData {
@@ -333,8 +339,8 @@ declare namespace Api {
     }
 
     type PointSearchParams = Partial<
-      Pick<SurveyPoint, 'projectId' | 'sectionId' | 'status' | 'assigneeUserId'> & 
-      { keyword?: string; abnormalTag?: string; projectName?: string } & 
+      Pick<SurveyPoint, 'projectId' | 'sectionId' | 'status' | 'assigneeUserId'> &
+      { keyword?: string; abnormalTag?: string; projectName?: string } &
       Common.CommonSearchParams
     >;
 

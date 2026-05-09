@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS project (
   project_code VARCHAR(50) UNIQUE COMMENT '项目编号',
   manager VARCHAR(30) COMMENT '负责人',
   region VARCHAR(100) COMMENT '所属区域',
+  client_name VARCHAR(200) COMMENT '委托单位',
+  description TEXT COMMENT '项目描述/备注',
   start_date DATE COMMENT '开始日期',
   end_date DATE COMMENT '结束日期',
   status TINYINT DEFAULT 0 COMMENT '0草稿 1进行中 2已暂停 3已完成 4已归档',
@@ -289,7 +291,37 @@ CREATE TABLE IF NOT EXISTS sys_user_role (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户角色关联表';
 
 -- =============================================
--- 16. 用户表
+-- 16. 权限目录表
+-- =============================================
+CREATE TABLE IF NOT EXISTS sys_permission (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  perm_code VARCHAR(100) UNIQUE NOT NULL COMMENT '权限编码，如 point:view',
+  perm_name VARCHAR(100) NOT NULL COMMENT '权限名称，如 查看点位',
+  module VARCHAR(50) COMMENT '所属模块，如 point/audit/user',
+  description VARCHAR(255) COMMENT '权限描述',
+  status TINYINT DEFAULT 1 COMMENT '1启用 0禁用',
+  sort INT DEFAULT 0 COMMENT '排序',
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_module (module),
+  INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限目录表';
+
+-- =============================================
+-- 17. 角色权限关联表
+-- =============================================
+CREATE TABLE IF NOT EXISTS sys_role_permission (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  role_id BIGINT NOT NULL COMMENT '角色ID',
+  perm_code VARCHAR(100) NOT NULL COMMENT '权限编码',
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uk_role_perm (role_id, perm_code),
+  INDEX idx_role (role_id),
+  INDEX idx_perm (perm_code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色权限关联表';
+
+-- =============================================
+-- 18. 用户表
 -- =============================================
 CREATE TABLE IF NOT EXISTS sys_user (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -298,7 +330,6 @@ CREATE TABLE IF NOT EXISTS sys_user (
   real_name VARCHAR(50) COMMENT '真实姓名',
   phone VARCHAR(20) COMMENT '手机号',
   email VARCHAR(100) COMMENT '邮箱',
-  role TINYINT DEFAULT 2 COMMENT '1管理员 2勘查员 3审核员(兼容旧字段)',
   status TINYINT DEFAULT 1 COMMENT '1正常 0禁用',
   is_first_login TINYINT DEFAULT 1 COMMENT '1首次登录 0非首次',
   login_fail_count INT DEFAULT 0 COMMENT '登录失败次数',
@@ -317,7 +348,7 @@ CREATE TABLE IF NOT EXISTS sys_user (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
 -- =============================================
--- 17. 消息中心表
+-- 19. 消息中心表
 -- =============================================
 CREATE TABLE IF NOT EXISTS message_center (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -337,7 +368,7 @@ CREATE TABLE IF NOT EXISTS message_center (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='消息中心表';
 
 -- =============================================
--- 18. 数据字典表
+-- 20. 数据字典表
 -- =============================================
 CREATE TABLE IF NOT EXISTS sys_dict (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -360,7 +391,7 @@ CREATE TABLE IF NOT EXISTS sys_dict_item (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='数据字典项表';
 
 -- =============================================
--- 19. 协作访问日志表
+-- 21. 协作访问日志表
 -- =============================================
 CREATE TABLE IF NOT EXISTS collab_access_log (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -376,7 +407,7 @@ CREATE TABLE IF NOT EXISTS collab_access_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='协作访问日志表';
 
 -- =============================================
--- 20. 文件存储表
+-- 22. 文件存储表
 -- =============================================
 CREATE TABLE IF NOT EXISTS sys_file (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -393,7 +424,7 @@ CREATE TABLE IF NOT EXISTS sys_file (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文件存储表';
 
 -- =============================================
--- 21. 系统配置表
+-- 23. 系统配置表
 -- =============================================
 CREATE TABLE IF NOT EXISTS sys_config (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -409,24 +440,35 @@ CREATE TABLE IF NOT EXISTS sys_config (
 -- =============================================
 
 -- 插入默认管理员用户 (密码: admin123)
-INSERT IGNORE INTO sys_user (username, password, real_name, role, is_first_login) 
-VALUES ('admin', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '系统管理员', 1, 0);
+INSERT IGNORE INTO sys_user (username, password, real_name, is_first_login) 
+VALUES ('admin', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '系统管理员', 0);
 
 -- 插入测试用户数据 (密码: admin123)
-INSERT IGNORE INTO sys_user (username, password, real_name, role, status) VALUES
-('surveyor1', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '张志明', 2, 1),
-('surveyor2', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '李晓华', 2, 1),
-('surveyor3', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '王建国', 2, 1),
-('reviewer1', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '陈美丽', 3, 1),
-('reviewer2', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '刘强', 3, 1);
+-- 注意：角色通过 sys_user_role 关联表分配，见下方 INSERT
+INSERT IGNORE INTO sys_user (username, password, real_name, status) VALUES
+('surveyor1', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '张志明', 1),
+('surveyor2', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '李晓华', 1),
+('surveyor3', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '王建国', 1),
+('reviewer1', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '陈美丽', 1),
+('reviewer2', '$2a$10$FwiFldcnaa2.sWJAhbU4RerIxA/stp.xq0iX/50/fMxbtdmFuq/yW', '刘强', 1);
 
 -- 插入默认角色
 INSERT IGNORE INTO sys_role (role_code, role_name, permissions) VALUES
-('admin', '管理员', '["*"]'),
-('project_manager', '项目负责人', '["project:view","project:edit","point:view","point:edit","template:bind","export:project"]'),
-('auditor', '审核员', '["point:view","audit:view","audit:pass","audit:reject","export:audit"]'),
-('surveyor', '采集员', '["point:view","survey:create","survey:edit","survey:submit"]'),
-('collab', '第三方协作', '["point:view","survey:assist"]');
+('admin', '管理员', '*'),
+('project_manager', '项目负责人', 'project:view,project:edit,point:view,point:edit,template:bind,export:project'),
+('auditor', '审核员', 'point:view,audit:view,audit:pass,audit:reject,export:audit'),
+('surveyor', '采集员', 'point:view,survey:create,survey:edit,survey:submit'),
+('collab', '第三方协作', 'point:view,survey:assist');
+
+-- 关联用户与角色（通过 sys_user_role 中间表）
+-- admin(user_id=1) -> admin(role_id=1)
+INSERT IGNORE INTO sys_user_role (user_id, role_id, create_time) VALUES
+(1, 1, NOW()),
+(2, 4, NOW()),
+(3, 4, NOW()),
+(4, 4, NOW()),
+(5, 3, NOW()),
+(6, 3, NOW());
 
 -- 插入排口类型字典
 INSERT IGNORE INTO sys_dict (dict_code, dict_name) VALUES ('outfall_type', '排口类型');

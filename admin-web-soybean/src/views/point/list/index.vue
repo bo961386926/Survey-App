@@ -69,11 +69,10 @@
     <!-- Filter Bar Area -->
     <div class="flex-shrink-0 bg-[var(--bg-card)] rd-8px p-16px shadow-[var(--shadow-card)] mb-16px flex items-center gap-16px flex-wrap">
       <div class="w-180px">
-        <a-select v-model:value="filters.projectName" placeholder="全部项目" class="w-full h-32px" @change="handleFilterChange">
+        <a-select v-model:value="filters.projectId" placeholder="全部项目" class="w-full h-32px" @change="handleFilterChange">
           <template #prefix><FolderOutlined class="text-14px text-[var(--color-text-secondary)]" /></template>
-          <a-select-option value="">全部项目</a-select-option>
-          <a-select-option value="亳州市城区入河排污口排查项目">亳州市城区入河排污口排查项目</a-select-option>
-          <a-select-option value="涡河流域排污口专项勘查">涡河流域排污口专项勘查</a-select-option>
+          <a-select-option :value="undefined">全部项目</a-select-option>
+          <a-select-option v-for="project in projectOptions" :key="project.id" :value="project.id">{{ project.projectName }}</a-select-option>
         </a-select>
       </div>
       <div class="w-240px">
@@ -139,13 +138,14 @@
             </template>
             <template v-if="column.key === 'project'">
               <div class="flex flex-col gap-2px">
-                <div class="flex items-center gap-8px">
-                  <span class="text-11px font-mono text-[var(--color-text-secondary)] px-4px py-1px bg-[var(--bg-hover)] rd-2px border border-[var(--color-border)]">
-                    {{ record.pointCode || 'BZ-2024-001' }}
-                  </span>
-                  <span class="text-13px text-[var(--color-text-primary)]">{{ record.projectName }}</span>
-                </div>
+                <span class="text-13px text-[var(--color-text-primary)]">{{ record.projectName || '--' }}</span>
+                <span v-if="record.projectCode" class="text-11px font-mono text-[var(--color-text-secondary)] px-2px py-0.5 bg-[var(--bg-hover)] rd-2px border border-[var(--color-border)] w-fit">
+                  {{ record.projectCode }}
+                </span>
               </div>
+            </template>
+            <template v-if="column.key === 'projectCode'">
+              <span class="font-mono text-12px text-[var(--color-text-secondary)]">{{ record.projectCode || '--' }}</span>
             </template>
             <template v-if="column.key === 'coordinates'">
               <span class="font-mono text-12px text-[var(--color-text-secondary)]">{{ record.longitude }}, {{ record.latitude }}</span>
@@ -265,7 +265,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import { message } from 'ant-design-vue';
 import { 
   UnorderedListOutlined, 
@@ -282,11 +282,16 @@ import {
   InboxOutlined
 } from '@ant-design/icons-vue';
 import { fetchGetPointList } from '@/service/api';
+import { fetchGetProjectList } from '@/service/api/project';
 import AMapComponent from '@/components/custom/amap-component.vue';
 
 defineOptions({ name: 'PointManagement' });
 
 const router = useRouter();
+const route = useRoute();
+
+// 从 URL query 读取 projectId 过滤参数
+const urlProjectId = computed(() => route.query.projectId as string | undefined);
 const viewMode = ref<'list' | 'map'>('list');
 const activePointId = ref<number | null>(null);
 
@@ -301,10 +306,13 @@ const pagination = ref({
 
 // Filters
 const filters = ref({
-  projectName: '',
+  projectId: undefined as number | undefined,
   keyword: '',
   status: ''
 });
+
+// 项目选项
+const projectOptions = ref<any[]>([]);
 
 const statusOptions = [
   { label: '全部', value: '' },
@@ -332,7 +340,8 @@ const mapPoints = computed(() => {
 // Table columns
 const columns = [
   { title: '点位名称', key: 'name', width: 220 },
-  { title: '所属项目', key: 'project', width: 400 },
+  { title: '所属项目', key: 'project', width: 250 },
+  { title: '项目编号', key: 'projectCode', width: 180 },
   { title: '坐标', key: 'coordinates', width: 180 },
   { title: '状态', key: 'status', width: 120 },
   { title: '创建时间', key: 'createdAt', width: 120 },
@@ -345,13 +354,14 @@ const selectedRowKeys = ref<any[]>([]);
 const loadData = async () => {
   loading.value = true;
   try {
-    const res = await fetchGetPointList({
+    const params: any = {
       current: pagination.value.current,
       size: pagination.value.pageSize,
-      projectName: filters.value.projectName || undefined,
+      projectId: filters.value.projectId,
       keyword: filters.value.keyword || undefined,
       status: filters.value.status || undefined
-    });
+    };
+    const res = await fetchGetPointList(params);
     if (res.data) {
       tableData.value = res.data.records;
       pagination.value.total = res.data.total;
@@ -360,6 +370,20 @@ const loadData = async () => {
     message.error('加载点位数据失败');
   } finally {
     loading.value = false;
+  }
+};
+
+// 加载项目列表
+const loadProjects = async () => {
+  try {
+    // fetchGetProjectList 期望 { current, size } 参数
+    const res = await fetchGetProjectList({ current: 1, size: 1000 });
+    if (res.data) {
+      projectOptions.value = res.data.records || [];
+      console.log('[PointManagement] 项目列表加载完成:', projectOptions.value.length, '个项目');
+    }
+  } catch (err) {
+    console.error('加载项目列表失败', err);
   }
 };
 
@@ -435,7 +459,17 @@ const handleDownloadTemplate = () => {
   message.info('导出功能开发中');
 };
 
-onMounted(loadData);
+watch(() => route.query.projectId, () => {
+  filters.value.projectId = undefined;
+  filters.value.keyword = '';
+  pagination.value.current = 1;
+  loadData();
+});
+
+onMounted(() => {
+  loadData();
+  loadProjects();
+});
 
 // Watch for view mode changes to fit map view
 watch(viewMode, (newVal) => {

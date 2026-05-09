@@ -58,16 +58,32 @@
         </view>
       </picker>
 
-      <!-- Radio -->
+      <!-- Radio (supports sub-fields for text input) -->
       <view v-else-if="field.type === 'radio'" class="radio-group">
-        <label v-for="option in getOptions(field)" :key="option.value" class="radio-item">
-          <radio :value="option.value"
-            :checked="formData[field.id] === option.value"
-            :disabled="field.disabled || readonly"
-            @change="formData[field.id] = option.value; clearError(field.id)"
-          />
-          <text>{{ option.label }}</text>
-        </label>
+        <view v-for="option in getOptions(field)" :key="option.value" class="radio-option-wrapper">
+          <label class="radio-item">
+            <radio :value="option.value"
+              :checked="formData[field.id] === option.value"
+              :disabled="field.disabled || readonly"
+              @change="onRadioChange(field, option)"
+            />
+            <text>{{ option.label }}</text>
+          </label>
+          <!-- Sub-fields: text inputs shown when this option is selected -->
+          <view v-if="formData[field.id] === option.value && option.subFields && option.subFields.length > 0" class="radio-sub-fields">
+            <view v-for="subField in option.subFields" :key="subField.id" class="radio-sub-field">
+              <text class="sub-field-label">{{ subField.label }}</text>
+              <input
+                class="sub-field-input"
+                v-model="formData[subField.id]"
+                :type="subField.type === 'number' ? 'digit' : 'text'"
+                :placeholder="subField.placeholder || '请输入'"
+                :disabled="field.disabled || readonly"
+              />
+              <text v-if="subField.suffix" class="sub-field-suffix">{{ subField.suffix }}</text>
+            </view>
+          </view>
+        </view>
       </view>
 
       <!-- Checkbox -->
@@ -109,9 +125,11 @@
         :camera-only="field.imageConfig?.cameraOnly || false"
       />
 
-      <!-- Location -->
+      <!-- Location (Amap Integration) -->
       <location-picker v-else-if="field.type === 'location'"
         v-model="formData[field.id]"
+        :map-zoom="(field as any).mapZoom || 15"
+        @change="(val: any) => onLocationChange(val, field)"
       />
 
       <!-- Divider -->
@@ -141,6 +159,23 @@ const emit = defineEmits(['update:modelValue', 'validate'])
 
 const formData = reactive({ ...props.modelValue })
 const errors = reactive({})
+
+// Handle location field change - auto-fill lat/lng to linked text fields
+function onLocationChange(value, field) {
+  if (!value || !value.lng || !value.lat) return
+
+  // Auto-fill longitude to linked field
+  const lngFieldId = field.autoFillLngFieldId
+  if (lngFieldId && formData[lngFieldId] !== undefined) {
+    formData[lngFieldId] = String(value.lng.toFixed(6))
+  }
+
+  // Auto-fill latitude to linked field
+  const latFieldId = field.autoFillLatFieldId
+  if (latFieldId && formData[latFieldId] !== undefined) {
+    formData[latFieldId] = String(value.lat.toFixed(6))
+  }
+}
 
 // 联动规则引擎：计算可见字段
 const visibleFields = computed(() => {
@@ -199,6 +234,21 @@ function toggleCheckbox(field, value) {
   if (idx >= 0) arr.splice(idx, 1)
   else arr.push(value)
   clearError(field.id)
+}
+
+function onRadioChange(field, option) {
+  formData[field.id] = option.value
+  clearError(field.id)
+
+  // Clear sub-field data from previously selected option
+  const options = getOptions(field)
+  for (const opt of options) {
+    if (opt.subFields && opt.value !== option.value) {
+      for (const subField of opt.subFields) {
+        delete formData[subField.id]
+      }
+    }
+  }
 }
 
 function onSelectChange(e, field) {
@@ -273,6 +323,12 @@ defineExpose({ validate, getFormData })
 .checkbox-group, .radio-group { display: flex; flex-wrap: wrap; gap: 12px; }
 .checkbox-item, .radio-item { display: flex; align-items: center; gap: 6px; }
 .checkbox-item text, .radio-item text { font-size: 14px; color: #333; }
+.radio-option-wrapper { width: 100%; }
+.radio-sub-fields { margin-left: 24px; margin-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+.radio-sub-field { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sub-field-label { font-size: 14px; color: #333; white-space: nowrap; }
+.sub-field-input { flex: 1; padding: 6px 10px; border: 1px solid #DCDFE6; border-radius: 4px; font-size: 14px; min-width: 60px; max-width: 150px; background-color: #fff; }
+.sub-field-suffix { font-size: 14px; color: #333; white-space: nowrap; }
 .form-divider { height: 1px; background: #eee; margin: 12px 0; }
 .error-tip { margin-top: 4px; }
 .error-tip text { font-size: 12px; color: #F56C6C; }

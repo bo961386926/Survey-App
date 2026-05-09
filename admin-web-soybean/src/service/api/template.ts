@@ -53,6 +53,12 @@ export interface FieldSchema {
   optionSource?: OptionSource;
   imageConfig?: ImageConfig;
   linkageRules?: LinkageRule[];
+  /** Location field: default map zoom level */
+  mapZoom?: number;
+  /** Location field: auto-fill longitude to this field ID */
+  autoFillLngFieldId?: string;
+  /** Location field: auto-fill latitude to this field ID */
+  autoFillLatFieldId?: string;
 }
 
 export interface TemplateSaveDraft {
@@ -148,5 +154,60 @@ export function fetchGetTemplateSimpleList() {
   return request<Api.Template.TemplateInfo[]>({
     url: `${TEMPLATE_BASE}/list`,
     method: 'get'
+  });
+}
+
+/** bind template to outfall type */
+export function fetchBindOutfallType(data: {
+  projectId: number;
+  sectionId?: number;
+  outfallType: string;
+  templateId: number;
+  templateVersionId: number;
+}) {
+  return request({
+    url: `${TEMPLATE_BASE}/bind-outfall`,
+    method: 'post',
+    params: data
+  });
+}
+
+/** get binding by outfall type */
+export function fetchGetBinding(params: { projectId: number; sectionId?: number; outfallType: string }) {
+  return request<{
+    id: number;
+    projectId: number;
+    sectionId?: number;
+    outfallType: string;
+    templateId: number;
+    templateVersionId: number;
+  } | null>({
+    url: `${TEMPLATE_BASE}/binding`,
+    method: 'get',
+    params
+  });
+}
+
+/** get all bindings for project */
+export function fetchGetBindings(projectId: number) {
+  return request<Array<{
+    id: number;
+    projectId: number;
+    sectionId?: number;
+    outfallType: string;
+    templateId: number;
+    templateVersionId: number;
+  }>>({
+    url: `${TEMPLATE_BASE}/bindings`,
+    method: 'get',
+    params: { projectId }
+  });
+}
+
+/** delete binding */
+export function fetchDeleteBinding(bindingId: number) {
+  return request({
+    url: `${TEMPLATE_BASE}/binding/${bindingId}`,
+    method: 'delete'
   });
 }

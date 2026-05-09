@@ -1,5 +1,7 @@
 package com.qhiot.survey.dto;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -10,6 +12,7 @@ import java.util.List;
 @Data
 public class UserResponse {
     
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
     
     private String username;
@@ -21,15 +24,14 @@ public class UserResponse {
     private String email;
     
     /**
-     * @deprecated 已废弃，请使用 roleIds
-     */
-    @Deprecated
-    private Integer role;
-    
-    /**
      * 角色ID列表（支持多角色）
      */
     private List<Long> roleIds;
+    
+    /**
+     * 负责的项目名称（多个项目用逗号分隔）
+     */
+    private String projectName;
     
     private Integer status;
     

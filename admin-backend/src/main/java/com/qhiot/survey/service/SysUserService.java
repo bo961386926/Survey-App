@@ -32,17 +32,12 @@ public interface SysUserService extends IService<SysUser> {
     /**
      * 分页查询用户列表
      */
-    PageResult<SysUser> queryUserPage(String username, Integer role, Integer status, Integer pageNum, Integer pageSize);
+    PageResult<SysUser> queryUserPage(String username, Integer status, Integer pageNum, Integer pageSize);
 
     /**
      * 获取用户列表
      */
     List<SysUser> getUserList();
-
-    /**
-     * 根据角色获取用户列表
-     */
-    List<SysUser> getUsersByRole(Integer role);
 
     /**
      * 更新用户状态
@@ -85,4 +80,11 @@ public interface SysUserService extends IService<SysUser> {
      * @return 导入结果：成功数量和失败数量
      */
     Map<String, Integer> importUsers(List<Map<Integer, String>> data);
+    
+    /**
+     * 获取用户负责的项目名称（多个项目用逗号分隔）
+     * @param userId 用户ID
+     * @return 项目名称字符串
+     */
+    String getUserProjectNames(Long userId);
 }

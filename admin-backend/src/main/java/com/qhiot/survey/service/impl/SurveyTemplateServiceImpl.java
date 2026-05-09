@@ -74,8 +74,28 @@ public class SurveyTemplateServiceImpl extends ServiceImpl<SurveyTemplateMapper,
         if (count > 0) {
             throw new BusinessException("模板编码已存在");
         }
+        
+        // 设置初始状态为草稿
         template.setStatus(TemplateStatus.DRAFT.getCode());
+        // 设置 fields_json 默认值
+        if (template.getFieldsJson() == null || template.getFieldsJson().isEmpty()) {
+            template.setFieldsJson("[]");
+        }
         save(template);
+        
+        // 创建初始版本记录（草稿版本）
+        SurveyTemplateVersion initialVersion = new SurveyTemplateVersion();
+        initialVersion.setTemplateId(template.getId());
+        initialVersion.setVersionNo(1);
+        initialVersion.setFieldsJson("[]");  // 初始为空数组
+        initialVersion.setRulesJson("{}");   // 初始为空对象
+        initialVersion.setLinkageRulesJson("[]");  // 初始为空数组
+        initialVersion.setStatus(TemplateStatus.DRAFT.getCode());
+        initialVersion.setCreatorId(template.getCreatorId());
+        surveyTemplateVersionMapper.insert(initialVersion);
+        
+        log.info("创建模板成功，templateId: {}, versionId: {}", template.getId(), initialVersion.getId());
+        
         return template;
     }
 

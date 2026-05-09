@@ -1,15 +1,15 @@
-/** 角色常量 - 与后端角色映射保持一致 */
+/** 角色常量 - 与后端 sys_role.role_code 保持一致 */
 export const ROLE = {
-  /** 超级管理员 (role=1) */
-  SUPER: 'R_SUPER',
-  /** 项目负责人 (role=2) */
-  ADMIN: 'R_ADMIN',
-  /** 审核员 (role=3) */
-  AUDITOR: 'R_AUDITOR',
-  /** 采集员 (role=4) */
-  COLLECTOR: 'R_COLLECTOR',
-  /** 查看者 (role=5) */
-  VIEWER: 'R_VIEWER',
+  /** 超级管理员 */
+  SUPER: 'admin',
+  /** 项目负责人 */
+  ADMIN: 'project_manager',
+  /** 审核员 */
+  AUDITOR: 'auditor',
+  /** 采集员 */
+  COLLECTOR: 'surveyor',
+  /** 查看者/第三方协作 */
+  VIEWER: 'collab',
 } as const;
 
 export type RoleType = (typeof ROLE)[keyof typeof ROLE];

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qhiot.survey.mapper.SurveyPointMapper">
+
+    <!-- 分页查询点位列表（关联项目名称） -->
+    <select id="selectPointPageWithProject" resultType="com.qhiot.survey.dto.SurveyPointDTO">
+        SELECT
+            sp.id,
+            sp.point_code AS pointCode,
+            sp.point_name AS pointName,
+            sp.project_id AS projectId,
+            sp.section_id AS sectionId,
+            sp.outfall_type AS outfallType,
+            sp.longitude,
+            sp.latitude,
+            sp.region,
+            sp.assignee_id AS assigneeId,
+            sp.collector_id AS collectorId,
+            sp.status,
+            sp.abnormal_tag AS abnormalTag,
+            sp.create_time AS createTime,
+            sp.update_time AS updateTime,
+            p.project_name AS projectName,
+            p.project_code AS projectCode,
+            ps.section_name AS sectionName,
+            u1.username AS collectorName,
+            u2.username AS assigneeName
+        FROM survey_point sp
+        LEFT JOIN project p ON sp.project_id = p.id
+        LEFT JOIN project_section ps ON sp.section_id = ps.id
+        LEFT JOIN sys_user u1 ON sp.collector_id = u1.id
+        LEFT JOIN sys_user u2 ON sp.assignee_id = u2.id
+        WHERE sp.is_deleted = 0
+        <if test="projectId != null">
+            AND sp.project_id = #{projectId}
+        </if>
+        <if test="sectionId != null">
+            AND sp.section_id = #{sectionId}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (sp.point_name LIKE CONCAT('%', #{keyword}, '%')
+                 OR sp.point_code LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="status != null">
+            AND sp.status = #{status}
+        </if>
+        ORDER BY sp.create_time DESC
+    </select>
+
+</mapper>

@@ -6,11 +6,13 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qhiot.survey.common.BusinessException;
 import com.qhiot.survey.common.enums.SurveyPointStatus;
 import com.qhiot.survey.common.enums.YesNo;
+import com.qhiot.survey.dto.SurveyPointDTO;
 import com.qhiot.survey.entity.SurveyPoint;
 import com.qhiot.survey.entity.SurveyResult;
 import com.qhiot.survey.mapper.SurveyPointMapper;
 import com.qhiot.survey.mapper.SurveyResultMapper;
 import com.qhiot.survey.service.SurveyPointService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +23,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
+@Slf4j
 public class SurveyPointServiceImpl extends ServiceImpl<SurveyPointMapper, SurveyPoint> implements SurveyPointService {
 
     @Autowired
@@ -94,7 +98,7 @@ public class SurveyPointServiceImpl extends ServiceImpl<SurveyPointMapper, Surve
     public Page<SurveyPoint> listByPage(Long projectId, Long sectionId, String keyword, Integer status, Integer pageNum, Integer pageSize) {
         Page<SurveyPoint> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<SurveyPoint> wrapper = new LambdaQueryWrapper<>();
-
+        
         if (projectId != null) {
             wrapper.eq(SurveyPoint::getProjectId, projectId);
         }
@@ -102,15 +106,22 @@ public class SurveyPointServiceImpl extends ServiceImpl<SurveyPointMapper, Surve
             wrapper.eq(SurveyPoint::getSectionId, sectionId);
         }
         if (StringUtils.hasText(keyword)) {
-            wrapper.and(w -> w.like(SurveyPoint::getPointCode, keyword)
-                    .or().like(SurveyPoint::getPointName, keyword));
+            wrapper.and(w -> w.like(SurveyPoint::getPointName, keyword)
+                    .or()
+                    .like(SurveyPoint::getPointCode, keyword));
         }
         if (status != null) {
             wrapper.eq(SurveyPoint::getStatus, status);
         }
-        wrapper.orderByAsc(SurveyPoint::getPointCode);
         
+        wrapper.orderByDesc(SurveyPoint::getCreateTime);
         return baseMapper.selectPage(page, wrapper);
+    }
+    
+    @Override
+    public Page<SurveyPointDTO> listByPageWithProject(Long projectId, Long sectionId, String keyword, Integer status, Integer pageNum, Integer pageSize) {
+        Page<SurveyPointDTO> page = new Page<>(pageNum, pageSize);
+        return baseMapper.selectPointPageWithProject(page, projectId, sectionId, keyword, status);
     }
 
     @Override

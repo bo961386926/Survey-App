@@ -13,6 +13,8 @@ public class ProjectCreateRequest {
     private String projectCode;
     private String manager;
     private String region;
+    private String clientName;
+    private String description;
     private LocalDate startDate;
     private LocalDate endDate;
 }

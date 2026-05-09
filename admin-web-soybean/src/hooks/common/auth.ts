@@ -6,11 +6,32 @@ import { ROLE, RoleType } from '@/constants/role';
 export function useAuth() {
   const authStore = useAuthStore();
   const roles = authStore.userInfo.roles || [];
+  const permissions = authStore.userInfo.permissions || [];
 
   /** 检查是否有指定角色 */
   function hasRole(role: RoleType | RoleType[]): boolean {
     const targetRoles = Array.isArray(role) ? role : [role];
     return targetRoles.some(r => roles.includes(r));
+  }
+
+  /**
+   * 检查是否有指定权限码
+   * @param permission 权限码，如 'point:view', 'project:create'
+   */
+  function hasPermission(permission: string): boolean {
+    if (!permission) return true;
+    // admin/super 角色拥有所有权限
+    if (roles.includes(ROLE.SUPER) || roles.includes(ROLE.ADMIN)) return true;
+    return permissions.includes(permission);
+  }
+
+  /**
+   * 检查是否有任意一个权限
+   * @param perms 权限码列表
+   */
+  function hasAnyPermission(perms: string[]): boolean {
+    if (!perms || perms.length === 0) return true;
+    return perms.some(p => hasPermission(p));
   }
 
   /** 是否是超级管理员或管理员（拥有所有权限） */
@@ -25,5 +46,15 @@ export function useAuth() {
   /** 是否是采集员 */
   const isCollector = computed(() => hasRole(ROLE.COLLECTOR));
 
-  return { hasRole, isAdmin, canManageProject, isAuditor, isCollector, roles };
+  return {
+    hasRole,
+    hasPermission,
+    hasAnyPermission,
+    isAdmin,
+    canManageProject,
+    isAuditor,
+    isCollector,
+    roles,
+    permissions
+  };
 }

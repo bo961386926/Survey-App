@@ -45,7 +45,7 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
         handleLogout();
         window.removeEventListener('beforeunload', handleLogout);
 
-        request.state.errMsgStack = request.state.errMsgStack.filter(msg => msg !== response.data.msg);
+        request.state.errMsgStack = request.state.errMsgStack.filter(msg => msg !== response.data.message);
       }
 
       // when the backend response code is in `logoutCodes`, it means the user will be logged out and redirected to login page
@@ -58,14 +58,14 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
       // when the backend response code is in `modalLogoutCodes`, it means the user will be logged out by displaying a modal
       const modalLogoutCodes = import.meta.env.VITE_SERVICE_MODAL_LOGOUT_CODES?.split(',') || [];
       if (modalLogoutCodes.includes(responseCode) && !request.state.errMsgStack?.includes(responseCode)) {
-        request.state.errMsgStack = [...(request.state.errMsgStack || []), response.data.msg];
+        request.state.errMsgStack = [...(request.state.errMsgStack || []), response.data.message];
 
         // prevent the user from refreshing the page
         window.addEventListener('beforeunload', handleLogout);
 
         window.$modal?.error({
           title: $t('common.error'),
-          content: response.data.msg,
+          content: response.data.message,
           okText: $t('common.confirm'),
           maskClosable: false,
           onOk() {
@@ -117,16 +117,25 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
         return;
       }
 
+      // 403 权限拒绝 — 不需要详细弹窗，用轻提示
+      if (error.response?.status === 403) {
+        message = '没有操作权限，请联系管理员';
+        showErrorMsg(request.state, message);
+        return;
+      }
+
       // get backend error message and code
       if (error.code === BACKEND_ERROR_CODE) {
         const responseData = error.response?.data;
         backendErrorCode = String(responseData?.code) || '';
         
-        // 使用友好消息替代原始错误消息
-        message = getFriendlyErrorMessage(
-          backendErrorCode,
-          responseData?.msg || error.message
-        );
+        // 优先使用后端返回的 message（如"验证码错误"），再尝试友好映射
+        const backendMsg = responseData?.message || responseData?.msg || '';
+        if (backendMsg) {
+          message = backendMsg;
+        } else {
+          message = getFriendlyErrorMessage(backendErrorCode, error.message);
+        }
       }
 
       // the error message is displayed in the modal

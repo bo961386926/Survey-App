@@ -1,7 +1,141 @@
 /**
  * 定位工具类
- * 处理GPS定位、人工纠偏、坐标转换
+ * 处理GPS定位、人工纠偏、坐标转换、高德地图选点
  */
+
+// 地图选点结果事件名
+export const MAP_PICKER_RESULT_EVENT = 'mapPickerResult'
+// 地图选点取消事件名
+export const MAP_PICKER_CANCEL_EVENT = 'mapPickerCancel'
+
+/**
+ * 打开高德地图选点页面
+ * 使用专用的地图选点页面，支持搜索、拖拽选点、反向地理编码
+ * 通过 uni.$emit/uni.$on 实现跨页面通信
+ * @param {Object} options - 配置选项
+ * @param {number} options.latitude - 初始纬度
+ * @param {number} options.longitude - 初始经度
+ * @param {number} options.zoom - 地图缩放级别
+ * @param {string} options.title - 页面标题
+ * @returns {Promise} 返回选择的位置 {lng, lat, name, address, province, city, district}
+ */
+export function openAmapPicker(options = {}) {
+  return new Promise((resolve, reject) => {
+    try {
+      const {
+        latitude = 39.9042,
+        longitude = 116.4074,
+        zoom = 15,
+        title = '选择位置'
+      } = options
+
+      // 生成唯一请求ID，防止事件冲突
+      const requestId = `picker_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`
+      const resultEvent = `${MAP_PICKER_RESULT_EVENT}_${requestId}`
+      const cancelEvent = `${MAP_PICKER_CANCEL_EVENT}_${requestId}`
+
+      // 监听结果事件（一次性）
+      uni.$once(resultEvent, (result) => {
+        uni.$off(cancelEvent)
+        resolve(result)
+      })
+
+      // 监听取消事件（一次性）
+      uni.$once(cancelEvent, () => {
+        uni.$off(resultEvent)
+        reject(new Error('用户取消选择'))
+      })
+
+      // 超时兜底（120秒后自动取消）
+      const timeoutId = setTimeout(() => {
+        uni.$off(resultEvent)
+        uni.$off(cancelEvent)
+        reject(new Error('地图选点超时'))
+      }, 120000)
+
+      // 包装一下监听，超时时清除定时器
+      const origResultOff = uni.$off.bind(uni)
+      const wrappedResolve = (result) => {
+        clearTimeout(timeoutId)
+        resolve(result)
+      }
+      // 重新注册以清除超时
+      uni.$off(resultEvent)
+      uni.$on(resultEvent, (result) => {
+        clearTimeout(timeoutId)
+        resolve(result)
+      })
+
+      uni.navigateTo({
+        url: `/pages/map-picker/index?latitude=${latitude}&longitude=${longitude}&zoom=${zoom}&requestId=${requestId}`,
+        fail: (err) => {
+          clearTimeout(timeoutId)
+          uni.$off(resultEvent)
+          uni.$off(cancelEvent)
+          console.warn('地图选点页面加载失败，回退到系统选点:', err)
+          openMapPicker(options).then(resolve).catch(reject)
+        }
+      })
+    } catch (error) {
+      console.warn('地图选点异常，回退到系统选点:', error)
+      openMapPicker(options).then(resolve).catch(reject)
+    }
+  })
+}
+
+/**
+ * 反向地理编码 - 获取地址描述
+ * @param {number} lng - 经度
+ * @param {number} lat - 纬度
+ * @returns {Promise<Object>} 地址信息
+ */
+export function reverseGeocode(lng, lat) {
+  return new Promise((resolve) => {
+    // #ifdef H5
+    // H5环境使用高德JS API
+    if (typeof AMap !== 'undefined' && AMap.Geocoder) {
+      const geocoder = new AMap.Geocoder({ city: '', radius: 1000 })
+      geocoder.getAddress([lng, lat], (status, result) => {
+        if (status === 'complete' && result.info === 'OK') {
+          const regeo = result.regeocode
+          resolve({
+            address: regeo.formattedAddress || '',
+            province: regeo.addressComponent?.province || '',
+            city: regeo.addressComponent?.city || '',
+            district: regeo.addressComponent?.district || ''
+          })
+        } else {
+          resolve({ address: '', province: '', city: '', district: '' })
+        }
+      })
+    } else {
+      resolve({ address: '', province: '', city: '', district: '' })
+    }
+    // #endif
+
+    // #ifndef H5
+    // 非H5环境使用 REST API
+    uni.request({
+      url: `https://restapi.amap.com/v3/geocode/regeo?output=json&location=${lng},${lat}&key=6b6697c339d48f245660d0e79ecc0945&radius=1000`,
+      method: 'GET',
+      success: (res) => {
+        if (res.data?.status === '1' && res.data?.regeocode) {
+          const regeo = res.data.regeocode
+          resolve({
+            address: regeo.formattedAddress || '',
+            province: regeo.addressComponent?.province || '',
+            city: regeo.addressComponent?.city || '',
+            district: regeo.addressComponent?.district || ''
+          })
+        } else {
+          resolve({ address: '', province: '', city: '', district: '' })
+        }
+      },
+      fail: () => resolve({ address: '', province: '', city: '', district: '' })
+    })
+    // #endif
+  })
+}
 
 /**
  * 获取当前位置

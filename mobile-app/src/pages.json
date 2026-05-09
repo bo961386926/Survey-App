@@ -38,6 +38,12 @@
       }
     },
     {
+      "path": "pages/survey/survey-list",
+      "style": {
+        "navigationBarTitleText": "勘查列表"
+      }
+    },
+    {
       "path": "pages/draft/draft-list",
       "style": {
         "navigationBarTitleText": "草稿管理"
@@ -83,6 +89,17 @@
       "path": "pages/my/profile",
       "style": {
         "navigationBarTitleText": "用户档案"
+      }
+    },
+    {
+      "path": "pages/map-picker/index",
+      "style": {
+        "navigationBarTitleText": "选择位置",
+        "navigationStyle": "custom",
+        "app-plus": {
+          "animationType": "slide-in-bottom",
+          "backgroundColor": "transparent"
+        }
       }
     }
   ],

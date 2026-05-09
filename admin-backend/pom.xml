@@ -162,6 +162,13 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Spring Security Test -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
         
         <!-- Embedded Redis for Testing -->
         <dependency>
@@ -173,7 +180,7 @@
         
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
+            <artifactId>mockito-inline</artifactId>
             <version>4.11.0</version>
             <scope>test</scope>
         </dependency>

@@ -3,6 +3,7 @@ import { ref, reactive, onMounted } from 'vue';
 import { message, Modal } from 'ant-design-vue';
 import type { TableColumnsType } from 'ant-design-vue';
 import { fetchGetDictList, fetchCreateDict, fetchUpdateDict, fetchDeleteDict } from '@/api/dict';
+import DictItemsModal from './components/DictItemsModal.vue';
 
 interface DictItem {
   id: number;
@@ -48,33 +49,24 @@ const formData = reactive({
   sortOrder: 0
 });
 
+// 字典项弹窗
+const dictItemsModalRef = ref();
+
 // 表格列定义
 const columns: TableColumnsType = [
+  {
+    title: '序号',
+    key: 'index',
+    width: 60,
+    customRender: ({ index }: any) => {
+      return (pagination.value.current - 1) * pagination.value.pageSize + index + 1;
+    }
+  },
   { title: '字典编码', dataIndex: 'dictCode', key: 'dictCode', width: 150 },
   { title: '字典名称', dataIndex: 'dictName', key: 'dictName', width: 150 },
   { title: '描述', dataIndex: 'description', key: 'description', ellipsis: true, width: 200 },
-  { 
-    title: '类型', 
-    dataIndex: 'isSystem', 
-    key: 'isSystem', 
-    width: 100,
-    customRender: ({ record }: any) => {
-      return record.isSystem === 1 
-        ? '<a-tag color="blue">系统内置</a-tag>' 
-        : '<a-tag>自定义</a-tag>';
-    }
-  },
-  { 
-    title: '状态', 
-    dataIndex: 'status', 
-    key: 'status', 
-    width: 100,
-    customRender: ({ record }: any) => {
-      return record.status === 1 
-        ? '<a-tag color="success">启用</a-tag>' 
-        : '<a-tag color="error">禁用</a-tag>';
-    }
-  },
+  { title: '类型', dataIndex: 'isSystem', key: 'isSystem', width: 100 },
+  { title: '状态', dataIndex: 'status', key: 'status', width: 80 },
   { title: '排序', dataIndex: 'sortOrder', key: 'sortOrder', width: 80 },
   { title: '创建时间', dataIndex: 'createTime', key: 'createTime', width: 180 },
   { title: '操作', key: 'action', width: 250, fixed: 'right' as const }
@@ -90,7 +82,7 @@ const loadData = async () => {
       dictCode: searchForm.dictCode || undefined,
       dictName: searchForm.dictName || undefined
     });
-    
+
     if (!error && data) {
       dictList.value = data.records || [];
       pagination.value.total = data.total || 0;
@@ -154,7 +146,7 @@ const handleEdit = (record: DictItem) => {
 const handleSubmit = async () => {
   try {
     await formRef.value?.validate();
-    
+
     if (editingDict.value) {
       // 更新
       const { error } = await fetchUpdateDict(editingDict.value.id, formData);
@@ -177,13 +169,13 @@ const handleSubmit = async () => {
   }
 };
 
-// 取消
-const handleCancel = () => {
+// 取消编辑
+const handleCancelEdit = () => {
   modalVisible.value = false;
 };
 
-// 删除
-const handleDelete = (record: DictItem) => {
+// 删除字典
+const handleDeleteDict = (record: DictItem) => {
   Modal.confirm({
     title: '确认删除？',
     content: `删除字典「${record.dictName}」后，关联的所有字典项也将被删除，此操作不可恢复。`,
@@ -202,7 +194,11 @@ const handleDelete = (record: DictItem) => {
 
 // 管理字典项
 const handleManageItems = (record: DictItem) => {
-  window.location.href = `/system/dict/${record.id}/items`;
+  dictItemsModalRef.value?.open({
+    id: record.id,
+    dictCode: record.dictCode,
+    dictName: record.dictName
+  });
 };
 
 onMounted(() => {
@@ -257,23 +253,30 @@ onMounted(() => {
         class="flex-1"
       >
         <template #bodyCell="{ column, record }">
-          <!-- Status -->
+          <!-- 类型 -->
+          <template v-if="column.key === 'isSystem'">
+            <ATag :color="record.isSystem === 1 ? 'blue' : 'default'">
+              {{ record.isSystem === 1 ? '系统内置' : '自定义' }}
+            </ATag>
+          </template>
+
+          <!-- 状态 -->
           <template v-if="column.key === 'status'">
             <ATag :color="record.status === 1 ? 'success' : 'default'">
               {{ record.status === 1 ? '启用' : '禁用' }}
             </ATag>
           </template>
 
-          <!-- Action -->
+          <!-- 操作 -->
           <template v-if="column.key === 'action'">
             <div class="flex gap-8px">
-              <AButton type="link" size="small" @click="handleManageItems(record)">
+              <AButton type="link" size="small" @click="handleManageItems(record as DictItem)">
                 管理字典项
               </AButton>
-              <AButton type="link" size="small" @click="handleEdit(record)">
+              <AButton type="link" size="small" @click="handleEdit(record as DictItem)">
                 编辑
               </AButton>
-              <AButton type="link" danger size="small" @click="handleDelete(record)">
+              <AButton type="link" danger size="small" @click="handleDeleteDict(record as DictItem)">
                 删除
               </AButton>
             </div>
@@ -288,7 +291,7 @@ onMounted(() => {
       :title="modalTitle"
       width="600px"
       @ok="handleSubmit"
-      @cancel="handleCancel"
+      @cancel="handleCancelEdit"
     >
       <AForm
         ref="formRef"
@@ -306,7 +309,7 @@ onMounted(() => {
         >
           <AInput v-model:value="formData.dictCode" placeholder="例如：project_status" :disabled="!!editingDict" />
         </AFormItem>
-        
+
         <AFormItem
           label="字典名称"
           name="dictName"
@@ -314,22 +317,22 @@ onMounted(() => {
         >
           <AInput v-model:value="formData.dictName" placeholder="例如：项目状态" />
         </AFormItem>
-        
+
         <AFormItem label="描述" name="description">
           <ATextarea v-model:value="formData.description" placeholder="请输入字典描述" :rows="2" />
         </AFormItem>
-        
+
         <AFormItem label="类型" name="isSystem">
           <ARadioGroup v-model:value="formData.isSystem">
             <ARadio :value="0">自定义</ARadio>
             <ARadio :value="1">系统内置</ARadio>
           </ARadioGroup>
         </AFormItem>
-        
+
         <AFormItem label="排序" name="sortOrder">
           <AInputNumber v-model:value="formData.sortOrder" :min="0" placeholder="数字越小越靠前" class="w-full!" />
         </AFormItem>
-        
+
         <AFormItem label="状态" name="status">
           <ARadioGroup v-model:value="formData.status">
             <ARadio :value="1">启用</ARadio>
@@ -338,6 +341,9 @@ onMounted(() => {
         </AFormItem>
       </AForm>
     </AModal>
+
+    <!-- 字典项管理弹窗 -->
+    <DictItemsModal ref="dictItemsModalRef" @success="loadData" />
   </div>
 </template>
 

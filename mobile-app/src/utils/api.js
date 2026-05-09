@@ -269,8 +269,10 @@ export const surveyResultApi = {
 export const templateApi = {
   // 获取模板详情
   getDetail: (id) => get(`/template/${id}`),
-  // 根据排口类型获取模板
-  getByOutfallType: (outfallType) => get(`/template/outfall/${outfallType}`)
+  // 根据排口类型获取模板绑定关系
+  getBinding: (params) => get('/template/binding', params),
+  // 获取模板版本字段配置
+  getVersionFields: (versionId) => get(`/template/version/${versionId}/fields`)
 }
 
 // 审核相关

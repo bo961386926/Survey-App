@@ -56,7 +56,7 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'audit_detail',
           i18nKey: 'route.audit_detail',
-          roles: ['R_SUPER', 'R_AUDITOR']
+          roles: ['admin', 'auditor']
         }
       },
       {
@@ -86,7 +86,7 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'export_list',
           i18nKey: 'route.export_list',
-          roles: ['R_SUPER', 'R_ADMIN']
+          roles: ['admin', 'project_manager']
         }
       }
     ]
@@ -261,7 +261,7 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'system_role',
           i18nKey: 'route.system_role',
-          roles: ['R_SUPER']
+          roles: ['admin']
         }
       },
       {
@@ -273,7 +273,7 @@ export const generatedRoutes: GeneratedRoute[] = [
           i18nKey: 'route.system_user',
           icon: 'material-symbols:group-outline-rounded',
           order: 1,
-          roles: ['R_SUPER']
+          roles: ['admin']
         }
       }
     ]
@@ -294,7 +294,7 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'template_design',
           i18nKey: 'route.template_design',
-          roles: ['R_SUPER']
+          roles: ['admin']
         }
       },
       {
@@ -304,7 +304,7 @@ export const generatedRoutes: GeneratedRoute[] = [
         meta: {
           title: 'template_list',
           i18nKey: 'route.template_list',
-          roles: ['R_SUPER']
+          roles: ['admin']
         }
       }
     ]

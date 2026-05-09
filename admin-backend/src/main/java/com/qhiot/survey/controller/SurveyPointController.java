@@ -3,6 +3,7 @@ package com.qhiot.survey.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qhiot.survey.common.Result;
 import com.qhiot.survey.common.annotation.OperationLog;
+import com.qhiot.survey.dto.SurveyPointDTO;
 import com.qhiot.survey.entity.SurveyPoint;
 import com.qhiot.survey.service.SurveyPointService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,14 +28,14 @@ public class SurveyPointController {
 
     @Operation(summary = "分页查询点位列表")
     @GetMapping("/page")
-    public Result<Page<SurveyPoint>> listByPage(
+    public Result<Page<SurveyPointDTO>> listByPage(
             @RequestParam(required = false) Long projectId,
             @RequestParam(required = false) Long sectionId,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer status,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
-        return Result.success(surveyPointService.listByPage(projectId, sectionId, keyword, status, pageNum, pageSize));
+        return Result.success(surveyPointService.listByPageWithProject(projectId, sectionId, keyword, status, pageNum, pageSize));
     }
 
     @Operation(summary = "获取点位列表")

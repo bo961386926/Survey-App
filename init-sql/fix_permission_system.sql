@@ -45,11 +45,11 @@ SELECT '✅ admin 用户已确保存在' as result;
 
 -- 插入默认角色（如果不存在）
 INSERT IGNORE INTO sys_role (role_code, role_name, permissions, sort, status) VALUES
-('ADMIN', '超级管理员', '["*"]', 1, 1),
-('PROJECT_MANAGER', '项目经理', '["project:view","project:edit","point:view","point:edit","template:bind","export:project"]', 2, 1),
-('AUDITOR', '审核员', '["point:view","audit:view","audit:pass","audit:reject","export:audit"]', 3, 1),
-('COLLECTOR', '采集员', '["point:view","survey:create","survey:edit","survey:submit"]', 4, 1),
-('THIRD_PARTY', '第三方协作', '["point:view","survey:assist"]', 5, 1);
+('ADMIN', '超级管理员', '*', 1, 1),
+('PROJECT_MANAGER', '项目经理', 'project:view,project:edit,point:view,point:edit,template:bind,export:project', 2, 1),
+('AUDITOR', '审核员', 'point:view,audit:view,audit:pass,audit:reject,export:audit', 3, 1),
+('COLLECTOR', '采集员', 'point:view,survey:create,survey:edit,survey:submit', 4, 1),
+('THIRD_PARTY', '第三方协作', 'point:view,survey:assist', 5, 1);
 
 SELECT '✅ 角色数据已确保存在' as result;
 

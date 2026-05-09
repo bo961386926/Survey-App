@@ -1,6 +1,7 @@
 package com.qhiot.survey.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.qhiot.survey.dto.SurveyPointDTO;
 import com.qhiot.survey.entity.SurveyPoint;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.web.multipart.MultipartFile;
@@ -44,6 +45,11 @@ public interface SurveyPointService extends IService<SurveyPoint> {
      * 分页查询点位列表
      */
     Page<SurveyPoint> listByPage(Long projectId, Long sectionId, String keyword, Integer status, Integer pageNum, Integer pageSize);
+    
+    /**
+     * 分页查询点位列表（包含项目名称）
+     */
+    Page<SurveyPointDTO> listByPageWithProject(Long projectId, Long sectionId, String keyword, Integer status, Integer pageNum, Integer pageSize);
 
     /**
      * Excel导入点位

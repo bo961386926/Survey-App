@@ -53,27 +53,27 @@ const activities = computed<ActivityItem[]>(() => [
 ]);
 
 const quickActions = [
-  { 
-    name: '新建项目', 
-    icon: 'i-material-symbols:add-circle-outline-rounded', 
+  {
+    name: '新建项目',
+    icon: 'i-material-symbols:add-circle-outline-rounded',
     color: 'var(--color-primary)',
     route: '/project/list'
   },
-  { 
-    name: '导入点位', 
-    icon: 'i-material-symbols:upload-file-outline-rounded', 
+  {
+    name: '导入点位',
+    icon: 'i-material-symbols:upload-file-outline-rounded',
     color: 'var(--color-success)',
     route: '/point/list'
   },
-  { 
-    name: '审核数据', 
-    icon: 'i-material-symbols:verified-user-outline-rounded', 
+  {
+    name: '审核数据',
+    icon: 'i-material-symbols:verified-user-outline-rounded',
     color: 'var(--color-warning)',
     route: '/audit/list'
   },
-  { 
-    name: '导出报告', 
-    icon: 'i-material-symbols:download-outline-rounded', 
+  {
+    name: '导出报告',
+    icon: 'i-material-symbols:download-outline-rounded',
     color: 'var(--color-info)',
     route: '/export/list'
   }
@@ -85,46 +85,44 @@ const handleAction = (route: string) => {
 </script>
 
 <template>
-  <div class="rounded-xl overflow-hidden h-full flex flex-col" style="background: var(--bg-card); border: 1px solid var(--color-divider); box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+  <div class="news-card rounded-xl overflow-hidden h-full flex flex-col" v-mouse-glow="{ color: '22,119,255', size: 200, intensity: 0.04 }">
     <!-- Header -->
-    <div class="flex justify-between items-center px-24px py-16px" style="border-bottom: 1px solid var(--color-divider);">
+    <div class="flex justify-between items-center px-24px py-16px header-divider">
       <h3 class="text-15px font-600 text-[var(--color-text-primary)]">最近活动</h3>
       <div class="flex items-center gap-12px">
-        <span class="i-material-symbols:history-outline-rounded text-18px text-[var(--color-text-placeholder)]"></span>
-        <span class="i-material-symbols:view-module-outline-rounded text-18px text-[var(--color-text-placeholder)]"></span>
+        <span class="header-icon i-material-symbols:history-outline-rounded text-18px text-[var(--color-text-placeholder)]"></span>
+        <span class="header-icon i-material-symbols:view-module-outline-rounded text-18px text-[var(--color-text-placeholder)]"></span>
       </div>
     </div>
 
     <!-- Activity List -->
     <div class="flex-1 px-24px py-16px overflow-y-auto">
       <div class="flex flex-col gap-16px">
-        <div 
-          v-for="item in activities" 
-          :key="item.id" 
-          class="flex gap-12px"
+        <div
+          v-for="item in activities"
+          :key="item.id"
+          class="activity-item"
         >
           <!-- Activity Icon -->
-          <div 
-            class="w-32px h-32px rounded-full flex items-center justify-center flex-shrink-0"
-            :style="{
-              background: item.type === 'create' ? 'rgba(22,119,255,0.1)' : 
-                         item.type === 'submit' ? 'rgba(22,119,255,0.1)' : 
-                         'rgba(16,185,129,0.1)',
-              color: item.type === 'create' || item.type === 'submit' ? 'var(--color-primary)' : 'var(--color-success)'
-            }"
-          >
-            <span :class="item.type === 'create' ? 'i-material-symbols:add-circle-outline-rounded' : 
-                          item.type === 'submit' ? 'i-material-symbols:cloud-upload-outline-rounded' : 
-                          'i-material-symbols:edit-outline-rounded'" class="text-16px"></span>
+          <div class="activity-icon-wrapper"
+               :style="{
+                 background: item.type === 'create' ? 'rgba(22,119,255,0.1)' :
+                            item.type === 'submit' ? 'rgba(22,119,255,0.1)' :
+                            'rgba(16,185,129,0.1)',
+                 color: item.type === 'create' || item.type === 'submit' ? 'var(--color-primary)' : 'var(--color-success)'
+               }">
+            <span :class="item.type === 'create' ? 'i-material-symbols:add-circle-outline-rounded' :
+                          item.type === 'submit' ? 'i-material-symbols:cloud-upload-outline-rounded' :
+                          'i-material-symbols:edit-outline-rounded'" class="activity-icon"></span>
           </div>
-          
+
           <!-- Activity Content -->
           <div class="flex-1 min-w-0">
             <div class="flex items-start justify-between gap-8px mb-4px">
-              <div class="text-14px font-600 text-[var(--color-text-primary)]">{{ item.title }}</div>
-              <div class="text-12px text-[var(--color-text-placeholder)] flex-shrink-0">{{ item.time }}</div>
+              <div class="activity-title">{{ item.title }}</div>
+              <div class="activity-time">{{ item.time }}</div>
             </div>
-            <div class="text-13px text-[var(--color-text-secondary)]" style="line-height: 1.5;">
+            <div class="activity-desc">
               {{ item.description }}
             </div>
           </div>
@@ -133,8 +131,8 @@ const handleAction = (route: string) => {
     </div>
 
     <!-- Footer: View All -->
-    <div class="px-24px py-12px" style="border-top: 1px solid var(--color-divider);">
-      <a class="text-13px text-[var(--color-primary)] cursor-pointer font-500 hover:underline block text-center">
+    <div class="px-24px py-12px footer-divider">
+      <a class="view-all-link">
         查看全量历史活动
       </a>
     </div>
@@ -142,4 +140,129 @@ const handleAction = (route: string) => {
 </template>
 
 <style scoped>
+.news-card {
+  background: var(--bg-card);
+  border: 1px solid var(--color-divider);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.news-card:hover {
+  border-color: rgba(22, 119, 255, 0.25);
+  box-shadow: 0 8px 32px rgba(22, 119, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.header-divider {
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.footer-divider {
+  border-top: 1px solid var(--color-divider);
+}
+
+.header-icon {
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.header-icon:hover {
+  color: var(--color-primary);
+  background: rgba(22, 119, 255, 0.08);
+  transform: scale(1.1);
+}
+
+.activity-item {
+  display: flex;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 6px;
+  margin: -8px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.activity-item:hover {
+  background: rgba(22, 119, 255, 0.04);
+}
+
+.activity-item:active {
+  background: rgba(22, 119, 255, 0.08);
+  transition-duration: 0.1s;
+}
+
+.activity-icon-wrapper {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.activity-item:hover .activity-icon-wrapper {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(22, 119, 255, 0.15);
+}
+
+.activity-icon {
+  font-size: 16px;
+}
+
+.activity-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  transition: color 0.2s ease;
+}
+
+.activity-item:hover .activity-title {
+  color: var(--color-primary);
+}
+
+.activity-time {
+  font-size: 12px;
+  color: var(--color-text-placeholder);
+  flex-shrink: 0;
+}
+
+.activity-desc {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+.view-all-link {
+  font-size: 13px;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: block;
+  text-align: center;
+  position: relative;
+}
+
+.view-all-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  width: 0;
+  height: 1px;
+  background: var(--color-primary);
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+.view-all-link:hover::after {
+  width: 100%;
+}
+
+.view-all-link:hover {
+  transform: translateX(2px);
+}
 </style>

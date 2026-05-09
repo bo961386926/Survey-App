@@ -55,10 +55,20 @@
       </view>
     </view>
     
-    <!-- 安全设置 -->
+    <!-- 账号设置 -->
     <view class="section">
-      <view class="section-title">安全设置</view>
+      <view class="section-title">账号设置</view>
       <view class="section-content">
+        <view class="menu-item" @click="goToProfile">
+          <view class="item-left">
+            <view class="item-icon" style="background: #DBEAFE;">
+              <text class="icon">👤</text>
+            </view>
+            <text class="item-label">用户档案</text>
+          </view>
+          <text class="arrow">›</text>
+        </view>
+        <view class="divider"></view>
         <view class="menu-item" @click="goToChangePassword">
           <view class="item-left">
             <view class="item-icon" style="background: #ECFDF5;">
@@ -120,6 +130,11 @@ onMounted(() => {
 // 加载用户信息
 function loadUserInfo() {
   userInfo.value = getUserInfo()
+}
+
+// 跳转到用户档案
+function goToProfile() {
+  uni.navigateTo({ url: '/pages/my/profile' })
 }
 
 // 跳转到修改密码

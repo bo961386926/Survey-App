@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class SurveyTemplate implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.AUTO)
     private Long id;
     
     private String templateName;
@@ -34,6 +34,11 @@ public class SurveyTemplate implements Serializable {
      * 状态：0草稿 1已发布 2已停用
      */
     private Integer status;
+    
+    /**
+     * 字段配置JSON（兼容旧版本）
+     */
+    private String fieldsJson;
     
     /**
      * 当前版本ID

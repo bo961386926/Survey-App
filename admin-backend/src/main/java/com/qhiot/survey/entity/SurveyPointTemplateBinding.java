@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class SurveyPointTemplateBinding implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @TableId(type = IdType.ASSIGN_ID)
+    @TableId(type = IdType.AUTO)
     private Long id;
     
     private Long projectId;

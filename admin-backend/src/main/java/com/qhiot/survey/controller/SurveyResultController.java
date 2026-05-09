@@ -58,6 +58,7 @@ public class SurveyResultController {
     @Operation(summary = "创建勘查结果")
     @PostMapping("/create")
     @PreAuthorize("hasRole('COLLECTOR')")
+    @OperationLog(module = "勘查管理", action = "创建", description = "创建勘查结果", riskLevel = 1)
     public Result<SurveyResult> createResult(@RequestBody SurveyResult result) {
         return Result.success(surveyResultService.createResult(result));
     }
@@ -65,6 +66,7 @@ public class SurveyResultController {
     @Operation(summary = "更新勘查结果")
     @PutMapping("/update/{id}")
     @PreAuthorize("hasRole('COLLECTOR')")
+    @OperationLog(module = "勘查管理", action = "更新", description = "更新勘查结果, ID: #id", riskLevel = 1)
     public Result<SurveyResult> updateResult(@PathVariable Long id,
                                               @RequestBody SurveyResult result,
                                               @RequestParam(required = false) Integer expectedVersion) {
@@ -74,6 +76,7 @@ public class SurveyResultController {
     @Operation(summary = "删除勘查结果")
     @DeleteMapping("/delete/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @OperationLog(module = "勘查管理", action = "删除", description = "删除勘查结果, ID: #id", riskLevel = 2)
     public Result<Boolean> deleteResult(@PathVariable Long id) {
         boolean success = surveyResultService.deleteResult(id);
         return success ? Result.success(true) : Result.error("删除失败");
@@ -140,6 +143,7 @@ public class SurveyResultController {
     @Operation(summary = "保存草稿")
     @PostMapping("/draft")
     @PreAuthorize("hasRole('COLLECTOR')")
+    @OperationLog(module = "勘查管理", action = "保存草稿", description = "保存勘查草稿", riskLevel = 0)
     public Result<SurveyResult> saveDraft(@RequestBody SurveyResult result) {
         Long userId = getCurrentUserId();
         return Result.success(surveyResultService.saveDraft(result, userId));

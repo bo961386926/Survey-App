@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -31,13 +33,6 @@ public class SysUser implements Serializable {
     private String phone;
     
     private String email;
-    
-    /**
-     * @deprecated 已废弃，请使用 sys_user_role 表管理用户角色（支持多角色）
-     * 此字段仅用于向后兼容，新版本不再使用
-     */
-    @Deprecated
-    private Integer role;
     
     private Integer status;
     
@@ -69,6 +64,7 @@ public class SysUser implements Serializable {
     
     private String deletedBy;
 
+    @JsonSerialize(using = ToStringSerializer.class)
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getUsername() { return username; }
@@ -81,8 +77,6 @@ public class SysUser implements Serializable {
     public void setPhone(String phone) { this.phone = phone; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
-    public Integer getRole() { return role; }
-    public void setRole(Integer role) { this.role = role; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
     public Integer getIsFirstLogin() { return isFirstLogin; }

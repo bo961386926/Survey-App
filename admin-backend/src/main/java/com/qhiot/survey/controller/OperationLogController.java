@@ -29,7 +29,7 @@ public class OperationLogController {
 
     @Operation(summary = "分页查询操作日志")
     @GetMapping("/page")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('system:log')")
     public Result<Page<OperationLog>> listByPage(
             @RequestParam(required = false) String module,
             @RequestParam(required = false) String operator,
@@ -41,7 +41,7 @@ public class OperationLogController {
 
     @Operation(summary = "导出操作日志")
     @GetMapping("/export")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('system:log')")
     public ResponseEntity<byte[]> exportLogs(
             @RequestParam(required = false) String module,
             @RequestParam(required = false) String operator,
@@ -57,28 +57,28 @@ public class OperationLogController {
 
     @Operation(summary = "统计各模块操作次数")
     @GetMapping("/statistics/module")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('system:log')")
     public Result<Map<String, Long>> countByModule() {
         return Result.success(operationLogService.countByModule());
     }
 
     @Operation(summary = "统计各用户操作次数")
     @GetMapping("/statistics/user")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('system:log')")
     public Result<Map<String, Long>> countByUser() {
         return Result.success(operationLogService.countByUser());
     }
 
     @Operation(summary = "统计各风险等级操作次数")
     @GetMapping("/statistics/risk-level")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('system:log')")
     public Result<Map<Integer, Long>> countByRiskLevel() {
         return Result.success(operationLogService.countByRiskLevel());
     }
 
     @Operation(summary = "按时间范围统计操作趋势")
     @GetMapping("/statistics/trend")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('system:log')")
     public Result<Map<String, Long>> countByDateRange(
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate) {

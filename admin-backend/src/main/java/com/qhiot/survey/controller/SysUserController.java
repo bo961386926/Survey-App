@@ -48,13 +48,12 @@ public class SysUserController {
     @PreAuthorize("hasRole('ADMIN')")
     public Result<PageResult<UserResponse>> queryUserPage(
             @RequestParam(required = false) String username,
-            @RequestParam(required = false) Integer role,
             @RequestParam(required = false) Integer status,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
-        PageResult<SysUser> userPage = sysUserService.queryUserPage(username, role, status, pageNum, pageSize);
+        PageResult<SysUser> userPage = sysUserService.queryUserPage(username, status, pageNum, pageSize);
         
-        // 转换为 UserResponse，添加角色ID列表
+        // 转换为 UserResponse，添加角色ID列表和负责项目
         List<UserResponse> responses = userPage.getRecords().stream().map(user -> {
             UserResponse response = new UserResponse();
             response.setId(user.getId());
@@ -62,7 +61,6 @@ public class SysUserController {
             response.setRealName(user.getRealName());
             response.setPhone(user.getPhone());
             response.setEmail(user.getEmail());
-            response.setRole(user.getRole()); // 保留旧字段用于兼容
             response.setStatus(user.getStatus());
             response.setCreateTime(user.getCreateTime());
             response.setUpdateTime(user.getUpdateTime());
@@ -71,6 +69,10 @@ public class SysUserController {
             List<SysRole> roles = sysRoleService.getUserRoles(user.getId());
             List<Long> roleIds = roles.stream().map(SysRole::getId).toList();
             response.setRoleIds(roleIds);
+            
+            // 查询用户负责的项目名称
+            String projectNames = sysUserService.getUserProjectNames(user.getId());
+            response.setProjectName(projectNames);
             
             return response;
         }).toList();
@@ -97,9 +99,25 @@ public class SysUserController {
     @Operation(summary = "获取用户详情")
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public Result<SysUser> getUserById(@PathVariable Long id) {
+    public Result<UserResponse> getUserById(@PathVariable Long id) {
         SysUser user = sysUserService.getById(id);
-        return user != null ? Result.success(user) : Result.error("用户不存在");
+        if (user == null) {
+            return Result.error("用户不存在");
+        }
+        UserResponse response = new UserResponse();
+        response.setId(user.getId());
+        response.setUsername(user.getUsername());
+        response.setRealName(user.getRealName());
+        response.setPhone(user.getPhone());
+        response.setEmail(user.getEmail());
+        response.setStatus(user.getStatus());
+        response.setCreateTime(user.getCreateTime());
+        response.setUpdateTime(user.getUpdateTime());
+        // 查询用户角色ID列表
+        List<SysRole> roles = sysRoleService.getUserRoles(user.getId());
+        List<Long> roleIds = roles.stream().map(SysRole::getId).toList();
+        response.setRoleIds(roleIds);
+        return Result.success(response);
     }
 
     @Operation(summary = "创建用户")
@@ -204,16 +222,16 @@ public class SysUserController {
         @PathVariable Long id, 
         @Valid @RequestBody com.qhiot.survey.dto.ResetPasswordRequest request
     ) {
-        boolean success = sysUserService.resetPassword(id, request.getNewPassword());
+        log.info("====== [用户管理] 重置密码请求 - userId: {} ======", id);
+        // 密码必须先加密再存储，否则无法登录验证
+        String encodedPassword = passwordEncoder.encode(request.getNewPassword());
+        boolean success = sysUserService.resetPassword(id, encodedPassword);
+        if (success) {
+            log.info("====== [用户管理] 密码重置成功 - userId: {} ======", id);
+        } else {
+            log.error("====== [用户管理] 密码重置失败 - userId: {} ======", id);
+        }
         return success ? Result.success(true) : Result.error("重置密码失败");
-    }
-
-    @Operation(summary = "根据角色获取用户列表")
-    @GetMapping("/role/{role}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public Result<List<SysUser>> getUsersByRole(@PathVariable Integer role) {
-        List<SysUser> users = sysUserService.getUsersByRole(role);
-        return Result.success(users);
     }
 
     @Operation(summary = "导出用户数据")

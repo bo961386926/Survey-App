@@ -1,6 +1,7 @@
 /**
  * 定位选择器组件
- * 用于GPS定位、人工纠偏、位置显示
+ * 集成高德地图选点、GPS定位、人工纠偏、位置显示
+ * 支持回填经纬度到关联的文本字段
  */
 <template>
   <view class="location-picker">
@@ -12,7 +13,7 @@
           <text class="status-text">{{ statusText }}</text>
         </view>
       </view>
-      
+
       <view class="location-coords">
         <text v-if="location.lng && location.lat">
           经度: {{ location.lng.toFixed(6) }}
@@ -23,35 +24,43 @@
         <text v-if="location.accuracy">
           精度: ±{{ location.accuracy.toFixed(0) }}米
         </text>
+        <text v-if="location.address" class="address-text">
+          地址: {{ location.address }}
+        </text>
       </view>
-      
+
       <!-- 距离目标点位距离 -->
       <view v-if="targetLocation && distance !== null" class="distance-info">
         <text>距目标点位: {{ distance }}米</text>
       </view>
     </view>
-    
+
     <!-- 操作按钮 -->
     <view class="action-buttons">
       <button class="btn btn-primary" @click="getLocation" :loading="locating">
         {{ locating ? '定位中...' : '重新定位' }}
       </button>
-      <button class="btn btn-secondary" @click="openMapPicker">
+      <button class="btn btn-secondary" @click="openAmapMapPicker">
         地图选点
       </button>
     </view>
-    
+
     <!-- 纠偏提示 -->
-    <view v-if="showCorrectionTip" class="correction-tip">
-      <text>您已偏离目标位置，是否进行人工纠偏？</text>
-      <button class="btn btn-small" @click="handleCorrection">确认纠偏</button>
+    <view v-if="showCorrectionTip && distance !== null && distance > maxDistance" class="correction-tip">
+      <text>您已偏离目标位置 ({{ distance }}米)，建议使用地图选点确认实际位置</text>
     </view>
   </view>
 </template>
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { getCurrentLocation, openMapPicker, calculateDistance, getLocationStatus, formatCorrectionLog } from '@/utils/location'
+import {
+  getCurrentLocation,
+  openAmapPicker,
+  calculateDistance,
+  getLocationStatus,
+  formatCorrectionLog
+} from '@/utils/location'
 
 const props = defineProps({
   // 当前值
@@ -73,6 +82,11 @@ const props = defineProps({
   showCorrectionTip: {
     type: Boolean,
     default: true
+  },
+  // 地图默认缩放级别
+  mapZoom: {
+    type: Number,
+    default: 15
   }
 })
 
@@ -83,8 +97,8 @@ const locating = ref(false)
 
 // 监听外部值变化
 watch(() => props.modelValue, (newVal) => {
-  location.value = { ...newVal }
-})
+  if (newVal) location.value = { ...newVal }
+}, { deep: true })
 
 // 计算距离
 const distance = computed(() => {
@@ -124,17 +138,17 @@ async function getLocation() {
     const pos = await getCurrentLocation()
     location.value = pos
     emitChange()
-    
+
     // 检查是否需要纠偏
     if (props.showCorrectionTip && distance.value > props.maxDistance) {
       uni.showToast({
-        title: '已偏离目标位置',
+        title: `已偏离目标位置${distance.value}米`,
         icon: 'none'
       })
     }
   } catch (error) {
     uni.showToast({
-      title: '定位失败，请检查权限',
+      title: '定位失败,请检查定位权限',
       icon: 'none'
     })
   } finally {
@@ -142,15 +156,20 @@ async function getLocation() {
   }
 }
 
-// 打开地图选点
-async function openMapPickerHandler() {
+// 打开高德地图选点
+async function openAmapMapPicker() {
   try {
-    const pos = await openMapPicker({
+    const pos = await openAmapPicker({
       latitude: location.value.lat || props.targetLocation?.lat || 39.9042,
-      longitude: location.value.lng || props.targetLocation?.lng || 116.4074
+      longitude: location.value.lng || props.targetLocation?.lng || 116.4074,
+      zoom: props.mapZoom
     })
-    location.value = pos
-    emitChange()
+    // 如果 resolve 成功了，直接使用结果
+    if (pos && pos.lng && pos.lat) {
+      location.value = pos
+      emitChange()
+      uni.showToast({ title: '位置已选择', icon: 'success' })
+    }
   } catch (error) {
     console.error('地图选点失败:', error)
   }
@@ -165,7 +184,7 @@ function handleCorrection() {
     correctedLng: location.value.lng,
     correctedLat: location.value.lat
   })
-  
+
   emit('correction', correctionData)
 }
 
@@ -174,6 +193,13 @@ function emitChange() {
   emit('update:modelValue', { ...location.value })
   emit('change', { ...location.value })
 }
+
+// 暴露方法给父组件
+defineExpose({
+  getLocation,
+  openAmapMapPicker,
+  getLocationData: () => ({ ...location.value })
+})
 </script>
 
 <style scoped>
@@ -220,6 +246,11 @@ function emitChange() {
 .location-coords text {
   font-size: 13px;
   color: #666;
+}
+
+.address-text {
+  color: #409EFF !important;
+  font-size: 12px !important;
 }
 
 .distance-info {
@@ -273,9 +304,6 @@ function emitChange() {
   padding: 12px;
   background-color: #FEF0F0;
   border-radius: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .correction-tip text {

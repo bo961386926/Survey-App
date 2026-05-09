@@ -3,15 +3,17 @@ import { ref, onMounted } from 'vue';
 import { message, Modal } from 'ant-design-vue';
 import { request } from '@/service/request';
 import { useAuth } from '@/hooks/common/auth';
+import RolePermissionModal from './components/RolePermissionModal.vue';
 
 defineOptions({ name: 'SystemRole' });
 
-const { isAdmin } = useAuth();
+const { hasPermission } = useAuth();
 
 const loading = ref(false);
 const searchKeyword = ref('');
 const showAddRoleModal = ref(false);
 const showEditRoleModal = ref(false);
+const permissionModalRef = ref<InstanceType<typeof RolePermissionModal> | null>(null);
 
 // 角色列表
 const roleList = ref<any[]>([]);
@@ -55,8 +57,8 @@ const fetchRoleList = async () => {
         keyword: searchKeyword.value || undefined
       }
     });
-    if (res?.data?.records) {
-      roleList.value = res.data.records.map((item: any) => ({
+    if (res?.records) {
+      roleList.value = res.records.map((item: any) => ({
         ...item,
         key: item.id,
         roleName: item.roleName || item.name,
@@ -168,7 +170,7 @@ const handleToggleStatus = async (record: any) => {
     await request({
       url: `/role/${record.id}/status`,
       method: 'put',
-      data: { status: newStatus }   // 改用 body 传参，确保后端能取到
+      params: { status: newStatus }   // 使用 query 参数，匹配后端 @RequestParam
     });
     message.success(`角色已${newStatus === 1 ? '启用' : '禁用'}`);
   } catch (error) {
@@ -194,6 +196,11 @@ const openAddModal = () => {
   showAddRoleModal.value = true;
 };
 
+// 打开权限配置弹窗
+const openPermissionModal = (record: any) => {
+  permissionModalRef.value?.open(record.id, record.roleName);
+};
+
 onMounted(() => {
   fetchRoleList();
 });
@@ -211,7 +218,7 @@ onMounted(() => {
           @search="fetchRoleList"
         />
       </div>
-      <a-button v-if="isAdmin" type="primary" class="h-36px! px-16px! rd-8px! font-medium! flex items-center gap-6px" @click="openAddModal">
+      <a-button v-if="hasPermission('role:edit')" type="primary" class="h-36px! px-16px! rd-8px! font-medium! flex items-center gap-6px" @click="openAddModal">
         <div class="i-material-symbols:add-rounded text-16px flex-shrink-0"></div>
         新增角色
       </a-button>
@@ -234,12 +241,22 @@ onMounted(() => {
 
           <template v-if="column.key === 'action'">
             <div class="flex-y-center gap-8px">
+              <a-tooltip title="配置权限">
+                <a-button
+                  type="text"
+                  size="small"
+                  class="!p-0 !h-auto !w-22px text-[var(--color-primary)]!"
+                  @click="openPermissionModal(record)"
+                >
+                  <div class="i-material-symbols:key-rounded text-15px"></div>
+                </a-button>
+              </a-tooltip>
               <a-tooltip title="编辑角色">
                 <a-button
                   type="text"
                   size="small"
                   class="!p-0 !h-auto !w-22px text-secondary!"
-                  :disabled="record.roleCode === 'SUPER_ADMIN'"
+                  :disabled="record.roleCode === 'admin'"
                   @click="handleEditRole(record)"
                 >
                   <div class="i-material-symbols:edit-outline-rounded text-15px"></div>
@@ -257,7 +274,7 @@ onMounted(() => {
                   type="text"
                   size="small"
                   class="!p-0 !h-auto !w-22px text-error!"
-                  :disabled="record.roleCode === 'SUPER_ADMIN'"
+                  :disabled="record.roleCode === 'admin'"
                   @click="handleDeleteRole(record)"
                 >
                   <div class="i-material-symbols:delete-rounded text-15px"></div>
@@ -335,6 +352,9 @@ onMounted(() => {
         <a-button type="primary" block @click="handleUpdateRole">保存</a-button>
       </div>
     </a-modal>
+
+    <!-- 权限配置弹窗 -->
+    <RolePermissionModal ref="permissionModalRef" />
   </div>
 </template>
 

@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { VueDraggable } from 'vue-draggable-plus';
 import { message } from 'ant-design-vue';
 import { useAuth } from '@/hooks/common/auth';
-import { fetchGetTemplateDetail, fetchSaveTemplateDraft, fetchPublishTemplate, fetchGetTemplateVersions, fetchPreviewTemplate, type FieldSchema, type FieldOption, type TemplateSaveDraft } from '@/service/api/template';
+import { fetchGetTemplateDetail, fetchSaveTemplateDraft, fetchPublishTemplate, fetchGetTemplateVersions, type FieldSchema, type FieldOption, type TemplateSaveDraft } from '@/service/api/template';
 
 defineOptions({ name: 'TemplateDesign' });
 
@@ -12,7 +12,7 @@ const route = useRoute();
 const router = useRouter();
 const templateId = route.params.id as string;
 
-const { isAdmin } = useAuth();
+const { hasPermission } = useAuth();
 
 // --- State ---
 const templateName = ref('未命名模板');
@@ -63,9 +63,16 @@ const createField = (type: string, label: string): FieldSchema => ({
   disabled: false,
   hidden: false,
   defaultValue: undefined,
+  validation: {},
   ...(type === 'image' ? { imageConfig: { cameraOnly: false, maxCount: 9, maxSize: 10 } } : {}),
   ...(type === 'select' || type === 'radio' || type === 'checkbox' ? {
-    options: [{ label: '选项一', value: 'option_1' }, { label: '选项二', value: 'option_2' }]
+    options: [{ label: '选项一', value: 'option_1' }, { label: '选项二', value: 'option_2' }],
+    optionSource: { type: 'static' }
+  } : {}),
+  ...(type === 'location' ? {
+    mapZoom: 15,
+    autoFillLngFieldId: undefined as string | undefined,
+    autoFillLatFieldId: undefined as string | undefined
   } : {})
 });
 
@@ -83,7 +90,8 @@ const deleteField = (id: string) => {
 };
 
 const copyField = (field: FieldSchema) => {
-  const copy = { ...field, id: generateId() };
+  const copy = JSON.parse(JSON.stringify(field)) as FieldSchema;
+  copy.id = generateId();
   canvasFields.value.splice(canvasFields.value.findIndex(f => f.id === field.id) + 1, 0, copy);
   markDirty();
 };
@@ -234,52 +242,52 @@ onMounted(() => { loadTemplate(); });
           </div>
 
           <div class="min-h-500px rd-12px border-2 border-dashed border-[var(--color-divider)] p-6 bg-[var(--bg-card)] shadow-inner relative">
-            <VueDraggable v-model="canvasFields" group="fields" :animation="150" class="space-y-4 min-h-400px" @change="markDirty">
-              <template #item="{ element }">
-                <div class="relative p-5 rd-8px border-2 transition-all cursor-pointer group bg-[var(--bg-card)]"
-                  :class="activeFieldId === element.id ? 'border-primary ring-2 ring-primary ring-opacity-10' : 'border-transparent hover:border-[var(--color-border)] hover:shadow-sm'"
-                  @click="selectField(element.id)">
-                  <div class="flex justify-between items-center mb-4">
-                    <div class="flex items-center gap-2">
-                      <span class="text-13px font-600 text-[var(--color-text-primary)]">
-                        {{ element.label }}<span v-if="element.required" class="text-danger ml-1">*</span>
-                      </span>
-                    </div>
-                    <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                      <a-button type="text" size="small" class="!flex-center" @click.stop="copyField(element)"><template #icon><div class="i-material-symbols:content-copy-outline-rounded text-14px"></div></template></a-button>
-                      <a-button type="text" danger size="small" @click.stop="deleteField(element.id)" class="!flex-center"><template #icon><div class="i-material-symbols:delete-outline-rounded text-14px"></div></template></a-button>
-                    </div>
+            <VueDraggable v-model="canvasFields" group="fields" :animation="150" class="space-y-4 min-h-400px">
+              <div
+                v-for="element in canvasFields"
+                :key="element.id"
+                class="relative p-5 rd-8px border-2 transition-all cursor-pointer group bg-[var(--bg-card)]"
+                :class="activeFieldId === element.id ? 'border-primary ring-2 ring-primary/10' : 'border-transparent hover:border-[var(--color-border)] hover:shadow-sm'"
+                @click="selectField(element.id)"
+              >
+                <div class="flex justify-between items-center mb-4">
+                  <div class="flex items-center gap-2">
+                    <span class="text-13px font-600 text-[var(--color-text-primary)]">
+                      {{ element.label }}<span v-if="element.required" class="text-danger ml-1">*</span>
+                    </span>
                   </div>
-                  <div class="pointer-events-none">
-                    <template v-if="element.type === 'input'"><a-input :placeholder="element.placeholder" /></template>
-                    <template v-else-if="element.type === 'textarea'"><a-textarea :placeholder="element.placeholder" :rows="3" /></template>
-                    <template v-else-if="element.type === 'number'"><a-input-number class="w-full" :placeholder="element.placeholder" /></template>
-                    <template v-else-if="element.type === 'select'"><a-select :placeholder="element.placeholder" class="w-full" /></template>
-                    <template v-else-if="element.type === 'radio'"><a-radio-group><a-radio>选项一</a-radio><a-radio>选项二</a-radio></a-radio-group></template>
-                    <template v-else-if="element.type === 'checkbox'"><a-checkbox-group><a-checkbox>选项一</a-checkbox><a-checkbox>选项二</a-checkbox></a-checkbox-group></template>
-                    <template v-else-if="element.type === 'switch'"><a-switch /></template>
-                    <template v-else-if="element.type === 'date'"><a-date-picker class="w-full" /></template>
-                    <template v-else-if="element.type === 'image'">
-                      <div class="w-100px h-100px rd-4px border border-dashed border-[var(--color-border)] flex-center flex-col gap-1 text-[var(--color-text-placeholder)]">
-                        <div class="i-material-symbols:add-rounded text-24px"></div><span class="text-11px">上传图片</span>
-                      </div>
-                    </template>
-                    <template v-else-if="element.type === 'location'">
-                      <div class="h-10 bg-[var(--bg-page)] rd-4px border border-[var(--color-border)] flex items-center px-3 text-12px text-[var(--color-text-secondary)]">
-                        <div class="i-material-symbols:location-on-outline-rounded text-16px mr-2"></div>点击选择位置
-                      </div>
-                    </template>
-                    <template v-else-if="element.type === 'divider'"><div class="h-1px bg-[var(--color-divider)] w-full my-2"></div></template>
+                  <div class="opacity-60 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                    <a-button type="text" size="small" class="!flex-center" @click.stop="copyField(element)"><template #icon><div class="i-material-symbols:content-copy-outline-rounded text-14px"></div></template></a-button>
+                    <a-button type="text" danger size="small" @click.stop="deleteField(element.id)" class="!flex-center" title="删除此字段"><template #icon><div class="i-material-symbols:delete-outline-rounded text-14px"></div></template></a-button>
                   </div>
                 </div>
-              </template>
-              <template #header>
-                <div v-if="canvasFields.length === 0" class="absolute inset-0 flex-center flex-col gap-4 text-[var(--color-text-placeholder)]">
-                  <div class="i-material-symbols:drag-pan-rounded text-48px opacity-20"></div>
-                  <div class="text-14px">点击左侧组件添加到表单</div>
+                <div class="pointer-events-none">
+                  <template v-if="element.type === 'input'"><a-input :placeholder="element.placeholder" /></template>
+                  <template v-else-if="element.type === 'textarea'"><a-textarea :placeholder="element.placeholder" :rows="3" /></template>
+                  <template v-else-if="element.type === 'number'"><a-input-number class="w-full" :placeholder="element.placeholder" /></template>
+                  <template v-else-if="element.type === 'select'"><a-select :placeholder="element.placeholder" class="w-full" /></template>
+                  <template v-else-if="element.type === 'radio'"><a-radio-group><a-radio>选项一</a-radio><a-radio>选项二</a-radio></a-radio-group></template>
+                  <template v-else-if="element.type === 'checkbox'"><a-checkbox-group><a-checkbox>选项一</a-checkbox><a-checkbox>选项二</a-checkbox></a-checkbox-group></template>
+                  <template v-else-if="element.type === 'switch'"><a-switch /></template>
+                  <template v-else-if="element.type === 'date'"><a-date-picker class="w-full" /></template>
+                  <template v-else-if="element.type === 'image'">
+                    <div class="w-100px h-100px rd-4px border border-dashed border-[var(--color-border)] flex-center flex-col gap-1 text-[var(--color-text-placeholder)]">
+                      <div class="i-material-symbols:add-rounded text-24px"></div><span class="text-11px">上传图片</span>
+                    </div>
+                  </template>
+                  <template v-else-if="element.type === 'location'">
+                    <div class="h-10 bg-[var(--bg-page)] rd-4px border border-[var(--color-border)] flex items-center px-3 text-12px text-[var(--color-text-secondary)]">
+                      <div class="i-material-symbols:location-on-outline-rounded text-16px mr-2"></div>点击选择位置
+                    </div>
+                  </template>
+                  <template v-else-if="element.type === 'divider'"><div class="h-1px bg-[var(--color-divider)] w-full my-2"></div></template>
                 </div>
-              </template>
+              </div>
             </VueDraggable>
+            <div v-if="canvasFields.length === 0" class="absolute inset-0 flex-center flex-col gap-4 text-[var(--color-text-placeholder)] pointer-events-none">
+              <div class="i-material-symbols:drag-pan-rounded text-48px opacity-20"></div>
+              <div class="text-14px">点击左侧组件添加到表单</div>
+            </div>
           </div>
         </div>
       </section>
@@ -331,6 +339,51 @@ onMounted(() => { loadTemplate(); });
                 <div class="space-y-4">
                   <div class="flex justify-between items-center"><span class="text-13px font-500">仅允许相机拍摄</span><a-switch v-model:checked="(activeField.imageConfig || (activeField.imageConfig = { cameraOnly: false, maxCount: 9, maxSize: 10 })).cameraOnly" @change="markDirty" /></div>
                   <a-form-item label="最大上传张数"><a-input-number v-model:value="(activeField.imageConfig || {}).maxCount" :min="1" :max="50" class="w-full" @change="markDirty" /></a-form-item>
+                </div>
+              </template>
+
+              <!-- Location Field Config (Amap) -->
+              <template v-if="activeField.type === 'location'">
+                <div class="my-4 border-t border-[var(--color-divider)]"></div>
+                <div class="text-13px font-500 mb-3">高德地图定位配置</div>
+                <div class="space-y-4">
+                  <a-form-item label="地图缩放级别">
+                    <a-input-number v-model:value="activeField.mapZoom" :min="3" :max="18" class="w-full" @change="markDirty" />
+                    <div class="text-11px text-[var(--color-text-placeholder)] mt-1">数值越大地图越精细 (3-18)</div>
+                  </a-form-item>
+                  <div class="my-3 border-t border-[var(--color-divider)]"></div>
+                  <div class="mb-2">
+                    <div class="text-12px font-500 mb-3">经纬度回填配置</div>
+                    <div class="text-11px text-[var(--color-text-placeholder)] mb-3">选择位置后自动将经纬度填入指定的文本字段</div>
+                  </div>
+                  <a-form-item label="经度回填字段">
+                    <a-select
+                      v-model:value="activeField.autoFillLngFieldId"
+                      allow-clear
+                      class="w-full"
+                      @change="markDirty"
+                    >
+                      <a-select-option
+                        v-for="f in otherFields"
+                        :key="f.id"
+                        :value="f.id"
+                      >{{ f.label }} ({{ f.id }})</a-select-option>
+                    </a-select>
+                  </a-form-item>
+                  <a-form-item label="纬度回填字段">
+                    <a-select
+                      v-model:value="activeField.autoFillLatFieldId"
+                      allow-clear
+                      class="w-full"
+                      @change="markDirty"
+                    >
+                      <a-select-option
+                        v-for="f in otherFields"
+                        :key="f.id"
+                        :value="f.id"
+                      >{{ f.label }} ({{ f.id }})</a-select-option>
+                    </a-select>
+                  </a-form-item>
                 </div>
               </template>
 
@@ -397,7 +450,7 @@ onMounted(() => { loadTemplate(); });
           </div>
         </div>
 
-        <div class="p-5 border-t border-[var(--color-divider)] bg-[var(--bg-card-alt)]">
+        <div class="p-5 border-t border-[var(--color-divider)] bg-[var(--bg-card-alt)] max-h-[180px] overflow-y-auto custom-scrollbar shrink-0">
           <div class="text-12px font-600 mb-4 flex items-center gap-2">
             <div class="i-material-symbols:history-rounded text-16px text-primary"></div>历史版本 ({{ versions.length }})
           </div>

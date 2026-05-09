@@ -49,6 +49,7 @@ public class MessageCenterController {
 
     @Operation(summary = "标记消息为已读")
     @PutMapping("/{messageId}/read")
+    @OperationLog(module = "消息中心", action = "标记已读", description = "标记消息为已读, 消息ID: #messageId", riskLevel = 0)
     public Result<Void> markAsRead(@PathVariable Long messageId) {
         Long userId = getCurrentUserId();
         messageCenterService.markAsRead(messageId, userId);
@@ -57,6 +58,7 @@ public class MessageCenterController {
 
     @Operation(summary = "全部标记为已读")
     @PutMapping("/read-all")
+    @OperationLog(module = "消息中心", action = "全部已读", description = "全部标记为已读", riskLevel = 0)
     public Result<Void> batchMarkAsRead() {
         Long userId = getCurrentUserId();
         messageCenterService.batchMarkAsRead(userId);

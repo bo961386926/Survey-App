@@ -61,14 +61,22 @@ public class SurveyTemplateController {
     @PreAuthorize("hasRole('ADMIN')")
     @OperationLog(module = "模板管理", action = "创建", description = "创建模板: #template.templateName", riskLevel = 1)
     public Result<SurveyTemplate> createTemplate(@RequestBody SurveyTemplate template) {
-        log.info("====== [模板管理] 创建模板请求 - templateName: {} ======", template.getTemplateName());
-        SurveyTemplate result = surveyTemplateService.createTemplate(template);
-        if (result != null) {
-            log.info("====== [模板管理] 模板创建成功 - templateId: {} ======", result.getId());
-        } else {
-            log.error("====== [模板管理] 模板创建失败 ======");
+        try {
+            log.info("====== [模板管理] 创建模板请求 - templateName: {}, templateCode: {} ======", 
+                    template.getTemplateName(), template.getTemplateCode());
+            SurveyTemplate result = surveyTemplateService.createTemplate(template);
+            if (result != null) {
+                log.info("====== [模板管理] 模板创建成功 - templateId: {} ======", result.getId());
+                return Result.success(result);
+            } else {
+                log.error("====== [模板管理] 模板创建失败 ======");
+                return Result.error("模板创建失败");
+            }
+        } catch (Exception e) {
+            log.error("====== [模板管理] 创建模板异常 - templateName: {}, error: {} ======", 
+                    template.getTemplateName(), e.getMessage(), e);
+            return Result.error("创建模板失败: " + e.getMessage());
         }
-        return Result.success(result);
     }
 
     @Operation(summary = "更新模板")
@@ -91,6 +99,7 @@ public class SurveyTemplateController {
     @Operation(summary = "保存模板草稿（设计器状态）")
     @PutMapping("/draft/{id}")
     @PreAuthorize("hasRole('ADMIN')")
+    @OperationLog(module = "模板管理", action = "保存草稿", description = "保存模板设计器草稿, 模板ID: #id", riskLevel = 0)
     public Result<Void> saveDraft(@PathVariable Long id, @RequestBody Map<String, Object> draftData) {
         surveyTemplateService.saveDraft(id, draftData);
         return Result.success();
