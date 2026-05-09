@@ -209,7 +209,6 @@ onMounted(() => {
         </div>
       </div>
       <AButton v-if="hasPermission('project:create')" type="primary" class="create-btn" @click="handleCreateProject">
-        <PlusOutlined class="text-16px flex-shrink-0" />
         <span>新建项目</span>
       </AButton>
     </div>
@@ -474,7 +473,7 @@ onMounted(() => {
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.4);
   border-radius: 8px;
-  padding: 16px 20px;
+  padding: 12px 16px;
   position: relative;
   overflow: hidden;
   cursor: pointer;
@@ -493,8 +492,8 @@ onMounted(() => {
 }
 
 .metric-icon-wrapper {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -508,11 +507,11 @@ onMounted(() => {
 }
 
 .metric-icon {
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .metric-value {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   color: var(--color-text-primary);
   letter-spacing: -0.5px;

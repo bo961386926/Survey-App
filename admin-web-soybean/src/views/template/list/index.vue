@@ -7,7 +7,6 @@
         <p class="text-14px text-[var(--color-text-secondary)]">配置勘查表单字段，支持多种字段类型与联动逻辑</p>
       </div>
       <a-button v-if="hasPermission('template:create')" type="primary" @click="handleCreate" class="rounded-6px">
-        <template #icon><PlusOutlined /></template>
         新建模板
       </a-button>
     </div>
