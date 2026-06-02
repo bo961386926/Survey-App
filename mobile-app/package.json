@@ -1,6 +1,7 @@
 {
   "name": "survey-mobile",
   "version": "1.0.0",
+  "packageManager": "npm@10.9.2",
   "description": "青泓项目勘查系统 - 移动端",
   "type": "module",
   "scripts": {

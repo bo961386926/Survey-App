@@ -51,42 +51,42 @@ const isLogin = computed(() => props.module === 'pwd-login' || props.module === 
 </script>
 
 <template>
-  <div class="relative size-full flex-center overflow-hidden bg-page" :style="{ backgroundColor: bgColor }">
-    <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[100px] pointer-events-none"></div>
-    <div class="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
+  <div class="relative size-full flex-center overflow-hidden" :style="{ backgroundColor: bgColor }">
+    <div class="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[100px] pointer-events-none deco-blob-1"></div>
+    <div class="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full blur-[120px] pointer-events-none deco-blob-2"></div>
 
-    <main class="w-full max-w-[1100px] min-h-[650px] grid grid-cols-1 lg:grid-cols-2 rounded-16px overflow-hidden glass-panel relative z-10 mx-24px">
+    <main class="login-main">
       <!-- Left Side: Brand Visual -->
-      <section class="hidden lg:flex flex-col justify-between p-48px relative overflow-hidden border-r border-divider bg-primary/5">
-        <div class="absolute inset-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(circle at 2px 2px, var(--color-text-primary) 1px, transparent 0); background-size: 24px 24px;"></div>
+      <section class="login-left">
+        <div class="absolute inset-0 pointer-events-none dot-pattern"></div>
 
         <div class="relative z-10">
           <header class="flex-y-center gap-12px mb-48px">
             <SystemLogo class="size-48px" />
-            <h1 class="text-24px font-800 tracking-tight text-primary">{{ $t('system.title') }}</h1>
+            <h1 class="text-24px font-800 tracking-tight" style="color: var(--color-primary);">{{ $t('system.title') }}</h1>
           </header>
 
-          <h2 class="text-36px font-800 leading-tight mb-24px text-primary">
+          <h2 class="text-36px font-800 leading-tight mb-24px" style="color: var(--color-primary);">
             专业实地调研<br />
             及巡检作业平台
           </h2>
-          <p class="text-16px text-secondary leading-relaxed max-w-360px">
+          <p class="text-16px leading-relaxed max-w-360px" style="color: var(--color-text-secondary);">
             通过高精度地理位置服务与智能表单系统，为您提供权威、稳固、不间断的外勤作业支撑。
           </p>
         </div>
 
         <div class="relative z-10">
-          <div class="p-24px bg-card/40 backdrop-blur-md rounded-8px border border-border/60 shadow-sm">
+          <div class="testimonial-card">
             <div class="flex-y-center gap-16px mb-12px">
-              <div class="size-40px rounded-full bg-primary/20 flex-center">
-                <div class="i-material-symbols:person text-primary text-20px"></div>
+              <div class="size-40px rounded-full flex-center" style="background-color: rgba(22, 119, 255, 0.12);">
+                <div class="i-material-symbols:person text-20px" style="color: var(--color-primary);"></div>
               </div>
               <div>
-                <p class="text-14px font-bold">高级巡检工程师</p>
-                <p class="text-12px text-secondary">数字化外勤管理专家</p>
+                <p class="text-14px font-bold" style="color: var(--color-text-primary);">高级巡检工程师</p>
+                <p class="text-12px" style="color: var(--color-text-secondary);">数字化外勤管理专家</p>
               </div>
             </div>
-            <p class="text-13px text-secondary italic font-500 leading-relaxed">
+            <p class="text-13px italic font-500 leading-relaxed" style="color: var(--color-text-secondary);">
               "在恶劣环境下的数据采集，我们需要的是绝对的可靠性。系统平台从未让我失望。"
             </p>
           </div>
@@ -94,11 +94,11 @@ const isLogin = computed(() => props.module === 'pwd-login' || props.module === 
       </section>
 
       <!-- Right Side: Login Form -->
-      <section class="p-32px md:p-48px lg:p-64px flex flex-col justify-center bg-card/20">
+      <section class="login-right">
         <header class="flex-y-center justify-between mb-32px">
           <div class="lg:hidden flex-y-center gap-8px">
             <SystemLogo class="size-32px" />
-            <span class="text-18px font-800 text-primary">{{ $t('system.title') }}</span>
+            <span class="text-18px font-800" style="color: var(--color-primary);">{{ $t('system.title') }}</span>
           </div>
           <div class="flex gap-12px ml-auto">
             <ThemeSchemaSwitch
@@ -117,8 +117,8 @@ const isLogin = computed(() => props.module === 'pwd-login' || props.module === 
         </header>
 
         <div class="mb-32px">
-          <h2 class="text-28px font-700 mb-8px">{{ $t(activeModule.label) }}</h2>
-          <p class="text-secondary">{{ isLogin ? '欢迎回来，请输入您的凭据开始作业' : '请填写以下信息完成注册' }}</p>
+          <h2 class="text-28px font-700 mb-8px" style="color: var(--color-text-primary);">{{ $t(activeModule.label) }}</h2>
+          <p style="color: var(--color-text-secondary);">{{ isLogin ? '欢迎回来，请输入您的凭据开始作业' : '请填写以下信息完成注册' }}</p>
         </div>
 
         <main class="animation-slide-in-left">
@@ -131,7 +131,7 @@ const isLogin = computed(() => props.module === 'pwd-login' || props.module === 
 
     <!-- Footer Meta -->
     <div class="fixed bottom-24px text-center w-full px-24px pointer-events-none z-20">
-      <p class="text-12px text-secondary/80 font-500">
+      <p class="text-12px font-500" style="color: var(--color-text-secondary);">
         © 2026 {{ $t('system.title') }}. 安全、稳固、精准的行业数据标准。
         <span class="mx-8px hidden md:inline">|</span>
         隐私条款 <span class="mx-8px">|</span> 服务协议
@@ -141,11 +141,83 @@ const isLogin = computed(() => props.module === 'pwd-login' || props.module === 
 </template>
 
 <style scoped>
-.glass-panel {
+.deco-blob-1 {
+  background-color: rgba(22, 119, 255, 0.08);
+}
+.deco-blob-2 {
+  background-color: rgba(22, 119, 255, 0.04);
+}
+
+.login-main {
+  width: 100%;
+  max-width: 1100px;
+  min-height: 650px;
+  display: grid;
+  grid-template-columns: 1fr;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
+  margin: 0 24px;
   background: var(--bg-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);
+}
+
+@media (min-width: 1024px) {
+  .login-main {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.login-left {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 48px;
+  position: relative;
+  overflow: hidden;
+  border-right: 1px solid var(--color-border);
+  background-color: rgba(22, 119, 255, 0.04);
+}
+
+@media (min-width: 1024px) {
+  .login-left {
+    display: flex;
+  }
+}
+
+.dot-pattern {
+  opacity: 0.04;
+  background-image: radial-gradient(circle at 2px 2px, var(--color-text-primary) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+.testimonial-card {
+  padding: 24px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background-color: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(12px);
+}
+
+.login-right {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: var(--bg-card);
+}
+
+@media (min-width: 768px) {
+  .login-right {
+    padding: 48px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .login-right {
+    padding: 64px;
+  }
 }
 </style>

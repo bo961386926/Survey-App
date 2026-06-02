@@ -71,6 +71,14 @@ export const generatedRoutes: GeneratedRoute[] = [
     ]
   },
   {
+    name: 'dashboard',
+    path: '/dashboard',
+    component: 'layout.base$view.dashboard',
+    meta: {
+      title: 'dashboard'
+    }
+  },
+  {
     name: 'export',
     path: '/export',
     component: 'layout.base',

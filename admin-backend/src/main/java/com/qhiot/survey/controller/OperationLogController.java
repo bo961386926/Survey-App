@@ -27,7 +27,7 @@ public class OperationLogController {
     @Autowired
     private OperationLogService operationLogService;
 
-    @Operation(summary = "分页查询操作日志")
+    @Operation(summary = "分页查询操作日志", description = "管理员分页查询操作日志，支持按模块、操作人、关键词筛选")
     @GetMapping("/page")
     @PreAuthorize("hasAuthority('system:log')")
     public Result<Page<OperationLog>> listByPage(
@@ -39,7 +39,7 @@ public class OperationLogController {
         return Result.success(operationLogService.listByPage(module, operator, keyword, pageNum, pageSize));
     }
 
-    @Operation(summary = "导出操作日志")
+    @Operation(summary = "导出操作日志", description = "导出操作日志为Excel文件，支持筛选条件")
     @GetMapping("/export")
     @PreAuthorize("hasAuthority('system:log')")
     public ResponseEntity<byte[]> exportLogs(
@@ -55,28 +55,28 @@ public class OperationLogController {
         return new ResponseEntity<>(excelBytes, headers, HttpStatus.OK);
     }
 
-    @Operation(summary = "统计各模块操作次数")
+    @Operation(summary = "统计各模块操作次数", description = "按模块分组统计操作次数")
     @GetMapping("/statistics/module")
     @PreAuthorize("hasAuthority('system:log')")
     public Result<Map<String, Long>> countByModule() {
         return Result.success(operationLogService.countByModule());
     }
 
-    @Operation(summary = "统计各用户操作次数")
+    @Operation(summary = "统计各用户操作次数", description = "按用户分组统计操作次数")
     @GetMapping("/statistics/user")
     @PreAuthorize("hasAuthority('system:log')")
     public Result<Map<String, Long>> countByUser() {
         return Result.success(operationLogService.countByUser());
     }
 
-    @Operation(summary = "统计各风险等级操作次数")
+    @Operation(summary = "统计各风险等级操作次数", description = "按风险等级分组统计操作次数")
     @GetMapping("/statistics/risk-level")
     @PreAuthorize("hasAuthority('system:log')")
     public Result<Map<Integer, Long>> countByRiskLevel() {
         return Result.success(operationLogService.countByRiskLevel());
     }
 
-    @Operation(summary = "按时间范围统计操作趋势")
+    @Operation(summary = "按时间范围统计操作趋势", description = "按日期范围统计操作趋势，返回每日操作数量")
     @GetMapping("/statistics/trend")
     @PreAuthorize("hasAuthority('system:log')")
     public Result<Map<String, Long>> countByDateRange(

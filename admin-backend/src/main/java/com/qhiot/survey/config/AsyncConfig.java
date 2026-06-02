@@ -48,4 +48,48 @@ public class AsyncConfig {
         
         return executor;
     }
+
+    /**
+     * 导出任务专用线程池
+     */
+    @Bean("exportTaskExecutor")
+    public Executor exportTaskExecutor() {
+        log.info("====== [异步配置] 开始初始化导出任务线程池 ======");
+
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(4);
+        executor.setQueueCapacity(50);
+        executor.setThreadNamePrefix("export-");
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(120);
+        executor.initialize();
+
+        log.info("====== [异步配置] 导出任务线程池初始化完成 ======");
+        return executor;
+    }
+
+    /**
+     * 通知发送线程池（短信、邮件等）
+     * 与操作日志线程池隔离，避免互相阻塞
+     */
+    @Bean("notificationExecutor")
+    public Executor notificationExecutor() {
+        log.info("====== [异步配置] 开始初始化通知发送线程池 ======");
+
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(8);
+        executor.setQueueCapacity(200);
+        executor.setThreadNamePrefix("notify-");
+        // 队列已满时由调用线程处理，避免丢失通知
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(30);
+        executor.initialize();
+
+        log.info("====== [异步配置] 通知发送线程池初始化完成 ======");
+        return executor;
+    }
 }

@@ -24,6 +24,8 @@ admin-backend/apache-maven-3.9.6/
 # Build
 dist/
 build/
+!admin-web-soybean/build/
+!admin-web-soybean/build/**
 
 # Temp
 *.tmp

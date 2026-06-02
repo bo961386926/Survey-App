@@ -208,7 +208,17 @@ const customRoutes: CustomRoute[] = [
   { name: 'point', path: '/point', meta: { hideInMenu: true } },
   { name: 'export', path: '/export', meta: { hideInMenu: true } },
   { name: 'exception', path: '/exception', meta: { hideInMenu: true } },
-  { name: 'dashboard_redirect', path: '/dashboard', redirect: '/home' }
+  {
+    name: 'dashboard',
+    path: '/dashboard',
+    component: 'layout.base$view.dashboard',
+    meta: {
+      title: 'dashboard',
+      i18nKey: 'route.dashboard',
+      icon: 'material-symbols:dashboard-outline-rounded',
+      order: 1
+    }
+  }
 ];
 
 /** create routes when the auth route mode is static */

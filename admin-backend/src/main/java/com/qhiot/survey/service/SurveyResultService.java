@@ -63,8 +63,11 @@ public interface SurveyResultService extends IService<SurveyResult> {
 
     /**
      * 提交审核
+     * @param id           勘查结果ID
+     * @param userId       操作人员ID
+     * @param expectedVersionNo 客户端所持有的版本号，用于乐观锁并发冲突检测。空表示不检测(兼容旧调用者)
      */
-    boolean submitForAudit(Long id, Long userId);
+    boolean submitForAudit(Long id, Long userId, Integer expectedVersionNo);
 
     /**
      * 保存草稿

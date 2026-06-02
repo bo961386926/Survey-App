@@ -51,6 +51,23 @@ public class JwtUtil {
     }
 
     /**
+     * 生成第三方协作访问 Token
+     * 通过 loginType=collab 与内部用户 Token 区分，并携带 collabEntryId 限定访问范围
+     */
+    public String generateCollabToken(Long entryId, String entryName, Long ttlMillis) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", entryId);
+        claims.put("username", "collab:" + entryId);
+        claims.put("tokenType", "access");
+        claims.put("loginType", "collab");
+        claims.put("collabEntryId", entryId);
+        if (entryName != null) {
+            claims.put("entryName", entryName);
+        }
+        return generateToken(claims, ttlMillis);
+    }
+
+    /**
      * 生成Token
      */
     private String generateToken(Map<String, Object> claims, Long expirationTime) {
@@ -101,6 +118,34 @@ public class JwtUtil {
     public String getTokenType(String token) {
         Claims claims = getClaimsFromToken(token);
         return claims.get("tokenType", String.class);
+    }
+
+    /**
+     * 获取登录类型 (internal / collab)
+     */
+    public String getLoginType(String token) {
+        Claims claims = getClaimsFromToken(token);
+        Object loginType = claims.get("loginType");
+        return loginType == null ? null : loginType.toString();
+    }
+
+    /**
+     * 从协作Token中获取协作入口ID
+     */
+    public Long getCollabEntryIdFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+        Object id = claims.get("collabEntryId");
+        if (id == null) {
+            return null;
+        }
+        if (id instanceof Number) {
+            return ((Number) id).longValue();
+        }
+        try {
+            return Long.valueOf(id.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     /**

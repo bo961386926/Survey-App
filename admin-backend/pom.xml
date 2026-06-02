@@ -77,6 +77,12 @@
             <version>${aliyun.sms.version}</version>
         </dependency>
 
+        <!-- Spring Mail (邮件兜底通道：密码下发等通知场景) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- Knife4j (Swagger增强) -->
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
@@ -111,6 +117,12 @@
             <artifactId>itext7-core</artifactId>
             <version>8.0.4</version>
             <type>pom</type>
+        </dependency>
+        <!-- iText 中文字体支持 -->
+        <dependency>
+            <groupId>com.itextpdf</groupId>
+            <artifactId>font-asian</artifactId>
+            <version>8.0.4</version>
         </dependency>
 
         <!-- Spring Security -->
@@ -178,12 +190,9 @@
             <scope>test</scope>
         </dependency>
         
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-inline</artifactId>
-            <version>4.11.0</version>
-            <scope>test</scope>
-        </dependency>
+        <!-- mockito-core 5.7.0 从 spring-boot-starter-test BOM 带入，
+             默认 subclass mock-maker 可以 spy/mock 非 final 的 ServiceImpl 子类。
+             Java 26 上需由 surefire 传入 -Dnet.bytebuddy.experimental=true 启用。 -->
     </dependencies>
 
     <build>
@@ -216,6 +225,15 @@
                             <version>1.18.38</version>
                         </path>
                     </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <!-- 允许 byte-buddy 在尚未官方支持的 JVM（如 Java 26）上工作，
+                         供 Mockito inline mock-maker 使用。 -->
+                    <argLine>-Dnet.bytebuddy.experimental=true</argLine>
                 </configuration>
             </plugin>
         </plugins>

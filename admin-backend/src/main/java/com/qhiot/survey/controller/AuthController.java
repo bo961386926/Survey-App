@@ -43,7 +43,7 @@ import javax.imageio.ImageIO;
 /**
  * 认证控制器
  */
-@Tag(name = "认证管理")
+@Tag(name = "认证管理", description = "用户登录、注册、密码管理、Token刷新等认证安全接口")
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -66,22 +66,53 @@ public class AuthController {
     // 验证码过期时间（分钟）
     private static final long CAPTCHA_EXPIRE_MINUTES = 5;
     
+    // 内存验证码缓存（Redis不可用时降级）
+    private static final ConcurrentHashMap<String, CaptchaCacheEntry> captchaMemoryCache = new ConcurrentHashMap<>();
+    
+    // 内存验证码过期时间（毫秒）
+    private static final long CAPTCHA_MEMORY_EXPIRE_MS = 5 * 60 * 1000;
+    
+    /**
+     * 验证码内存缓存条目
+     */
+    private static class CaptchaCacheEntry {
+        final String code;
+        final long expireTime;
+        
+        CaptchaCacheEntry(String code, long expireTime) {
+            this.code = code;
+            this.expireTime = expireTime;
+        }
+        
+        boolean isExpired() {
+            return System.currentTimeMillis() > expireTime;
+        }
+    }
+    
     // 幂等性Token Redis Key前缀
     private static final String IDEMPOTENT_TOKEN_KEY = "idempotent:token:";
     // 幂等性Token过期时间（分钟）
     private static final long IDEMPOTENT_TOKEN_EXPIRE_MINUTES = 5;
 
-    @Operation(summary = "获取图形验证码")
+    @Operation(summary = "获取图形验证码", description = "生成4位数字图形验证码，返回Base64图片和验证Key，5分钟有效")
     @GetMapping("/captcha")
     public Result<Map<String, String>> getCaptcha() {
         try {
+            // 清理过期内存缓存
+            cleanupExpiredCaptchaCache();
+            
             // 生成随机验证码 (4位数字)
             String code = String.valueOf((int)((Math.random() * 9000) + 1000));
             String key = UUID.randomUUID().toString().replace("-", "");
             
-            // 存入Redis缓存，5分钟过期
-            String redisKey = CAPTCHA_KEY_PREFIX + key;
-            redisTemplate.opsForValue().set(redisKey, code, CAPTCHA_EXPIRE_MINUTES, java.util.concurrent.TimeUnit.MINUTES);
+            // 尝试存入Redis缓存，5分钟过期；Redis不可用时降级到内存缓存
+            try {
+                String redisKey = CAPTCHA_KEY_PREFIX + key;
+                redisTemplate.opsForValue().set(redisKey, code, CAPTCHA_EXPIRE_MINUTES, java.util.concurrent.TimeUnit.MINUTES);
+            } catch (Exception redisEx) {
+                // Redis不可用，降级到内存缓存
+                captchaMemoryCache.put(key, new CaptchaCacheEntry(code, System.currentTimeMillis() + CAPTCHA_MEMORY_EXPIRE_MS));
+            }
             
             // 生成图片
             int width = 120;
@@ -134,8 +165,15 @@ public class AuthController {
             return Result.error("生成验证码失败: " + e.getMessage());
         }
     }
+    
+    /**
+     * 清理过期的内存验证码缓存
+     */
+    private void cleanupExpiredCaptchaCache() {
+        captchaMemoryCache.entrySet().removeIf(entry -> entry.getValue().isExpired());
+    }
 
-    @Operation(summary = "用户登录(账号密码)")
+    @Operation(summary = "用户登录(账号密码)", description = "账号密码登录，需先获取图形验证码，登录成功返回JWT令牌")
     @PostMapping("/login")
     public Result<LoginResponse> login(@RequestBody LoginRequest request, HttpServletRequest httpRequest) {
         try {
@@ -144,20 +182,41 @@ public class AuthController {
                 return Result.error("请输入验证码");
             }
             
-            // 从Redis获取验证码
+            // 从Redis获取验证码，Redis不可用时从内存缓存获取
+            String cachedCode = null;
             String redisKey = CAPTCHA_KEY_PREFIX + request.getCaptchaKey();
-            String cachedCode = redisTemplate.opsForValue().get(redisKey);
+            try {
+                cachedCode = redisTemplate.opsForValue().get(redisKey);
+            } catch (Exception redisEx) {
+                // Redis不可用，尝试从内存缓存获取
+                CaptchaCacheEntry entry = captchaMemoryCache.get(request.getCaptchaKey());
+                if (entry != null && !entry.isExpired()) {
+                    cachedCode = entry.code;
+                }
+            }
             
             if (cachedCode == null) {
-                return Result.error("验证码已过期，请刷新");
+                // 再次检查内存缓存（Redis查询可能返回null）
+                CaptchaCacheEntry entry = captchaMemoryCache.get(request.getCaptchaKey());
+                if (entry != null && !entry.isExpired()) {
+                    cachedCode = entry.code;
+                } else {
+                    return Result.error("验证码已过期，请刷新");
+                }
             }
             
             if (!cachedCode.equals(request.getCaptcha())) {
-                redisTemplate.delete(redisKey); // 验证失败删除
+                try {
+                    redisTemplate.delete(redisKey); // 验证失败删除
+                } catch (Exception ignored) {}
+                captchaMemoryCache.remove(request.getCaptchaKey()); // 同时删除内存缓存
                 return Result.error("验证码错误");
             }
             
-            redisTemplate.delete(redisKey); // 验证成功删除
+            try {
+                redisTemplate.delete(redisKey); // 验证成功删除
+            } catch (Exception ignored) {}
+            captchaMemoryCache.remove(request.getCaptchaKey()); // 同时删除内存缓存
             
             // 检查用户是否存在
             SysUser user = sysUserService.getUserByUsername(request.getUsername());
@@ -237,7 +296,7 @@ public class AuthController {
         }
     }
 
-    @Operation(summary = "短信验证码登录")
+    @Operation(summary = "短信验证码登录", description = "手机号+短信验证码登录，无需密码")
     @PostMapping("/sms-login")
     public Result<LoginResponse> smsLogin(@Valid @RequestBody SmsLoginRequest request, HttpServletRequest httpRequest) {
         try {
@@ -299,7 +358,7 @@ public class AuthController {
         }
     }
 
-    @Operation(summary = "发送短信验证码")
+    @Operation(summary = "发送短信验证码", description = "发送短信验证码，支持login和reset场景")
     @PostMapping("/send-sms-code")
     public Result<Boolean> sendSmsCode(@Valid @RequestBody SmsCodeRequest request) {
         try {
@@ -318,7 +377,7 @@ public class AuthController {
         }
     }
     
-    @Operation(summary = "获取幂等性Token")
+    @Operation(summary = "获取幂等性Token", description = "获取防重复提交的幂等性Token，5分钟有效")
     @GetMapping("/idempotent-token")
     public Result<String> getIdempotentToken() {
         String token = UUID.randomUUID().toString().replace("-", "");
@@ -332,7 +391,7 @@ public class AuthController {
         return Result.success(token);
     }
 
-    @Operation(summary = "修改密码")
+    @Operation(summary = "修改密码", description = "已登录用户修改密码，需验证原密码")
     @PostMapping("/change-password")
     @OperationLog(module = "认证管理", action = "修改密码", description = "用户修改密码", riskLevel = 2)
     public Result<Void> changePassword(@RequestBody ChangePasswordRequest request) {
@@ -368,7 +427,7 @@ public class AuthController {
         }
     }
 
-    @Operation(summary = "重置密码（通过短信验证码）")
+    @Operation(summary = "重置密码（通过短信验证码）", description = "未登录用户通过手机短信验证码重置密码")
     @PostMapping("/reset-password")
     @OperationLog(module = "认证管理", action = "重置密码", description = "用户重置密码", riskLevel = 2)
     public Result<Void> resetPassword(@Valid @RequestBody SmsResetPasswordRequest request) {
@@ -395,7 +454,7 @@ public class AuthController {
         }
     }
 
-    @Operation(summary = "刷新Token")
+    @Operation(summary = "刷新Token", description = "使用refreshToken换取新的accessToken和refreshToken")
     @PostMapping("/refresh")
     public Result<LoginResponse> refreshToken(@RequestParam String refreshToken) {
         try {
@@ -477,7 +536,7 @@ public class AuthController {
         );
     }
 
-    @Operation(summary = "退出登录")
+    @Operation(summary = "退出登录", description = "退出登录，清除服务端Session")
     @PostMapping("/logout")
     @OperationLog(module = "认证管理", action = "退出登录", description = "用户退出登录", riskLevel = 0)
     public Result<Void> logout() {
@@ -486,7 +545,7 @@ public class AuthController {
         return Result.success();
     }
 
-    @Operation(summary = "获取用户信息")
+    @Operation(summary = "获取用户信息", description = "获取当前登录用户的详细信息，包含角色和权限列表")
     @GetMapping("/getUserInfo")
     public Result<UserInfoResponse> getUserInfo() {
         try {

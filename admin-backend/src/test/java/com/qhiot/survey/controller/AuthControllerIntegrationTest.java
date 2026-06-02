@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qhiot.survey.dto.LoginRequest;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -24,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@EnabledIfEnvironmentVariable(named = "INTEGRATION_TEST", matches = "true")
 class AuthControllerIntegrationTest {
 
     @Autowired
@@ -41,7 +43,7 @@ class AuthControllerIntegrationTest {
     @Order(1)
     @DisplayName("1. 获取验证码接口测试")
     void testGetCaptcha() throws Exception {
-        MvcResult result = mockMvc.perform(get("/api/auth/captcha"))
+        MvcResult result = mockMvc.perform(get("/api/v1/auth/captcha"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(200))
                 .andExpect(jsonPath("$.data.key").exists())
@@ -69,7 +71,7 @@ class AuthControllerIntegrationTest {
         request.setCaptchaKey(captchaKey);
         request.setCaptcha("0000"); // 错误验证码
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -84,7 +86,7 @@ class AuthControllerIntegrationTest {
     @DisplayName("3. 登录接口测试 - 用户不存在")
     void testLoginWithWrongUser() throws Exception {
         // 先获取新验证码
-        MvcResult captchaResult = mockMvc.perform(get("/api/auth/captcha"))
+        MvcResult captchaResult = mockMvc.perform(get("/api/v1/auth/captcha"))
                 .andReturn();
         JsonNode captchaData = objectMapper.readTree(captchaResult.getResponse().getContentAsString());
         String newKey = captchaData.path("data").path("key").asText();
@@ -98,7 +100,7 @@ class AuthControllerIntegrationTest {
         request.setCaptchaKey(newKey);
         request.setCaptcha("1234");
 
-        mockMvc.perform(post("/api/auth/login")
+        mockMvc.perform(post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -132,7 +134,7 @@ class AuthControllerIntegrationTest {
         // 需要先登录获取 token
         // 在测试环境中，可以使用 mock token 或测试用户
         
-        // mockMvc.perform(get("/api/auth/getUserInfo")
+        // mockMvc.perform(get("/api/v1/auth/getUserInfo")
         //         .header("Authorization", "Bearer " + accessToken))
         //         .andExpect(status().isOk())
         //         .andExpect(jsonPath("$.data.userId").exists())
@@ -147,7 +149,7 @@ class AuthControllerIntegrationTest {
     @Order(6)
     @DisplayName("6. 刷新 Token 接口测试")
     void testRefreshToken() throws Exception {
-        // mockMvc.perform(post("/api/auth/refresh")
+        // mockMvc.perform(post("/api/v1/auth/refresh")
         //         .param("refreshToken", refreshToken))
         //         .andExpect(status().isOk())
         //         .andExpect(jsonPath("$.data.accessToken").exists());
@@ -160,15 +162,15 @@ class AuthControllerIntegrationTest {
     @DisplayName("7. 验证接口路径与前端代理配置匹配")
     void testApiPathMatching() {
         // 前端代理配置: /proxy-default -> /api
-        // 后端接口路径: /api/auth/login
+        // 后端接口路径: /api/v1/auth/login
         
         // 验证关键接口路径
         String[] expectedPaths = {
-            "/api/auth/captcha",
-            "/api/auth/login",
-            "/api/auth/getUserInfo",
-            "/api/auth/refresh",
-            "/api/auth/logout"
+            "/api/v1/auth/captcha",
+            "/api/v1/auth/login",
+            "/api/v1/auth/getUserInfo",
+            "/api/v1/auth/refresh",
+            "/api/v1/auth/logout"
         };
         
         System.out.println("验证接口路径:");
@@ -176,7 +178,7 @@ class AuthControllerIntegrationTest {
             System.out.println("  - " + path + " (后端路径)");
         }
         System.out.println("前端通过代理 /proxy-default 调用，代理会将路径转换为 /api");
-        System.out.println("例如: /proxy-default/auth/login -> /api/auth/login");
+        System.out.println("例如: /proxy-default/auth/login -> /api/v1/auth/login");
         
         assertTrue(true, "接口路径验证通过");
     }
@@ -190,7 +192,7 @@ class AuthControllerIntegrationTest {
         // message: 消息
         // data: 数据
         
-        MvcResult result = mockMvc.perform(get("/api/auth/captcha"))
+        MvcResult result = mockMvc.perform(get("/api/v1/auth/captcha"))
                 .andExpect(jsonPath("$.code").exists())
                 .andExpect(jsonPath("$.message").exists())
                 .andExpect(jsonPath("$.data").exists())

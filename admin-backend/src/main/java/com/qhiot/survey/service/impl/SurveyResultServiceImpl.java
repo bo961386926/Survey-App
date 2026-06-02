@@ -4,12 +4,15 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qhiot.survey.common.BusinessException;
+import com.qhiot.survey.common.ResultCode;
 import com.qhiot.survey.common.enums.ResultStatus;
 import com.qhiot.survey.common.enums.SurveyPointStatus;
 import com.qhiot.survey.common.enums.YesNo;
 import com.qhiot.survey.dto.PageResult;
+import com.qhiot.survey.entity.SurveyAuditRecord;
 import com.qhiot.survey.entity.SurveyPoint;
 import com.qhiot.survey.entity.SurveyResult;
+import com.qhiot.survey.mapper.SurveyAuditRecordMapper;
 import com.qhiot.survey.mapper.SurveyPointMapper;
 import com.qhiot.survey.mapper.SurveyResultMapper;
 import com.qhiot.survey.service.SurveyResultService;
@@ -30,6 +33,7 @@ import java.util.stream.Collectors;
 public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, SurveyResult> implements SurveyResultService {
 
     private final SurveyPointMapper surveyPointMapper;
+    private final SurveyAuditRecordMapper surveyAuditRecordMapper;
 
     @Override
     public List<SurveyResult> getResultsByPointId(Long pointId) {
@@ -178,6 +182,9 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
             surveyPointMapper.updateById(point);
         }
 
+        // 保存审核记录(审核通过)
+        saveAuditRecord(result.getId(), result.getPointId(), auditorId, "pass", auditRemark, null);
+
         return true;
     }
 
@@ -223,7 +230,24 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
             surveyPointMapper.updateById(point);
         }
 
+        // 4. 保存审核记录(驳回) - 包含驳回原因、审核人、时间戳、原记录ID
+        saveAuditRecord(rejectedResult.getId(), rejectedResult.getPointId(), auditorId, "reject", auditRemark, null);
+
         return true;
+    }
+
+    /**
+     * 保存审核记录(保证 survey_audit_record 中留存审核决策、原因、时间)
+     */
+    private void saveAuditRecord(Long resultId, Long pointId, Long auditorId, String action, String comment, Long rejectTemplateId) {
+        SurveyAuditRecord record = new SurveyAuditRecord();
+        record.setResultId(resultId);
+        record.setPointId(pointId);
+        record.setAuditorId(auditorId);
+        record.setAction(action);
+        record.setAuditComment(comment);
+        record.setRejectTemplateId(rejectTemplateId);
+        surveyAuditRecordMapper.insert(record);
     }
 
     @Override
@@ -245,7 +269,7 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
 
     @Override
     @Transactional
-    public boolean submitForAudit(Long id, Long userId) {
+    public boolean submitForAudit(Long id, Long userId, Integer expectedVersionNo) {
         SurveyResult result = getById(id);
         if (result == null) {
             throw new BusinessException("勘查结果不存在");
@@ -259,6 +283,26 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
         // 校验操作人
         if (!result.getSurveyUserId().equals(userId)) {
             throw new BusinessException("无权操作");
+        }
+
+        // 版本冲突检测: 客户端传入的 versionNo 必须与当前记录版本一致，且不能低于同点位的最新版本
+        if (expectedVersionNo != null) {
+            if (!expectedVersionNo.equals(result.getVersionNo())) {
+                throw new BusinessException(ResultCode.VERSION_CONFLICT.getCode(),
+                        "提交的版本号(" + expectedVersionNo + ")与当前记录版本(" + result.getVersionNo() + ")不一致，请刷新后重试");
+            }
+            Integer maxVersionNo = lambdaQuery()
+                    .eq(SurveyResult::getPointId, result.getPointId())
+                    .select(SurveyResult::getVersionNo)
+                    .list()
+                    .stream()
+                    .mapToInt(SurveyResult::getVersionNo)
+                    .max()
+                    .orElse(0);
+            if (expectedVersionNo < maxVersionNo) {
+                throw new BusinessException(ResultCode.VERSION_CONFLICT.getCode(),
+                        "该点位已有更新版本(v" + maxVersionNo + ")，当前提交版本(v" + expectedVersionNo + ")已过期");
+            }
         }
 
         result.setResultStatus(ResultStatus.PENDING_AUDIT.getCode());

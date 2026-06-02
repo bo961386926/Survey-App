@@ -45,4 +45,9 @@ public interface CollabEntryService extends IService<CollabEntry> {
      * 获取访问日志
      */
     List<Object> getAccessLogs(Long entryId);
+
+    /**
+     * 为指定协作入口签发一个 loginType=collab 的 JWT，供第三方使用
+     */
+    String issueCollabToken(Long entryId);
 }

@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qhiot.survey.common.BusinessException;
 import com.qhiot.survey.common.enums.TemplateStatus;
+import com.qhiot.survey.config.CacheConfig;
 import com.qhiot.survey.entity.SurveyPointTemplateBinding;
 import com.qhiot.survey.entity.SurveyTemplate;
 import com.qhiot.survey.entity.SurveyTemplateVersion;
@@ -15,6 +16,8 @@ import com.qhiot.survey.mapper.SurveyTemplateVersionMapper;
 import com.qhiot.survey.service.SurveyTemplateService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -110,6 +113,7 @@ public class SurveyTemplateServiceImpl extends ServiceImpl<SurveyTemplateMapper,
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.TEMPLATE_VERSION_CACHE, allEntries = true)
     public SurveyTemplate updateTemplate(Long id, SurveyTemplate template) {
         SurveyTemplate existing = getById(id);
         if (existing == null) {
@@ -122,6 +126,7 @@ public class SurveyTemplateServiceImpl extends ServiceImpl<SurveyTemplateMapper,
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.TEMPLATE_VERSION_CACHE, allEntries = true)
     public void deleteTemplate(Long id) {
         SurveyTemplate existing = getById(id);
         if (existing == null) {
@@ -132,6 +137,7 @@ public class SurveyTemplateServiceImpl extends ServiceImpl<SurveyTemplateMapper,
 
     @Override
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.TEMPLATE_VERSION_CACHE, allEntries = true)
     public SurveyTemplateVersion publishTemplate(Long templateId, String fieldsJson, String rulesJson, String linkageRulesJson) {
         SurveyTemplate template = getById(templateId);
         if (template == null) {
@@ -177,12 +183,35 @@ public class SurveyTemplateServiceImpl extends ServiceImpl<SurveyTemplateMapper,
     }
 
     @Override
+    @Cacheable(cacheNames = CacheConfig.TEMPLATE_VERSION_CACHE, key = "'detail:' + #versionId", unless = "#result == null")
     public SurveyTemplateVersion getVersionDetail(Long versionId) {
         SurveyTemplateVersion version = surveyTemplateVersionMapper.selectById(versionId);
         if (version == null) {
             throw new BusinessException("版本不存在");
         }
         return version;
+    }
+
+    @Override
+    @Cacheable(cacheNames = CacheConfig.TEMPLATE_VERSION_CACHE, key = "'published:' + #templateId", unless = "#result == null")
+    public SurveyTemplateVersion getPublishedVersion(Long templateId) {
+        SurveyTemplate template = getById(templateId);
+        if (template == null || template.getCurrentVersionId() == null) {
+            return null;
+        }
+        SurveyTemplateVersion version = surveyTemplateVersionMapper.selectById(template.getCurrentVersionId());
+        if (version == null || version.getStatus() == null
+                || version.getStatus() != TemplateStatus.PUBLISHED.getCode()) {
+            return null;
+        }
+        return version;
+    }
+
+    @Override
+    @CacheEvict(cacheNames = CacheConfig.TEMPLATE_VERSION_CACHE, allEntries = true)
+    public void evictTemplateVersionCache(Long versionId) {
+        // allEntries=true 会清理主动发布/编辑后的所有模板版本缓存
+        log.debug("模板版本缓存已清除: versionId={}", versionId);
     }
 
     @Override

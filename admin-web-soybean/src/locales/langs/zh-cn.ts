@@ -158,6 +158,7 @@ const local: App.I18n.Schema = {
     500: '服务器错误',
     'iframe-page': '外链页面',
     home: '概览工作台',
+    dashboard: '分析看板',
     document: '文档',
     document_project: '项目文档',
     'document_project-link': '项目文档(外链)',
@@ -473,7 +474,7 @@ const local: App.I18n.Schema = {
     },
     pwd: {
       required: '请输入密码',
-      invalid: '密码格式不正确，6-18位字符，包含字母、数字、下划线或特殊字符(-@#$%^&*!)'
+      invalid: "密码格式不正确，6-18位字符，包含字母、数字、下划线或特殊字符(-{'@'}#$%^&*!)"
     },
     confirmPwd: {
       required: '请输入确认密码',

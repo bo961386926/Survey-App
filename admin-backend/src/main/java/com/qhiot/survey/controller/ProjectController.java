@@ -21,7 +21,7 @@ import java.util.Map;
  * 项目管理控制器
  */
 @Slf4j
-@Tag(name = "项目管理")
+@Tag(name = "项目管理", description = "项目增删改查、状态管理、归档恢复等接口")
 @RestController
 @RequestMapping(value = "/api/v1/project", produces = "application/json;charset=UTF-8")
 @RequiredArgsConstructor
@@ -29,14 +29,14 @@ public class ProjectController {
 
     private final ProjectService projectService;
 
-    @Operation(summary = "分页查询项目列表")
+    @Operation(summary = "分页查询项目列表", description = "支持按项目名称、编号、状态等条件分页查询")
     @GetMapping(value = "/page", produces = "application/json;charset=UTF-8")
     public Result<PageResult<Project>> queryProjectPage(ProjectQueryRequest request) {
         PageResult<Project> result = projectService.queryProjectPage(request);
         return Result.success(result);
     }
 
-    @Operation(summary = "获取项目详情")
+    @Operation(summary = "获取项目详情", description = "根据项目ID获取项目详细信息")
     @GetMapping(value = "/{id}", produces = "application/json;charset=UTF-8")
     public Result<Project> getProjectDetail(@PathVariable Long id) {
         log.info("====== [项目管理] 获取项目详情请求 - projectId: {} ======", id);
@@ -49,7 +49,7 @@ public class ProjectController {
         return Result.success(project);
     }
 
-    @Operation(summary = "创建项目")
+    @Operation(summary = "创建项目", description = "创建新项目，需ADMIN角色")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @OperationLog(module = "项目管理", action = "创建", description = "创建项目: #request.projectName", riskLevel = 1)
@@ -67,7 +67,7 @@ public class ProjectController {
         return success ? Result.success() : Result.error("创建项目失败");
     }
 
-    @Operation(summary = "更新项目")
+    @Operation(summary = "更新项目", description = "更新项目信息，需ADMIN角色")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @OperationLog(module = "项目管理", action = "更新", description = "更新项目ID: #id", riskLevel = 1)
@@ -84,7 +84,7 @@ public class ProjectController {
         }
     }
 
-    @Operation(summary = "删除项目")
+    @Operation(summary = "删除项目", description = "删除项目，需ADMIN角色，高风险操作")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @OperationLog(module = "项目管理", action = "删除", description = "删除项目ID: #id", riskLevel = 2)
@@ -105,7 +105,7 @@ public class ProjectController {
         }
     }
 
-    @Operation(summary = "变更项目状态")
+    @Operation(summary = "变更项目状态", description = "变更项目状态：0草稿、1进行中、2已暂停、3已完成、4已归档")
     @PutMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     @OperationLog(module = "项目管理", action = "变更状态", description = "变更项目状态, ID: #id, 目标状态: #targetStatus", riskLevel = 1)
@@ -117,14 +117,14 @@ public class ProjectController {
         return success ? Result.success() : Result.error("变更状态失败");
     }
 
-    @Operation(summary = "获取项目统计信息")
+    @Operation(summary = "获取项目统计信息", description = "获取指定项目下的点位数、勘查完成率等统计数据")
     @GetMapping("/{id}/statistics")
     public Result<Map<String, Object>> getProjectStatistics(@PathVariable Long id) {
         Map<String, Object> statistics = projectService.getProjectStatistics(id);
         return Result.success(statistics);
     }
 
-    @Operation(summary = "归档项目")
+    @Operation(summary = "归档项目", description = "将已完成的项目归档，归档后数据只读")
     @PutMapping("/{id}/archive")
     @PreAuthorize("hasRole('ADMIN')")
     @OperationLog(module = "项目管理", action = "归档", description = "归档项目ID: #id", riskLevel = 1)
@@ -133,7 +133,7 @@ public class ProjectController {
         return success ? Result.success() : Result.error("归档项目失败");
     }
 
-    @Operation(summary = "恢复项目（取消归档）")
+    @Operation(summary = "恢复项目（取消归档）", description = "取消项目归档状态，恢复为可编辑状态")
     @PutMapping("/{id}/restore")
     @PreAuthorize("hasRole('ADMIN')")
     @OperationLog(module = "项目管理", action = "恢复", description = "恢复项目ID: #id", riskLevel = 1)

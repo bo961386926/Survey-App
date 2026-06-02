@@ -23,3 +23,27 @@
 4. **高精度定位**: 地图人工纠偏
 5. **闭环审核**: 提交-审核-通过/驳回流程
 6. **跨端协同**: Web、小程序、App 三端数据打通
+
+## Docker 开发环境
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+```
+
+默认访问地址：
+
+- PC 管理后台: http://localhost:9527
+- 移动端 H5: http://localhost:3000
+- 后端 API: http://localhost:8081
+- 健康检查: http://localhost:8081/api/v1/health
+
+本地直接运行管理后台时需要 pnpm：
+
+```bash
+cd admin-web-soybean
+corepack enable
+corepack prepare pnpm@9.15.9 --activate
+pnpm install
+pnpm dev
+```

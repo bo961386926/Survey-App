@@ -13,6 +13,7 @@ public enum ResultCode {
     UNAUTHORIZED(401, "未授权"),
     FORBIDDEN(403, "禁止访问"),
     NOT_FOUND(404, "资源不存在"),
+    VERSION_CONFLICT(409, "数据版本冲突，请刷新后重试"),
     INTERNAL_ERROR(500, "服务器内部错误"),
     
     // 业务错误码

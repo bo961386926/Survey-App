@@ -44,6 +44,11 @@ public class ExportTask implements Serializable {
     
     private String fileUrl;
     
+    /**
+     * 磁盘文件名（存储在导出目录下的实际文件名）
+     */
+    private String fileName;
+    
     private Long fileSize;
     
     private LocalDateTime expireTime;

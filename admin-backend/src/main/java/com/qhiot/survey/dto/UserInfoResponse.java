@@ -1,6 +1,7 @@
 package com.qhiot.survey.dto;
 
 import com.qhiot.survey.common.util.PermissionRegistry;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -9,13 +10,26 @@ import lombok.Data;
  */
 @Data
 @AllArgsConstructor
+@Schema(description = "用户信息响应")
 public class UserInfoResponse {
+
+    @Schema(description = "用户ID", example = "1")
     private String userId;
+
+    @Schema(description = "用户名", example = "admin")
     private String userName;
+
+    @Schema(description = "真实姓名", example = "管理员")
     private String realName;
+
+    @Schema(description = "角色编码列表", example = "[\"admin\"]")
     private String[] roles;
+
     /** 权限码列表（通配符已展开） */
+    @Schema(description = "权限码列表（通配符已展开）", example = "[\"user:list\", \"user:create\"]")
     private String[] permissions;
+
+    @Schema(description = "按钮权限列表", example = "[]")
     private String[] buttons;
 
     /**

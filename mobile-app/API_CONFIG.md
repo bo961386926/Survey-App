@@ -6,7 +6,7 @@
 
 ## 当前配置
 
-**开发环境**: `http://localhost:8080/api/v1`
+**开发环境**: `http://localhost:8081/api/v1`
 **生产环境**: 需要修改 `.env.production`
 
 ## 后端服务检查
@@ -15,7 +15,7 @@
 
 ```bash
 # 检查后端服务状态
-curl http://localhost:8080/api/v1/auth/login
+curl http://localhost:8081/api/v1/auth/login
 ```
 
 如果返回连接拒绝,说明后端未启动。
@@ -35,7 +35,7 @@ java -jar target/survey-app.jar
 
 ```bash
 # 测试登录接口
-curl -X POST http://localhost:8080/api/v1/auth/login \
+curl -X POST http://localhost:8081/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}'
 ```
@@ -104,7 +104,7 @@ export default {
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:8080',
+        target: 'http://localhost:8081',
         changeOrigin: true,
         // 不要rewrite,保持/api/v1路径
       }
@@ -170,7 +170,7 @@ mvn spring-boot:run
 ### 2. 测试后端API
 ```bash
 # 测试登录
-curl -X POST http://localhost:8080/api/v1/auth/login \
+curl -X POST http://localhost:8081/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"admin123"}'
 ```
@@ -185,7 +185,7 @@ npm run dev:h5
 访问: `http://localhost:5173`
 
 ### 5. 检查Network面板
-- 登录请求应发送到: `http://localhost:8080/api/v1/auth/login`
+- 登录请求应发送到: `http://localhost:8081/api/v1/auth/login`
 - 状态码应为: `200`
 - 响应应包含: `token` 和 `user` 信息
 

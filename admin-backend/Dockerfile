@@ -5,9 +5,9 @@
 FROM maven:3.9.6-eclipse-temurin-17 AS builder
 WORKDIR /build
 
-# 配置 Maven 镜像加速（可选，取消注释即可使用阿里云镜像）
-# RUN mkdir -p /root/.m2 && \
-#     echo '<settings><mirrors><mirror><id>aliyun</id><mirrorOf>central</mirrorOf><name>Aliyun Maven Mirror</name><url>https://maven.aliyun.com/repository/public</url></mirror></mirrors></settings>' > /root/.m2/settings.xml
+# 配置 Maven 镜像加速（使用阿里云镜像避免国内网络超时）
+RUN mkdir -p /root/.m2 && \
+    echo '<settings><mirrors><mirror><id>aliyun</id><mirrorOf>central</mirrorOf><name>Aliyun Maven Mirror</name><url>https://maven.aliyun.com/repository/public</url></mirror></mirrors></settings>' > /root/.m2/settings.xml
 
 # 先复制 pom.xml 利用 Docker 缓存层
 COPY pom.xml .

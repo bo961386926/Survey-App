@@ -24,7 +24,7 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:survey_db}?useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci&serverTimezone=Asia/Shanghai&useSSL=${DB_USE_SSL:false}
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:survey_db}?useUnicode=true&characterEncoding=UTF-8&connectionCollation=utf8mb4_unicode_ci&serverTimezone=Asia/Shanghai&useSSL=${DB_USE_SSL:false}&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:root}
     druid:
@@ -42,12 +42,31 @@ spring:
           enabled: true
           slow-sql-millis: 2000
           log-slow-sql: true
+  # 邮件配置（密码下发兜底通道；未配置 host 时邮件服务自动降级为 Mock 模式）
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:465}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    from: ${MAIL_FROM:${MAIL_USERNAME:no-reply@qhiot.com}}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: ${MAIL_STARTTLS:true}
+          ssl:
+            enable: ${MAIL_SSL:true}
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
   # Redis配置
   data:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:qh-iot@2026}
+      password: ${REDIS_PASSWORD:redis_password}
       database: 0
       timeout: 5000ms
       lettuce:
@@ -90,7 +109,8 @@ aliyun:
     access-key-id: ${ALIYUN_SMS_ACCESS_KEY_ID:your-access-key-id}
     access-key-secret: ${ALIYUN_SMS_ACCESS_KEY_SECRET:your-access-key-secret}
     sign-name: ${ALIYUN_SMS_SIGN_NAME:青泓勘察}  # 短信签名
-    template-code: ${ALIYUN_SMS_TEMPLATE_CODE:SMS_123456789}  # 短信模板代码
+    template-code: ${ALIYUN_SMS_TEMPLATE_CODE:SMS_123456789}  # 短信模板代码（验证码）
+    password-template-code: ${ALIYUN_SMS_PWD_TEMPLATE_CODE:${ALIYUN_SMS_TEMPLATE_CODE:SMS_123456789}}  # 密码下发模板代码（建议单独申请）
     endpoint: dysmsapi.aliyuncs.com
 
 # Knife4j接口文档配置
@@ -118,3 +138,11 @@ cors:
 # 应用环境配置
 app:
   env: ${APP_ENV:prod}  # dev/test/prod
+  # 安全相关配置
+  security:
+    password-reset:
+      user-per-hour: ${PWD_RESET_USER_PER_HOUR:3}    # 单用户每小时被重置上限
+      admin-per-hour: ${PWD_RESET_ADMIN_PER_HOUR:10} # 单管理员每小时触发上限
+  notification:
+    email:
+      from-name: ${MAIL_FROM_NAME:青泓勘察系统}

@@ -158,6 +158,7 @@ const local: App.I18n.Schema = {
     500: 'Server Error',
     'iframe-page': 'Iframe',
     home: 'Home',
+    dashboard: 'Dashboard',
     document: 'Document',
     document_project: 'Project Document',
     'document_project-link': 'Project Document(External Link)',
@@ -472,7 +473,7 @@ const local: App.I18n.Schema = {
     },
     pwd: {
       required: 'Please enter password',
-      invalid: '6-18 characters, including letters, numbers, underscores, or special characters (-@#$%^&*!)'
+      invalid: "6-18 characters, including letters, numbers, underscores, or special characters (-{'@'}#$%^&*!)"
     },
     confirmPwd: {
       required: 'Please enter password again',

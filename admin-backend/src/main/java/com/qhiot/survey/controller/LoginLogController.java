@@ -5,6 +5,7 @@ import com.qhiot.survey.common.result.Result;
 import com.qhiot.survey.entity.LoginLog;
 import com.qhiot.survey.service.LoginLogService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -25,7 +26,7 @@ public class LoginLogController {
     @Autowired
     private LoginLogService loginLogService;
 
-    @Operation(summary = "分页查询登录日志")
+    @Operation(summary = "分页查询登录日志", description = "管理员分页查询登录日志，支持按用户名和登录状态筛选")
     @GetMapping("/page")
     @PreAuthorize("hasRole('ADMIN')")
     public Result<Page<LoginLog>> listByPage(
@@ -36,7 +37,7 @@ public class LoginLogController {
         return Result.success(loginLogService.listByPage(username, status, pageNum, pageSize));
     }
 
-    @Operation(summary = "导出登录日志")
+    @Operation(summary = "导出登录日志", description = "导出登录日志为Excel文件，支持筛选条件")
     @GetMapping("/export")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<byte[]> exportLogs(

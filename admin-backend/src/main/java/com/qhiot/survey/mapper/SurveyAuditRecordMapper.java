@@ -14,9 +14,7 @@ public interface SurveyAuditRecordMapper extends BaseMapper<SurveyAuditRecord> {
      * @param resultId 勘察结果ID
      * @return 最新的审核记录
      */
-    @Select("SELECT id, result_id, auditor_id, audit_status, audit_comment, " +
-            "audit_time, create_time, update_time, create_by, update_by " +
-            "FROM survey_audit_record " +
+    @Select("SELECT * FROM survey_audit_record " +
             "WHERE result_id = #{resultId} " +
             "ORDER BY create_time DESC LIMIT 1")
     SurveyAuditRecord selectLatestByResultId(@Param("resultId") Long resultId);

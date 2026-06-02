@@ -19,4 +19,9 @@ public interface SysDictService extends IService<SysDict> {
      * 根据字典编码获取字典项列表
      */
     List<Object> getDictItems(String dictCode);
+
+    /**
+     * 清除字典相关的 Redis 缓存。在新增/修改/删除字典或字典项之后调用。
+     */
+    void evictDictCache();
 }

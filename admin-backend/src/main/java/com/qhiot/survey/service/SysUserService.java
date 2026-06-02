@@ -50,6 +50,16 @@ public interface SysUserService extends IService<SysUser> {
     boolean resetPassword(Long id, String newPassword);
 
     /**
+     * 重置用户密码并异步下发新密码（短信优先，邮件兜底）
+     *
+     * @param id          目标用户ID
+     * @param rawPassword 明文新密码（服务端负责加密落库与下发）
+     * @param adminKey    发起重置的管理员标识（用于限流；可为空）
+     * @return 是否更新成功
+     */
+    boolean resetPasswordAndNotify(Long id, String rawPassword, String adminKey);
+
+    /**
      * 处理登录失败，增加失败次数，达到阈值后锁定
      * @param username 用户名
      */

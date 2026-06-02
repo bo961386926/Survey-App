@@ -103,6 +103,8 @@ docker compose logs -f admin-backend
 | MySQL | survey-mysql | 3306 | 3306 | 数据库 |
 | Redis | survey-redis | 6379 | 6379 | 缓存 |
 | Backend | survey-admin-backend | 8080 | 8081 | 后端API |
+| Admin Web | survey-admin-web | 9527 | 9527 | PC管理后台开发服务 |
+| Mobile H5 | survey-mobile-app | 3000 | 3000 | 移动端H5开发服务 |
 
 ---
 
@@ -116,6 +118,7 @@ DB_ROOT_PASSWORD=root           # MySQL root密码
 DB_NAME=survey_db               # 数据库名
 DB_USERNAME=survey_user         # 应用数据库用户
 DB_PASSWORD=survey_password     # 应用数据库密码
+DB_USE_SSL=false                # Docker 本地 MySQL 默认关闭 SSL
 DB_MAX_CONNECTIONS=200          # 最大连接数
 DB_BUFFER_POOL=256M             # InnoDB缓冲池大小
 
@@ -136,6 +139,8 @@ CORS_ALLOWED_ORIGINS=...        # 允许的跨域来源
 # MYSQL_PORT=3306
 # REDIS_PORT=6379
 # BACKEND_PORT=8081
+ADMIN_WEB_PORT=9527
+MOBILE_WEB_PORT=3000
 ```
 
 ---
@@ -146,6 +151,8 @@ CORS_ALLOWED_ORIGINS=...        # 允许的跨域来源
 
 | 服务 | URL | 说明 |
 |------|-----|------|
+| PC管理后台 | http://localhost:9527 | Vue 管理后台开发服务 |
+| 移动端H5 | http://localhost:3000 | 移动端 H5 开发服务 |
 | 后端API | http://localhost:8081 | REST API |
 | 健康检查 | http://localhost:8081/api/v1/health | 服务状态 |
 | API文档 | http://localhost:8081/doc.html | Knife4j接口文档 |

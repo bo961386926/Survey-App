@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qhiot.survey.common.BusinessException;
+import com.qhiot.survey.common.util.JwtUtil;
 import com.qhiot.survey.entity.CollabAccessLog;
 import com.qhiot.survey.entity.CollabEntry;
 import com.qhiot.survey.mapper.CollabAccessLogMapper;
@@ -12,6 +13,7 @@ import com.qhiot.survey.service.CollabEntryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -25,6 +27,9 @@ public class CollabEntryServiceImpl extends ServiceImpl<CollabEntryMapper, Colla
 
     @Autowired
     private CollabAccessLogMapper collabAccessLogMapper;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @Override
     public Page<CollabEntry> listByPage(String keyword, Integer pageNum, Integer pageSize) {
@@ -111,5 +116,27 @@ public class CollabEntryServiceImpl extends ServiceImpl<CollabEntryMapper, Colla
                         .last("LIMIT 100")
         );
         return logs.stream().map(log -> (Object) log).collect(Collectors.toList());
+    }
+
+    @Override
+    public String issueCollabToken(Long entryId) {
+        CollabEntry entry = getById(entryId);
+        if (entry == null) {
+            throw new BusinessException("协作入口不存在");
+        }
+        if (entry.getStatus() == null || entry.getStatus() != 1) {
+            throw new BusinessException("协作入口已失效");
+        }
+        long ttlMillis;
+        if (entry.getExpireTime() != null) {
+            ttlMillis = Duration.between(LocalDateTime.now(), entry.getExpireTime()).toMillis();
+            if (ttlMillis <= 0) {
+                throw new BusinessException("协作入口已过期");
+            }
+        } else {
+            // 未设置有效期时，默认 7 天
+            ttlMillis = 7L * 24 * 60 * 60 * 1000;
+        }
+        return jwtUtil.generateCollabToken(entry.getId(), entry.getEntryName(), ttlMillis);
     }
 }

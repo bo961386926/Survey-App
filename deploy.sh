@@ -47,6 +47,11 @@ if [ ! -f .env ]; then
     fi
 fi
 
+# 让脚本自身的健康检查也使用 .env 中的端口和密码配置。
+set -a
+source .env
+set +a
+
 # 询问是否清理旧数据
 echo -e "${YELLOW}是否清理旧的 Docker 数据卷？【注意：会删除所有数据库和缓存数据】${NC}"
 read -p "是否清理？(y/N): " clean_volumes
@@ -127,6 +132,8 @@ fi
 echo "=========================================="
 echo ""
 echo "📱 访问地址："
+echo "   - PC管理后台:    http://localhost:${ADMIN_WEB_PORT:-9527}"
+echo "   - 移动端H5:      http://localhost:${MOBILE_WEB_PORT:-3000}"
 echo "   - 后端API:       http://localhost:${BACKEND_PORT:-8081}"
 echo "   - 健康检查:      http://localhost:${BACKEND_PORT:-8081}/api/v1/health"
 echo "   - API文档:       http://localhost:${BACKEND_PORT:-8081}/doc.html"

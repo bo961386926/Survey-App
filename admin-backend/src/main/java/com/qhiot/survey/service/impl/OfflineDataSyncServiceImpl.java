@@ -3,11 +3,19 @@ package com.qhiot.survey.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qhiot.survey.common.BusinessException;
+import com.qhiot.survey.entity.LocationCorrectionLog;
 import com.qhiot.survey.entity.OfflineDataSync;
+import com.qhiot.survey.entity.SurveyPoint;
 import com.qhiot.survey.entity.SurveyResult;
+import com.qhiot.survey.entity.SysFile;
+import com.qhiot.survey.mapper.LocationCorrectionLogMapper;
 import com.qhiot.survey.mapper.OfflineDataSyncMapper;
+import com.qhiot.survey.mapper.SurveyPointMapper;
 import com.qhiot.survey.mapper.SurveyResultMapper;
+import com.qhiot.survey.mapper.SysFileMapper;
 import com.qhiot.survey.service.OfflineDataSyncService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +23,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -29,11 +38,25 @@ public class OfflineDataSyncServiceImpl extends ServiceImpl<OfflineDataSyncMappe
         implements OfflineDataSyncService {
 
     private final SurveyResultMapper surveyResultMapper;
+    private final SurveyPointMapper surveyPointMapper;
+    private final SysFileMapper sysFileMapper;
+    private final LocationCorrectionLogMapper locationCorrectionLogMapper;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * 默认最大重试次数
      */
     private static final int DEFAULT_MAX_RETRY = 3;
+
+    /**
+     * 冲突解决方案常量
+     */
+    private static final String RESOLUTION_SERVER_WINS = "server_wins";
+    private static final String RESOLUTION_CLIENT_WINS = "client_wins";
+    private static final String RESOLUTION_MERGE = "merge";
+    private static final String RESOLUTION_SERVER = "server";
+    private static final String RESOLUTION_CLIENT = "client";
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -331,31 +354,340 @@ public class OfflineDataSyncServiceImpl extends ServiceImpl<OfflineDataSyncMappe
 
     /**
      * 同步勘察结果数据
+     * 流程：解析JSON -> 版本校验 -> 冲突解决 -> 保存/更新结果 -> 更新点位状态
      */
     private void syncSurveyResult(OfflineDataSync sync) {
-        // 这里应该解析dataContent并保存到SurveyResult表
-        // 简化实现，实际需要根据业务逻辑处理
-        log.info("同步勘察结果: dataId={}", sync.getDataId());
-        
-        // TODO: 实现具体的同步逻辑
-        // 1. 检查是否存在冲突（同一数据点是否有更新版本）
-        // 2. 如果有冲突，标记为冲突状态
-        // 3. 如果没有冲突，保存到数据库
+        log.info("同步勘察结果: dataId={}, versionNo={}", sync.getDataId(), sync.getVersionNo());
+
+        Map<String, Object> clientData = parseDataContent(sync);
+        Long pointId = parseLong(clientData.get("pointId"));
+        if (pointId == null) {
+            throw new BusinessException("勘察结果同步失败: 缺少pointId");
+        }
+
+        // 查询当前数据库中该点位的最新结果（用于版本校验和冲突检测）
+        LambdaQueryWrapper<SurveyResult> resultWrapper = new LambdaQueryWrapper<>();
+        resultWrapper.eq(SurveyResult::getPointId, pointId)
+                     .orderByDesc(SurveyResult::getVersionNo)
+                     .last("LIMIT 1");
+        SurveyResult serverResult = surveyResultMapper.selectOne(resultWrapper);
+
+        Integer clientVersion = sync.getVersionNo() == null ? 1 : sync.getVersionNo();
+        Integer serverVersion = serverResult == null ? 0 : (serverResult.getVersionNo() == null ? 0 : serverResult.getVersionNo());
+
+        // 版本冲突检测：客户端版本落后于服务端
+        if (serverResult != null && clientVersion < serverVersion) {
+            String resolution = sync.getConflictResolution();
+            if (resolution == null || resolution.isEmpty()) {
+                throw new BusinessException("勘察结果版本冲突: 客户端v" + clientVersion + " < 服务端v" + serverVersion + "，待人工解决");
+            }
+            if (isServerWins(resolution)) {
+                log.info("勘察结果冲突解决[server_wins]: 保留服务端版本, syncId={}", sync.getId());
+                return;
+            }
+            if (RESOLUTION_MERGE.equalsIgnoreCase(resolution)) {
+                Map<String, Object> serverFormData = parseJsonToMap(serverResult.getFormData());
+                Map<String, Object> clientFormData = parseJsonToMap((String) clientData.get("formData"));
+                Map<String, Object> merged = mergeFields(serverFormData, clientFormData);
+                clientData.put("formData", writeJson(merged));
+                log.info("勘察结果冲突解决[merge]: 字段级合并, syncId={}", sync.getId());
+            }
+            // client_wins 走下面的覆盖逻辑
+        }
+
+        // 构建/更新 SurveyResult
+        SurveyResult target;
+        boolean isUpdate = serverResult != null && Objects.equals(clientVersion, serverVersion);
+        if (isUpdate) {
+            target = serverResult;
+        } else {
+            target = new SurveyResult();
+            target.setPointId(pointId);
+            target.setCreateTime(LocalDateTime.now());
+        }
+
+        target.setVersionNo(Math.max(clientVersion, serverVersion + (isUpdate ? 0 : 1)));
+        target.setTemplateVersionId(parseLong(clientData.get("templateVersionId")));
+        Object formData = clientData.get("formData");
+        target.setFormData(formData instanceof String ? (String) formData : writeJson(formData));
+        Object images = clientData.get("images");
+        if (images != null) {
+            target.setImages(images instanceof String ? (String) images : writeJson(images));
+        }
+        Integer resultStatus = parseInt(clientData.get("resultStatus"));
+        target.setResultStatus(resultStatus == null ? 1 : resultStatus);
+        Integer auditStatus = parseInt(clientData.get("auditStatus"));
+        target.setAuditStatus(auditStatus == null ? 0 : auditStatus);
+        Long surveyUserId = parseLong(clientData.get("surveyUserId"));
+        target.setSurveyUserId(surveyUserId == null ? sync.getUserId() : surveyUserId);
+        target.setSubmitTime(LocalDateTime.now());
+        target.setUpdateTime(LocalDateTime.now());
+
+        if (isUpdate) {
+            surveyResultMapper.updateById(target);
+        } else {
+            surveyResultMapper.insert(target);
+        }
+
+        // 更新点位状态：草稿/已提交 -> 待审核
+        SurveyPoint point = surveyPointMapper.selectById(pointId);
+        if (point != null) {
+            Integer newStatus = mapResultStatusToPointStatus(target.getResultStatus(), point.getStatus());
+            if (newStatus != null && !newStatus.equals(point.getStatus())) {
+                point.setStatus(newStatus);
+                point.setUpdateTime(LocalDateTime.now());
+                surveyPointMapper.updateById(point);
+            }
+        }
     }
 
     /**
      * 同步照片数据
+     * 流程：解析照片元数据 -> 创建/更新 SysFile -> 关联到勘察结果(更新images字段)
      */
     private void syncPhoto(OfflineDataSync sync) {
         log.info("同步照片: dataId={}", sync.getDataId());
-        // TODO: 实现照片同步逻辑
+
+        Map<String, Object> photoData = parseDataContent(sync);
+        String filePath = (String) photoData.get("filePath");
+        String fileName = (String) photoData.get("fileName");
+        if (filePath == null || filePath.isEmpty()) {
+            throw new BusinessException("照片同步失败: 缺少filePath");
+        }
+
+        Long resultId = parseLong(photoData.get("resultId"));
+        Long pointId = parseLong(photoData.get("pointId"));
+        Long bizId = resultId != null ? resultId : pointId;
+        String bizType = (String) photoData.getOrDefault("bizType", "survey_photo");
+
+        // 通过 filePath + bizId 检测重复，避免重复入库
+        LambdaQueryWrapper<SysFile> fileWrapper = new LambdaQueryWrapper<>();
+        fileWrapper.eq(SysFile::getFilePath, filePath)
+                   .eq(SysFile::getBizType, bizType);
+        if (bizId != null) {
+            fileWrapper.eq(SysFile::getBizId, bizId);
+        }
+        SysFile existing = sysFileMapper.selectOne(fileWrapper);
+
+        if (existing != null) {
+            // 冲突：服务端已存在同路径文件
+            String resolution = sync.getConflictResolution();
+            if (isServerWins(resolution)) {
+                log.info("照片同步[server_wins]: 服务端已存在, 跳过, syncId={}", sync.getId());
+                return;
+            }
+            // client_wins / merge: 更新元数据
+            existing.setFileName(fileName != null ? fileName : existing.getFileName());
+            Long size = parseLong(photoData.get("fileSize"));
+            if (size != null) existing.setFileSize(size);
+            String fileType = (String) photoData.get("fileType");
+            if (fileType != null) existing.setFileType(fileType);
+            sysFileMapper.updateById(existing);
+        } else {
+            SysFile file = new SysFile();
+            file.setFileName(fileName);
+            file.setFilePath(filePath);
+            file.setFileSize(parseLong(photoData.get("fileSize")));
+            file.setFileType((String) photoData.get("fileType"));
+            file.setBizType(bizType);
+            file.setBizId(bizId);
+            file.setCreatorId(sync.getUserId());
+            file.setCreateTime(LocalDateTime.now());
+            sysFileMapper.insert(file);
+            existing = file;
+        }
+
+        // 将照片URL/ID追加到 SurveyResult.images
+        if (resultId != null) {
+            SurveyResult result = surveyResultMapper.selectById(resultId);
+            if (result != null) {
+                List<String> imageList = parseJsonToList(result.getImages());
+                String photoUrl = filePath;
+                if (!imageList.contains(photoUrl)) {
+                    imageList.add(photoUrl);
+                    result.setImages(writeJson(imageList));
+                    result.setUpdateTime(LocalDateTime.now());
+                    surveyResultMapper.updateById(result);
+                }
+            } else {
+                log.warn("照片关联的勘察结果不存在: resultId={}", resultId);
+            }
+        }
     }
 
     /**
      * 同步位置数据
+     * 流程：解析坐标 -> 保存到 location_correction_log -> 视情况更新 SurveyPoint 坐标
      */
     private void syncLocation(OfflineDataSync sync) {
         log.info("同步位置: dataId={}", sync.getDataId());
-        // TODO: 实现位置数据同步逻辑
+
+        Map<String, Object> locationData = parseDataContent(sync);
+        Long pointId = parseLong(locationData.get("pointId"));
+        if (pointId == null) {
+            throw new BusinessException("位置同步失败: 缺少pointId");
+        }
+
+        BigDecimal correctedLng = parseBigDecimal(locationData.get("correctedLng"));
+        BigDecimal correctedLat = parseBigDecimal(locationData.get("correctedLat"));
+        if (correctedLng == null || correctedLat == null) {
+            throw new BusinessException("位置同步失败: 缺少纠偏坐标");
+        }
+
+        SurveyPoint point = surveyPointMapper.selectById(pointId);
+        if (point == null) {
+            throw new BusinessException("位置同步失败: 点位不存在 pointId=" + pointId);
+        }
+
+        BigDecimal originalLng = parseBigDecimal(locationData.get("originalLng"));
+        BigDecimal originalLat = parseBigDecimal(locationData.get("originalLat"));
+        if (originalLng == null) originalLng = point.getLongitude();
+        if (originalLat == null) originalLat = point.getLatitude();
+
+        // 写入纠偏日志
+        LocationCorrectionLog correctionLog = new LocationCorrectionLog();
+        correctionLog.setPointId(pointId);
+        correctionLog.setResultId(parseLong(locationData.get("resultId")));
+        correctionLog.setOriginalLng(originalLng);
+        correctionLog.setOriginalLat(originalLat);
+        correctionLog.setCorrectedLng(correctedLng);
+        correctionLog.setCorrectedLat(correctedLat);
+        correctionLog.setUserId(sync.getUserId());
+        correctionLog.setCreateTime(LocalDateTime.now());
+        locationCorrectionLogMapper.insert(correctionLog);
+
+        // 是否更新点位坐标：默认 applyToPoint=true，server_wins 时拒绝
+        boolean applyToPoint = !Boolean.FALSE.equals(locationData.get("applyToPoint"));
+        String resolution = sync.getConflictResolution();
+        if (applyToPoint && isServerWins(resolution)
+                && point.getLongitude() != null && point.getLatitude() != null) {
+            log.info("位置同步[server_wins]: 保留服务端坐标, syncId={}", sync.getId());
+            applyToPoint = false;
+        }
+
+        if (applyToPoint) {
+            point.setLongitude(correctedLng);
+            point.setLatitude(correctedLat);
+            point.setUpdateTime(LocalDateTime.now());
+            surveyPointMapper.updateById(point);
+        }
+    }
+
+    // ============================== 辅助方法 ==============================
+
+    /**
+     * 解析 dataContent JSON 为 Map
+     */
+    private Map<String, Object> parseDataContent(OfflineDataSync sync) {
+        String content = sync.getDataContent();
+        if (content == null || content.isEmpty()) {
+            throw new BusinessException("数据内容为空");
+        }
+        try {
+            return objectMapper.readValue(content, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception e) {
+            throw new BusinessException("数据内容JSON解析失败: " + e.getMessage());
+        }
+    }
+
+    private Map<String, Object> parseJsonToMap(String json) {
+        if (json == null || json.isEmpty()) return new HashMap<>();
+        try {
+            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception e) {
+            log.warn("JSON转Map失败, 返回空Map: {}", e.getMessage());
+            return new HashMap<>();
+        }
+    }
+
+    private List<String> parseJsonToList(String json) {
+        if (json == null || json.isEmpty()) return new ArrayList<>();
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            log.warn("JSON转List失败, 返回空List: {}", e.getMessage());
+            return new ArrayList<>();
+        }
+    }
+
+    private String writeJson(Object obj) {
+        if (obj == null) return null;
+        try {
+            return objectMapper.writeValueAsString(obj);
+        } catch (Exception e) {
+            throw new BusinessException("对象序列化为JSON失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 字段级合并：以客户端为主，仅在客户端缺失时回退到服务端
+     */
+    private Map<String, Object> mergeFields(Map<String, Object> server, Map<String, Object> client) {
+        Map<String, Object> merged = new HashMap<>(server == null ? new HashMap<>() : server);
+        if (client != null) {
+            for (Map.Entry<String, Object> entry : client.entrySet()) {
+                if (entry.getValue() != null) {
+                    merged.put(entry.getKey(), entry.getValue());
+                }
+            }
+        }
+        return merged;
+    }
+
+    /**
+     * 兼容 server / server_wins 两种命名
+     */
+    private boolean isServerWins(String resolution) {
+        return RESOLUTION_SERVER_WINS.equalsIgnoreCase(resolution)
+                || RESOLUTION_SERVER.equalsIgnoreCase(resolution);
+    }
+
+    /**
+     * 根据结果状态映射点位状态
+     * resultStatus: 0草稿 1已提交 2待审核 3已通过 4已驳回 5已归档
+     * pointStatus:  0待采集 1草稿中 2待审核 3审核通过 4驳回待修改 5已归档
+     */
+    private Integer mapResultStatusToPointStatus(Integer resultStatus, Integer currentPointStatus) {
+        if (resultStatus == null) return null;
+        switch (resultStatus) {
+            case 0: return 1; // 草稿
+            case 1:
+            case 2: return 2; // 已提交/待审核 -> 待审核
+            case 3: return 3; // 已通过
+            case 4: return 4; // 已驳回
+            case 5: return 5; // 已归档
+            default: return currentPointStatus;
+        }
+    }
+
+    private Long parseLong(Object value) {
+        if (value == null) return null;
+        if (value instanceof Number) return ((Number) value).longValue();
+        try {
+            return Long.parseLong(value.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private Integer parseInt(Object value) {
+        if (value == null) return null;
+        if (value instanceof Number) return ((Number) value).intValue();
+        try {
+            return Integer.parseInt(value.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private BigDecimal parseBigDecimal(Object value) {
+        if (value == null) return null;
+        if (value instanceof BigDecimal) return (BigDecimal) value;
+        if (value instanceof Number) return BigDecimal.valueOf(((Number) value).doubleValue());
+        try {
+            return new BigDecimal(value.toString());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

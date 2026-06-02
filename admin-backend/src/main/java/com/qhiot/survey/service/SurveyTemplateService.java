@@ -28,6 +28,17 @@ public interface SurveyTemplateService extends IService<SurveyTemplate> {
     List<SurveyTemplateVersion> getVersionList(Long templateId);
     
     SurveyTemplateVersion getVersionDetail(Long versionId);
+
+    /**
+     * 获取某个模板当前的“已发布”版本详情。未发布返回 null。
+     * 该查询在点位加载模板、移动端表单渲染、纯阅场景高频调用，适合加上中期缓存。
+     */
+    SurveyTemplateVersion getPublishedVersion(Long templateId);
+
+    /**
+     * 清除指定模板版本缓存；传 null 表示清除整个命名空间。
+     */
+    void evictTemplateVersionCache(Long versionId);
     
     void bindOutfallType(Long projectId, Long sectionId, String outfallType, Long templateId, Long templateVersionId);
     

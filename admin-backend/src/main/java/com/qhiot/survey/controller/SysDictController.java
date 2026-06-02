@@ -22,7 +22,7 @@ import java.util.List;
  * 数据字典控制器
  */
 @Slf4j
-@Tag(name = "数据字典管理")
+@Tag(name = "数据字典管理", description = "数据字典及字典项的增删改查、缓存管理等接口")
 @RestController
 @RequestMapping(value = "/api/v1/dict", produces = "application/json;charset=UTF-8")
 @RequiredArgsConstructor
@@ -31,7 +31,7 @@ public class SysDictController {
     private final SysDictService dictService;
     private final SysDictItemService dictItemService;
 
-    @Operation(summary = "分页查询字典列表")
+    @Operation(summary = "分页查询字典列表", description = "支持按字典编码、名称模糊查询分页")
     @GetMapping("/page")
     public Result<PageResult<SysDict>> queryDictPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
@@ -63,21 +63,21 @@ public class SysDictController {
         return Result.success(pageResult);
     }
 
-    @Operation(summary = "获取所有启用的字典")
+    @Operation(summary = "获取所有启用的字典", description = "获取状态为启用的全部字典列表")
     @GetMapping("/enabled")
     public Result<List<SysDict>> listEnabled() {
         List<SysDict> list = dictService.listEnabled();
         return Result.success(list);
     }
 
-    @Operation(summary = "获取字典详情")
+    @Operation(summary = "获取字典详情", description = "根据字典ID获取详细信息")
     @GetMapping("/{id}")
     public Result<SysDict> getDictDetail(@PathVariable Long id) {
         SysDict dict = dictService.getById(id);
         return Result.success(dict);
     }
 
-    @Operation(summary = "创建字典")
+    @Operation(summary = "创建字典", description = "创建新字典，字典编码必须唯一")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     @OperationLog(module = "数据字典", action = "创建", description = "创建字典: #dict.dictName", riskLevel = 1)
@@ -103,12 +103,13 @@ public class SysDictController {
         
         boolean success = dictService.save(dict);
         if (success) {
+            dictService.evictDictCache();
             log.info("====== [数据字典] 字典创建成功 - dictId: {} ======", dict.getId());
         }
         return success ? Result.success() : Result.error("创建字典失败");
     }
 
-    @Operation(summary = "更新字典")
+    @Operation(summary = "更新字典", description = "更新字典信息")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @OperationLog(module = "数据字典", action = "更新", description = "更新字典ID: #id", riskLevel = 1)
@@ -118,12 +119,13 @@ public class SysDictController {
         dict.setId(id);
         boolean success = dictService.updateById(dict);
         if (success) {
+            dictService.evictDictCache();
             log.info("====== [数据字典] 字典更新成功 - dictId: {} ======", id);
         }
         return success ? Result.success() : Result.error("更新字典失败");
     }
 
-    @Operation(summary = "删除字典")
+    @Operation(summary = "删除字典", description = "删除字典及其关联的所有字典项")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @OperationLog(module = "数据字典", action = "删除", description = "删除字典ID: #id", riskLevel = 2)
@@ -138,26 +140,27 @@ public class SysDictController {
         // 再删除字典
         boolean success = dictService.removeById(id);
         if (success) {
+            dictService.evictDictCache();
             log.info("====== [数据字典] 字典删除成功 - dictId: {} ======", id);
         }
         return success ? Result.success() : Result.error("删除字典失败");
     }
 
-    @Operation(summary = "获取字典项列表")
+    @Operation(summary = "获取字典项列表", description = "根据字典ID获取其下所有字典项")
     @GetMapping("/{id}/items")
     public Result<List<SysDictItem>> getDictItems(@PathVariable Long id) {
         List<SysDictItem> items = dictItemService.listByDictId(id);
         return Result.success(items);
     }
 
-    @Operation(summary = "根据字典编码获取字典项")
+    @Operation(summary = "根据字典编码获取字典项", description = "根据字典编码获取对应的字典项列表")
     @GetMapping("/code/{dictCode}/items")
     public Result<List<Object>> getDictItemsByCode(@PathVariable String dictCode) {
         List<Object> items = dictService.getDictItems(dictCode);
         return Result.success(items);
     }
 
-    @Operation(summary = "批量保存字典项")
+    @Operation(summary = "批量保存字典项", description = "批量保存指定字典下的字典项，会先清除原有项再重新写入")
     @PostMapping("/{id}/items/batch")
     @PreAuthorize("hasRole('ADMIN')")
     @OperationLog(module = "数据字典", action = "批量保存字典项", description = "批量保存字典项，字典ID: #id", riskLevel = 1)
@@ -184,6 +187,7 @@ public class SysDictController {
         
         boolean success = dictItemService.batchSave(id, items);
         if (success) {
+            dictService.evictDictCache();
             log.info("====== [数据字典] 字典项保存成功 - dictId: {} ======", id);
         }
         return success ? Result.success() : Result.error("保存字典项失败");

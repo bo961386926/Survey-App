@@ -1,26 +1,26 @@
 <template>
-  <AForm ref="formRef" :model="model" :rules="rules" @keyup.enter="handleSubmit" class="space-y-16px">
+  <AForm ref="formRef" :model="model" :rules="rules" layout="vertical" @keyup.enter="handleSubmit" class="space-y-16px">
     <AFormItem name="phone" class="mb-0!">
-      <div class="relative group">
-        <div class="absolute inset-y-0 left-16px flex-y-center pointer-events-none">
-          <div class="i-material-symbols:smartphone-outline text-secondary text-20px group-focus-within:text-primary transition-colors"></div>
+      <div class="relative w-full">
+        <div class="absolute left-16px top-1/2 -translate-y-1/2 z-10 flex-y-center pointer-events-none">
+          <div class="i-material-symbols:smartphone-outline text-[var(--color-text-secondary)] text-20px"></div>
         </div>
         <AInput
           v-model:value="model.phone"
-          class="pl-48px! h-52px! rd-12px! bg-card/60! border-border/50! focus:bg-card! transition-all!"
+          class="w-full h-52px! pl-48px! rd-12px! bg-[var(--bg-card-alt)]! border-1! border-solid! border-[var(--color-border)]! hover:border-[var(--color-primary)]! focus:border-[var(--color-primary)]! focus:bg-[var(--bg-card)]! focus:shadow-[0_0_0_2px_rgba(22,119,255,0.1)]! transition-all!"
           :placeholder="$t('page.login.common.phonePlaceholder')"
         />
       </div>
     </AFormItem>
     <AFormItem name="code" class="mb-0!">
       <div class="w-full flex-y-center gap-12px">
-        <div class="relative flex-1 group">
-          <div class="absolute inset-y-0 left-16px flex-y-center pointer-events-none">
-            <div class="i-material-symbols:verified-user-outline text-secondary text-20px group-focus-within:text-primary transition-colors"></div>
+        <div class="relative flex-1">
+          <div class="absolute left-16px top-1/2 -translate-y-1/2 z-10 flex-y-center pointer-events-none">
+            <div class="i-material-symbols:verified-user-outline text-[var(--color-text-secondary)] text-20px"></div>
           </div>
           <AInput
             v-model:value="model.code"
-            class="pl-48px! h-52px! rd-12px! bg-card/60! border-border/50! focus:bg-card! transition-all!"
+            class="w-full h-52px! pl-48px! rd-12px! bg-[var(--bg-card-alt)]! border-1! border-solid! border-[var(--color-border)]! hover:border-[var(--color-primary)]! focus:border-[var(--color-primary)]! focus:bg-[var(--bg-card)]! focus:shadow-[0_0_0_2px_rgba(22,119,255,0.1)]! transition-all!"
             :placeholder="$t('page.login.common.codePlaceholder')"
           />
         </div>
@@ -90,3 +90,6 @@ async function handleSubmit() {
   window.$message?.success($t('page.login.common.validateSuccess'));
 }
 </script>
+
+<style scoped>
+</style>

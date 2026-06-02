@@ -169,6 +169,7 @@ const routeMap: RouteMap = {
   "audit": "/audit",
   "audit_detail": "/audit/detail/:id",
   "audit_list": "/audit/list",
+  "dashboard": "/dashboard",
   "export": "/export",
   "export_list": "/export/list",
   "home": "/home",

@@ -14,12 +14,12 @@ import java.util.Map;
  * 健康检查控制器
  * 用于负载均衡器、容器编排系统检查服务状态
  */
-@Tag(name = "健康检查")
+@Tag(name = "健康检查", description = "服务健康状态检查接口，用于负载均衡和容器编排")
 @RestController
 @RequestMapping("/api/v1/health")
 public class HealthController {
     
-    @Operation(summary = "服务健康检查")
+    @Operation(summary = "服务健康检查", description = "返回服务基本状态信息")
     @GetMapping
     public Map<String, Object> health() {
         Map<String, Object> result = new HashMap<>();
@@ -30,7 +30,7 @@ public class HealthController {
         return result;
     }
     
-    @Operation(summary = "服务详细信息")
+    @Operation(summary = "服务详细信息", description = "返回服务详细状态，包含数据库、Redis、磁盘等组件状态")
     @GetMapping("/details")
     public Map<String, Object> healthDetails() {
         Map<String, Object> result = new HashMap<>();
@@ -49,7 +49,7 @@ public class HealthController {
         return result;
     }
     
-    @Operation(summary = "服务就绪检查")
+    @Operation(summary = "服务就绪检查", description = "检查服务是否就绪可接收流量")
     @GetMapping("/ready")
     public Map<String, Object> readiness() {
         Map<String, Object> result = new HashMap<>();

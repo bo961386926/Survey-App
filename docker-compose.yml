@@ -19,7 +19,9 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD:-survey_password}
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./init-sql:/docker-entrypoint-initdb.d
+      - ./init-sql/init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+      - ./init-sql/offline_data_sync.sql:/docker-entrypoint-initdb.d/01-offline-data-sync.sql:ro
+      - ./admin-backend/src/main/resources/db/project_member.sql:/docker-entrypoint-initdb.d/02-project-member.sql:ro
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
@@ -32,8 +34,8 @@ services:
     networks:
       - survey-network
     healthcheck:
-      # 使用 sh -c 确保容器内环境变量被正确展开
-      test: ["CMD", "sh", "-c", "mysqladmin ping -h localhost -u root -p$MYSQL_ROOT_PASSWORD"]
+      # 直接使用 Compose 展开的密码，避免容器内健康检查拿到空值
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p${DB_ROOT_PASSWORD:-root}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -65,8 +67,8 @@ services:
     networks:
       - survey-network
     healthcheck:
-      # 使用 sh -c 确保容器内环境变量被正确展开
-      test: ["CMD", "sh", "-c", "redis-cli -a $REDIS_PASSWORD ping"]
+      # 直接使用 Compose 展开的密码，避免容器内健康检查拿到空值
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD:-redis_password} ping"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -94,6 +96,7 @@ services:
       DB_NAME: ${DB_NAME:-survey_db}
       DB_USERNAME: ${DB_USERNAME:-survey_user}
       DB_PASSWORD: ${DB_PASSWORD:-survey_password}
+      DB_USE_SSL: ${DB_USE_SSL:-false}
       # Redis配置
       REDIS_HOST: redis
       REDIS_PORT: "6379"
@@ -142,12 +145,66 @@ services:
           cpus: '${BACKEND_CPU_RESERVE:-0.5}'
           memory: ${BACKEND_MEM_RESERVE:-512M}
 
+  # ========================================
+  # PC 管理后台（开发环境）
+  # ========================================
+  admin-web:
+    build:
+      context: ./admin-web-soybean
+      dockerfile: Dockerfile.dev
+    image: survey-admin-web-dev:latest
+    container_name: survey-admin-web
+    restart: unless-stopped
+    ports:
+      - "${ADMIN_WEB_PORT:-9527}:9527"
+    environment:
+      TZ: Asia/Shanghai
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - ./admin-web-soybean:/app
+      - admin-web-node-modules:/app/node_modules
+    depends_on:
+      admin-backend:
+        condition: service_healthy
+    networks:
+      - survey-network
+
+  # ========================================
+  # 移动端 H5（开发环境）
+  # ========================================
+  mobile-app:
+    build:
+      context: ./mobile-app
+      dockerfile: Dockerfile.dev
+    image: survey-mobile-app-dev:latest
+    container_name: survey-mobile-app
+    restart: unless-stopped
+    ports:
+      - "${MOBILE_WEB_PORT:-3000}:3000"
+    environment:
+      TZ: Asia/Shanghai
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+    volumes:
+      - ./mobile-app:/app
+      - mobile-app-node-modules:/app/node_modules
+    depends_on:
+      admin-backend:
+        condition: service_healthy
+    networks:
+      - survey-network
+
 volumes:
   mysql-data:
     driver: local
   redis-data:
     driver: local
   backend-logs:
+    driver: local
+  admin-web-node-modules:
+    driver: local
+  mobile-app-node-modules:
     driver: local
 
 networks:

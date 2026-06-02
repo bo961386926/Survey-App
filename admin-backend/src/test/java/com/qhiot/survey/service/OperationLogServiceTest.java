@@ -11,6 +11,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -39,6 +40,9 @@ class OperationLogServiceTest {
 
     @BeforeEach
     void setUp() {
+        // ServiceImpl 的 baseMapper 字段不会被 @InjectMocks 自动注入，手动设置
+        ReflectionTestUtils.setField(operationLogService, "baseMapper", operationLogMapper);
+
         testLog = new OperationLog();
         testLog.setId(1L);
         testLog.setUserId(100L);

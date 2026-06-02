@@ -5,18 +5,25 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qhiot.survey.common.BusinessException;
 import com.qhiot.survey.common.util.ExcelUtil;
 import com.qhiot.survey.common.util.PasswordGenerator;
+import com.qhiot.survey.config.CacheConfig;
 import com.qhiot.survey.dto.PageResult;
 import com.qhiot.survey.entity.SysRole;
 import com.qhiot.survey.entity.SysUser;
 import com.qhiot.survey.entity.Project;
 import com.qhiot.survey.entity.ProjectMember;
 import com.qhiot.survey.mapper.SysUserMapper;
+import com.qhiot.survey.service.PasswordNotificationService;
+import com.qhiot.survey.service.PasswordResetRateLimiter;
 import com.qhiot.survey.service.SysRoleService;
 import com.qhiot.survey.service.SysUserService;
 import com.qhiot.survey.service.ProjectMemberService;
 import com.qhiot.survey.service.ProjectService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,15 +46,21 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private final ProjectMemberService projectMemberService;
     private final ProjectService projectService;
     private final SysRoleService sysRoleService;
+    private final PasswordNotificationService passwordNotificationService;
+    private final PasswordResetRateLimiter passwordResetRateLimiter;
 
     public SysUserServiceImpl(PasswordEncoder passwordEncoder, StringRedisTemplate redisTemplate,
                               ProjectMemberService projectMemberService, ProjectService projectService,
-                              SysRoleService sysRoleService) {
+                              SysRoleService sysRoleService,
+                              PasswordNotificationService passwordNotificationService,
+                              PasswordResetRateLimiter passwordResetRateLimiter) {
         this.passwordEncoder = passwordEncoder;
         this.redisTemplate = redisTemplate;
         this.projectMemberService = projectMemberService;
         this.projectService = projectService;
         this.sysRoleService = sysRoleService;
+        this.passwordNotificationService = passwordNotificationService;
+        this.passwordResetRateLimiter = passwordResetRateLimiter;
     }
 
     /**
@@ -61,12 +74,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private static final int LOCK_DURATION_MINUTES = 30;
 
     @Override
+    @Cacheable(cacheNames = CacheConfig.USER_CACHE, key = "'username:' + #username", unless = "#result == null")
     public SysUser getUserByUsername(String username) {
         return lambdaQuery().eq(SysUser::getUsername, username).one();
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = CacheConfig.USER_CACHE, allEntries = true)
     public boolean createUser(SysUser user) {
         // 检查用户名是否已存在
         if (getUserByUsername(user.getUsername()) != null) {
@@ -79,6 +94,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = CacheConfig.USER_CACHE, allEntries = true)
     public boolean updateUser(SysUser user) {
         log.info("====== [用户服务] 开始更新用户 - userId: {} ======", user.getId());
         
@@ -102,6 +118,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = CacheConfig.USER_CACHE, allEntries = true)
     public boolean deleteUser(Long id) {
         SysUser user = getById(id);
         if (user == null) {
@@ -148,6 +165,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
+    @CacheEvict(cacheNames = CacheConfig.USER_CACHE, allEntries = true)
     public boolean updateUserStatus(Long id, Integer status) {
         SysUser user = getById(id);
         if (user == null) {
@@ -161,6 +179,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = CacheConfig.USER_CACHE, allEntries = true)
     public boolean resetPassword(Long id, String newPassword) {
         SysUser user = getById(id);
         if (user == null) {
@@ -170,6 +189,65 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         updateUser.setId(id);
         updateUser.setPassword(newPassword);
         return updateById(updateUser);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(cacheNames = CacheConfig.USER_CACHE, allEntries = true)
+    public boolean resetPasswordAndNotify(Long id, String rawPassword, String adminKey) {
+        if (id == null) {
+            throw new BusinessException("用户ID不能为空");
+        }
+        if (!StringUtils.hasText(rawPassword)) {
+            throw new BusinessException("新密码不能为空");
+        }
+
+        SysUser user = getById(id);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        // 限流：超限时会抛 BusinessException，拦住后续的密码重置
+        String adminIdentifier = StringUtils.hasText(adminKey) ? adminKey : resolveCurrentAdmin();
+        passwordResetRateLimiter.acquire(id, adminIdentifier);
+
+        SysUser updateUser = new SysUser();
+        updateUser.setId(id);
+        updateUser.setPassword(passwordEncoder.encode(rawPassword));
+        // 重置后要求首次登录修改
+        updateUser.setIsFirstLogin(1);
+
+        boolean updated = updateById(updateUser);
+        if (!updated) {
+            log.error("[用户服务] 重置密码更新失败 - userId: {}", id);
+            return false;
+        }
+
+        // 异步下发新密码：失败不影响主流程
+        try {
+            passwordNotificationService.notifyPasswordReset(user, rawPassword);
+        } catch (Exception e) {
+            log.error("[用户服务] 提交密码下发任务异常，忽略： userId={}, error={}",
+                    id, e.getMessage(), e);
+        }
+        log.info("[用户服务] 密码重置成功，已提交异步通知: userId={}, admin={}",
+                id, adminIdentifier);
+        return true;
+    }
+
+    /**
+     * 从 Spring Security 上下文获取当前管理员标识，获取不到时返回空字符串
+     */
+    private String resolveCurrentAdmin() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth != null && auth.isAuthenticated() && StringUtils.hasText(auth.getName())) {
+                return auth.getName();
+            }
+        } catch (Exception e) {
+            log.debug("[用户服务] 获取当前管理员上下文失败: {}", e.getMessage());
+        }
+        return "";
     }
 
     @Override
@@ -334,14 +412,18 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 String strongPassword = PasswordGenerator.generateStrongPassword();
                 user.setPassword(passwordEncoder.encode(strongPassword));
                 
-                // TODO: 应该通过邮件或短信发送密码给用户
-                log.info("创建用户: username={}, 初始密码={} (应通过邮件/短信发送)", username, strongPassword);
-                
                 user.setStatus(1);
                 user.setLoginFailCount(0);
                 user.setIsFirstLogin(1);
                 
                 if (save(user)) {
+                    // 异步下发初始密码到用户（短信优先，邮件兜底）
+                    try {
+                        passwordNotificationService.notifyPasswordReset(user, strongPassword);
+                    } catch (Exception ex) {
+                        log.error("提交初始密码下发任务失败: username={}, error={}",
+                                username, ex.getMessage(), ex);
+                    }
                     // 如果 Excel 中指定了角色名称，通过 sys_user_role 分配角色
                     if (StringUtils.hasText(roleName)) {
                         // 查询 sys_role 表中匹配的角色

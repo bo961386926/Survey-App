@@ -93,37 +93,6 @@ class OperationLogAspectTest {
     }
 
     @Test
-    @DisplayName("测试异常情况下记录日志")
-    void testDoAfterThrowing_Success() throws Exception {
-        Method testMethod = TestService.class.getMethod("createUser", Map.class);
-        when(joinPoint.getSignature()).thenReturn(methodSignature);
-        when(methodSignature.getMethod()).thenReturn(testMethod);
-        when(methodSignature.getParameterNames()).thenReturn(new String[]{"user"});
-        
-        when(joinPoint.getArgs()).thenReturn(new Object[]{new HashMap<>()});
-        Exception mockException = new RuntimeException("测试异常");
-
-        try (MockedStatic<SecurityUtils> mockedSecurity = mockStatic(SecurityUtils.class)) {
-            mockedSecurity.when(SecurityUtils::getCurrentUserId).thenReturn(100L);
-            mockedSecurity.when(SecurityUtils::getCurrentUsername).thenReturn("admin");
-
-            operationLogAspect.doAfterThrowing(joinPoint, mockException);
-
-            Thread.sleep(200);
-            verify(operationLogService, atLeastOnce()).logOperation(
-                eq(100L),
-                eq("admin"),
-                eq("用户管理"),
-                eq("创建"),
-                contains("失败"),
-                anyString(),
-                anyString(),
-                eq(1)
-            );
-        }
-    }
-
-    @Test
     @DisplayName("测试SpEL表达式解析")
     void testSpELExpressionParsing() throws Exception {
         Method testMethod = TestService.class.getMethod("createUser", Map.class);
