@@ -1,0 +1,1 @@
+ALTER TABLE sys_task ADD COLUMN IF NOT EXISTS category VARCHAR(100) COMMENT '任务类型/类别';

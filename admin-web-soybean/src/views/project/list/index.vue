@@ -13,12 +13,7 @@ import {
   CheckCircleOutlined,
   StopOutlined,
   DeleteOutlined,
-  FolderOpenOutlined,
-  WarningOutlined,
-  CheckSquareOutlined,
-  EnvironmentOutlined,
-  ClockCircleOutlined,
-  SendOutlined
+  EnvironmentOutlined
 } from '@ant-design/icons-vue';
 import {
   fetchGetProjectList,
@@ -31,7 +26,7 @@ import { useAuth } from '@/hooks/common/auth';
 defineOptions({ name: 'ProjectList' });
 
 const router = useRouter();
-const { hasPermission, canManageProject } = useAuth();
+const { hasPermission } = useAuth();
 
 // Search Filter
 const searchForm = ref({
@@ -55,14 +50,13 @@ const pagination = ref({
 });
 
 const columns = computed(() => [
-  { title: '项目名称', dataIndex: 'projectName', key: 'projectName', width: 240, ellipsis: true },
-  { title: '项目编号', dataIndex: 'projectCode', key: 'projectCode', width: 160 },
-  { title: '负责人', dataIndex: 'manager', key: 'manager', width: 100 },
-  { title: '区域', dataIndex: 'region', key: 'region', width: 120 },
-  { title: '进度', dataIndex: 'progress', key: 'progress', width: 140 },
-  { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
-  { title: '起止日期', key: 'dateRange', width: 180 },
-  { title: '操作', key: 'action', width: 188, fixed: 'right' as const }
+  { title: '项目编号', dataIndex: 'projectCode', key: 'projectCode', width: 140 },
+  { title: '项目名称 / 勘察区域', key: 'projectNameRegion', width: 280 },
+  { title: '负责人', dataIndex: 'manager', key: 'manager', width: 120 },
+  { title: '勘察进度', key: 'progress', width: 180 },
+  { title: '当前状态', key: 'status', width: 120 },
+  { title: '更新时间', key: 'updateTime', width: 160 },
+  { title: '操作', key: 'action', width: 80, fixed: 'right' as const }
 ]);
 
 const loadData = async () => {
@@ -144,6 +138,46 @@ const handleCreateSuccess = () => {
   loadData();
 };
 
+// Initials and Color Helpers for Avatar
+const getInitials = (name: string) => {
+  if (!name) return '??';
+  if (/[\u4e00-\u9fa5]/.test(name)) {
+    return name.length > 2 ? name.substring(name.length - 2) : name;
+  }
+  const parts = name.split(' ');
+  if (parts.length > 1) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+};
+
+const getAvatarBgColor = (name: string) => {
+  if (!name) return '#a0aec0';
+  const colors = ['#1677ff', '#52c41a', '#faad14', '#13c2c2', '#722ed1', '#eb2f96'];
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return colors[Math.abs(hash) % colors.length];
+};
+
+const formatDateTime = (dateTimeStr: string) => {
+  if (!dateTimeStr) return ['--', ''];
+  const parts = dateTimeStr.split(' ');
+  if (parts.length === 2) {
+    return [parts[0], parts[1]];
+  }
+  try {
+    const d = new Date(dateTimeStr);
+    if (isNaN(d.getTime())) return [dateTimeStr, ''];
+    const date = d.toISOString().split('T')[0];
+    const time = d.toTimeString().split(' ')[0];
+    return [date, time];
+  } catch (e) {
+    return [dateTimeStr, ''];
+  }
+};
+
 // 状态映射辅助函数
 const getStatusClass = (status: number | string) => {
   const statusMap: Record<number, string> = {
@@ -159,36 +193,30 @@ const getStatusClass = (status: number | string) => {
 const getStatusText = (status: number | string) => {
   const textMap: Record<number, string> = {
     0: '草稿',
-    1: '进行中',
-    2: '已暂停',
+    1: '勘察中',
+    2: '待审核',
     3: '已完成',
     4: '已归档'
   };
   return textMap[Number(status)] || '未知';
 };
 
-const iconMap: Record<string, any> = {
-  folder: FolderOutlined,
-  trending: CheckSquareOutlined,
-  warning: WarningOutlined,
-  task: CheckCircleOutlined
-};
-
 const metrics = computed(() => [
-  { title: '总项目', value: 1284, icon: iconMap.folder, color: 'var(--color-primary)' },
-  { title: '进行中', value: 42, icon: iconMap.trending, color: 'var(--color-primary)' },
-  { title: '逾期风险', value: 3, icon: iconMap.warning, color: 'var(--color-warning)' },
-  { title: '本月完成', value: 156, icon: iconMap.task, color: 'var(--color-success)' }
+  { title: '本年度活跃项目', value: 248, badge: '+12.5%', icon: 'material-symbols:folder-open-outline-rounded', color: '#1677ff' },
+  { title: '进行中项目', value: 156, icon: 'material-symbols:play-circle-outline-rounded', color: '#52c41a' },
+  { title: '已延期项目', value: 12, icon: 'material-symbols:warning-outline-rounded', color: '#faad14' },
+  { title: '系统健康度', value: '94%', icon: 'material-symbols:health-and-safety-outline-rounded', color: '#722ed1', subtitle: '资源分配与并发请求状态良好' }
 ]);
 
-const statusOptions = [
-  { label: '全部', value: undefined as string | undefined, dotClass: 'bg-[var(--color-text-disabled)]' },
-  { label: '草稿', value: '0', dotClass: 'bg-[var(--color-info)]' },
-  { label: '进行中', value: '1', dotClass: 'bg-[var(--color-primary)]' },
-  { label: '已暂停', value: '2', dotClass: 'bg-[var(--color-warning)]' },
-  { label: '已完成', value: '3', dotClass: 'bg-[var(--color-success)]' },
-  { label: '已归档', value: '4', dotClass: 'bg-[var(--color-secondary)]' }
+const filterTabs = [
+  { label: '全部', value: undefined as string | undefined },
+  { label: '勘察中', value: '1' },
+  { label: '待审核', value: '2' }
 ];
+
+const handleAdvancedSearch = () => {
+  message.info('高级筛选功能开发中...');
+};
 
 onMounted(() => {
   loadData();
@@ -198,7 +226,7 @@ onMounted(() => {
 <template>
   <div class="h-full flex-col gap-24px p-24px overflow-y-auto project-list-page">
     <!-- Page Header -->
-    <div class="flex justify-between items-center page-header">
+    <div class="flex justify-between items-center page-header mb-16px">
       <div class="flex items-center gap-12px">
         <div class="page-header-icon">
           <FolderOutlined class="text-20px" />
@@ -208,54 +236,81 @@ onMounted(() => {
           <p class="text-12px text-[var(--color-text-secondary)] mt-2px">管理和追踪所有勘察项目进度</p>
         </div>
       </div>
-      <AButton v-if="hasPermission('project:create')" type="primary" class="create-btn" @click="handleCreateProject">
-        <span>新建项目</span>
-      </AButton>
     </div>
 
     <!-- Stats Bar -->
-    <div class="metrics-grid">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16px mb-20px">
+      <!-- Card 1-4: White glass cards -->
       <div
         v-for="item in metrics"
         :key="item.title"
-        class="metric-card group"
+        class="metric-card bg-white/75 dark:bg-[#1e293b]/75 border border-white/40 dark:border-white/10 rounded-12px p-16px backdrop-blur-md shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-2px flex flex-col justify-between min-h-100px"
       >
-        <div class="flex items-center justify-between mb-8px">
-          <span class="text-12px text-[var(--color-text-secondary)]">{{ item.title }}</span>
-          <div class="metric-icon-wrapper" :style="{ color: item.color }">
-            <component :is="item.icon" class="metric-icon" />
+        <div class="flex items-center justify-between mb-12px">
+          <span class="text-13px text-[var(--color-text-secondary)] font-500">{{ item.title }}</span>
+          <div class="flex items-center gap-6px">
+            <span
+              v-if="item.badge"
+              class="px-8px py-2px rounded-full text-10px font-600 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"
+            >
+              {{ item.badge }}
+            </span>
+            <div class="w-32px h-32px rounded-8px flex items-center justify-center" :style="{ backgroundColor: item.color + '15', color: item.color }">
+              <SvgIcon :icon="item.icon" class="text-18px" />
+            </div>
           </div>
         </div>
-        <div class="metric-value">{{ item.value.toLocaleString() }}</div>
-        <!-- 底部装饰线 -->
-        <div class="metric-line" :style="{ background: `linear-gradient(90deg, transparent, ${item.color}40, transparent)` }"></div>
+        <div>
+          <div class="text-24px font-700 text-[var(--color-text-primary)] tracking-tight leading-none">
+            {{ typeof item.value === 'number' ? item.value.toLocaleString() : item.value }}
+          </div>
+          <div v-if="item.subtitle" class="text-11px text-[var(--color-text-placeholder)] mt-6px">
+            {{ item.subtitle }}
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Table Section -->
     <div class="table-card" v-mouse-glow="{ color: '22,119,255', size: 300, intensity: 0.04 }">
       <!-- Filter Bar -->
-      <div class="filter-bar">
-        <div class="w-180px">
-          <AInput v-model:value="searchForm.keyword" placeholder="搜索项目名称或编号..." class="w-full h-32px" @pressEnter="handleSearch" allow-clear>
-            <template #prefix>
-              <SearchOutlined class="text-14px text-[var(--color-text-secondary)]" />
-            </template>
-          </AInput>
+      <div class="flex justify-between items-center px-20px py-14px border-b border-[var(--color-divider)]">
+        <div class="flex items-center gap-16px">
+          <h3 class="text-15px font-700 text-[var(--color-text-primary)] m-0">项目列表数据</h3>
+          <!-- Tabs -->
+          <div class="flex gap-4px bg-gray-100 dark:bg-zinc-800 p-2px rd-6px">
+            <button
+              v-for="opt in filterTabs"
+              :key="opt.label"
+              class="px-14px h-28px rd-4px flex items-center cursor-pointer transition-all border-none text-12px font-500"
+              :class="searchForm.status === opt.value ? 'bg-white dark:bg-zinc-700 text-[var(--color-primary)] shadow-sm' : 'bg-transparent text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)]'"
+              @click="searchForm.status = opt.value; handleSearch()"
+            >
+              {{ opt.label }}
+            </button>
+          </div>
         </div>
 
-        <!-- Status Filter Toggle Buttons -->
-        <div class="flex gap-8px">
-          <div 
-            v-for="status in statusOptions" 
-            :key="status.label"
-            class="px-12px h-32px rd-4px flex items-center cursor-pointer transition-all border"
-            :class="searchForm.status === status.value ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white' : 'bg-[var(--bg-card-alt)] border-[var(--color-border)] text-[var(--color-text-secondary)] hover:border-[var(--color-primary)]'"
-            @click="searchForm.status = status.value; handleSearch()"
-          >
-            <div v-if="status.value" class="w-6px h-6px rd-full mr-8px" :class="searchForm.status === status.value ? 'bg-white' : status.dotClass"></div>
-            <span class="text-13px">{{ status.label }}</span>
-          </div>
+        <div class="flex items-center gap-12px">
+          <AInput v-model:value="searchForm.keyword" placeholder="搜索项目名称或编号..." class="w-200px h-32px" @pressEnter="handleSearch" allow-clear>
+            <template #prefix>
+              <SearchOutlined class="text-13px text-[var(--color-text-secondary)]" />
+            </template>
+          </AInput>
+          
+          <AButton class="h-32px px-12px flex items-center gap-6px" @click="handleAdvancedSearch">
+            <template #icon>
+              <SvgIcon icon="material-symbols:filter-alt-outline-rounded" class="text-14px" />
+            </template>
+            <span>高级筛选</span>
+          </AButton>
+
+          <AButton v-if="hasPermission('project:create')" type="primary" class="h-32px px-14px flex items-center gap-6px" @click="handleCreateProject">
+            <template #icon>
+              <PlusOutlined />
+            </template>
+            <span>新建项目</span>
+          </AButton>
         </div>
       </div>
 
@@ -268,39 +323,55 @@ onMounted(() => {
         @change="handleTableChange"
         rowKey="id"
         class="project-table"
-        :scroll="{ y: 'calc(100vh - 430px)' }"
+        :scroll="{ x: 1100, y: 'calc(100vh - 430px)' }"
       >
         <template #bodyCell="{ column, record }">
-          <!-- Project Name -->
-          <template v-if="column.key === 'projectName'">
-            <div class="project-cell" @click="handleViewProject(record.id)">
-              <div class="project-icon-wrapper">
-                <EnvironmentOutlined class="text-16px text-[var(--color-primary)]" />
-              </div>
-              <span class="project-name">{{ record.projectName }}</span>
-            </div>
-          </template>
-
           <!-- Project Code -->
           <template v-if="column.key === 'projectCode'">
-            <span class="font-mono text-12px text-[var(--color-text-secondary)]">{{ record.projectCode || '--' }}</span>
+            <span class="font-mono font-600 text-13px text-[var(--color-text-primary)]">{{ record.projectCode || '--' }}</span>
           </template>
 
-          <!-- Region -->
-          <template v-if="column.key === 'region'">
-            <span class="text-13px text-[var(--color-text-secondary)]">{{ record.region || '--' }}</span>
+          <!-- Project Name & Region -->
+          <template v-if="column.key === 'projectNameRegion'">
+            <div class="flex flex-col gap-4px py-4px">
+              <span class="text-14px font-600 text-[var(--color-text-primary)] hover:text-[var(--color-primary)] transition-colors cursor-pointer" @click="handleViewProject(record.id)">
+                {{ record.projectName }}
+              </span>
+              <span class="text-12px text-[var(--color-text-secondary)] flex items-center gap-4px">
+                <SvgIcon icon="material-symbols:location-on-outline-rounded" class="text-14px text-gray-400" />
+                {{ record.region || '未设定区域' }}
+              </span>
+            </div>
           </template>
 
           <!-- Manager -->
           <template v-if="column.key === 'manager'">
-            <span class="manager-text">{{ record.manager || '未指派' }}</span>
+            <div class="flex items-center gap-8px">
+              <div 
+                class="w-24px h-24px rd-full flex items-center justify-center text-10px font-600 text-white select-none"
+                :style="{ backgroundColor: getAvatarBgColor(record.manager) }"
+              >
+                {{ getInitials(record.manager) }}
+              </div>
+              <span class="text-13px font-500 text-[var(--color-text-primary)]">{{ record.manager || '未指派' }}</span>
+            </div>
           </template>
 
           <!-- Progress -->
           <template v-if="column.key === 'progress'">
-            <div class="progress-wrapper">
-              <AProgress :percent="getProgressPercent(record)" size="small" :show-info="false" :stroke-width="6" class="progress-bar" />
-              <span class="progress-text">{{ getProgressPercent(record) }}%</span>
+            <div class="flex flex-col gap-4px w-full max-w-160px">
+              <div class="flex justify-between items-center text-11px text-[var(--color-text-secondary)]">
+                <span>{{ getProgressPercent(record) }}%</span>
+                <span class="font-mono">{{ record.completedCount || 0 }}/{{ record.pointCount || 0 }}</span>
+              </div>
+              <AProgress 
+                :percent="getProgressPercent(record)" 
+                size="small" 
+                :show-info="false" 
+                :stroke-width="5" 
+                :stroke-color="record.status == 2 ? '#ff7d00' : '#1677ff'" 
+                class="m-0!" 
+              />
             </div>
           </template>
 
@@ -310,76 +381,25 @@ onMounted(() => {
               class="status-tag"
               :class="getStatusClass(record.status)"
             >
-              <span v-if="record.status == 1" class="status-dot status-dot--pulse"></span>
-              <span v-else class="status-dot"></span>
+              <span class="status-dot" :class="record.status == 1 ? 'status-dot--pulse' : ''"></span>
               {{ getStatusText(record.status) }}
             </span>
           </template>
 
-          <!-- Date Range -->
-          <template v-if="column.key === 'dateRange'">
+          <!-- Update Time -->
+          <template v-if="column.key === 'updateTime'">
             <div class="flex flex-col gap-2px">
-              <span class="text-12px text-[var(--color-text-secondary)]">{{ record.startDate || '--' }}</span>
-              <span class="text-11px text-[var(--color-text-placeholder)]">至 {{ record.endDate || '--' }}</span>
+              <span class="text-13px font-500 text-[var(--color-text-primary)]">{{ formatDateTime(record.updateTime)[0] }}</span>
+              <span class="text-11px text-[var(--color-text-placeholder)]">{{ formatDateTime(record.updateTime)[1] }}</span>
             </div>
           </template>
 
           <!-- Action -->
           <template v-if="column.key === 'action'">
-            <!-- 无编辑权限：仅查看 -->
-            <div v-if="!hasPermission('project:edit')" class="action-group">
-              <ATooltip title="查看详情">
-                <AButton type="text" size="small" class="action-btn" @click="handleViewProject(record.id)">
-                  <ArrowRightOutlined class="text-15px" />
-                </AButton>
-              </ATooltip>
-            </div>
-            <!-- 管理员：编辑 + 状态操作 + 删除 -->
-            <div v-else class="action-group">
-              <ATooltip title="查看详情">
-                <AButton type="text" size="small" class="action-btn" @click="handleViewProject(record.id)">
-                  <ArrowRightOutlined class="text-15px" />
-                </AButton>
-              </ATooltip>
-              <ATooltip title="编辑项目">
-                <AButton type="text" size="small" class="action-btn" @click="handleEditProject(record)">
-                  <EditOutlined class="text-15px" />
-                </AButton>
-              </ATooltip>
-              <!-- 状态操作：草稿→开始，进行中→暂停/完成，已暂停→恢复，已完成→归档 -->
-              <ATooltip v-if="record.status == 0" title="开始项目">
-                <AButton type="text" size="small" class="action-btn action-btn--success" @click="handleUpdateStatus(record, 1)">
-                  <PlayCircleOutlined class="text-15px" />
-                </AButton>
-              </ATooltip>
-              <template v-else-if="record.status == 1">
-                <ATooltip title="暂停项目">
-                  <AButton type="text" size="small" class="action-btn action-btn--warning" @click="handleUpdateStatus(record, 2)">
-                    <PauseCircleOutlined class="text-15px" />
-                  </AButton>
-                </ATooltip>
-                <ATooltip title="完成项目">
-                  <AButton type="text" size="small" class="action-btn action-btn--success" @click="handleUpdateStatus(record, 3)">
-                    <CheckCircleOutlined class="text-15px" />
-                  </AButton>
-                </ATooltip>
-              </template>
-              <ATooltip v-else-if="record.status == 2" title="恢复项目">
-                <AButton type="text" size="small" class="action-btn action-btn--success" @click="handleUpdateStatus(record, 1)">
-                  <PlayCircleOutlined class="text-15px" />
-                </AButton>
-              </ATooltip>
-              <ATooltip v-else-if="record.status == 3" title="归档项目">
-                <AButton type="text" size="small" class="action-btn action-btn--secondary" @click="handleUpdateStatus(record, 4)">
-                  <StopOutlined class="text-15px" />
-                </AButton>
-              </ATooltip>
-              <ATooltip title="删除项目">
-                <AButton type="text" size="small" class="action-btn action-btn--danger" @click="handleDeleteProject(record)">
-                  <DeleteOutlined class="text-15px" />
-                </AButton>
-              </ATooltip>
-            </div>
+            <AButton type="link" size="small" class="p-0! text-13px font-500 flex items-center gap-2px" @click="handleViewProject(record.id)">
+              <span>详情</span>
+              <ArrowRightOutlined class="text-11px" />
+            </AButton>
           </template>
         </template>
       </ATable>
@@ -440,100 +460,14 @@ onMounted(() => {
   transform: scale(1.05);
 }
 
-.create-btn {
-  height: 36px !important;
-  padding: 0 16px !important;
-  border-radius: 6px !important;
-  font-weight: 500 !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-.create-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(22, 119, 255, 0.3);
-}
-
-.create-btn:active {
-  transform: translateY(0);
-}
-
 /* ===== 指标卡片 ===== */
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
 .metric-card {
-  background: var(--bg-card);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  border-radius: 8px;
-  padding: 12px 16px;
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.metric-card:hover {
-  border-color: rgba(22, 119, 255, 0.25);
-  box-shadow: 0 8px 32px rgba(22, 119, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
-  transform: translateY(-2px);
-}
-
-.metric-card:active {
-  transform: translateY(0);
-  transition-duration: 0.1s;
-}
-
-.metric-icon-wrapper {
-  width: 24px;
-  height: 24px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(22, 119, 255, 0.1);
-  transition: all 0.25s ease;
-}
-
-.metric-card:hover .metric-icon-wrapper {
-  transform: scale(1.1);
-}
-
-.metric-icon {
-  font-size: 14px;
-}
-
-.metric-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  letter-spacing: -0.5px;
-  transition: transform 0.3s ease;
-}
-
-.metric-card:hover .metric-value {
-  transform: translateX(4px);
-}
-
-.metric-line {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.metric-card:hover .metric-line {
-  opacity: 1;
+.metric-card--gradient {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 /* ===== 表格卡片 ===== */
@@ -557,28 +491,12 @@ onMounted(() => {
   box-shadow: 0 8px 32px rgba(22, 119, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-/* ===== 筛选栏 ===== */
-.filter-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--color-border);
-}
-
-.search-input {
-  width: 180px;
-}
-
-.search-input :deep(.ant-input) {
-  border-radius: 4px;
-  height: 32px;
-}
-
 /* ===== 表格样式 ===== */
 .project-table {
   flex: 1;
   min-height: 0;
+  width: 100%;
+  overflow: hidden;
 }
 
 .project-table :deep(.ant-table-thead > tr > th) {
@@ -591,7 +509,7 @@ onMounted(() => {
 }
 
 .project-table :deep(.ant-table-tbody > tr > td) {
-  padding: 14px 20px !important;
+  padding: 12px 20px !important;
   border-bottom: 1px solid var(--color-divider) !important;
   transition: all 0.2s ease;
 }
@@ -620,97 +538,15 @@ onMounted(() => {
   flex-shrink: 0;
 }
 
-/* ===== 项目单元格 ===== */
-.project-cell {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-}
-
-.project-cell:hover .project-name {
-  color: var(--color-primary);
-}
-
-.project-icon-wrapper {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  background: #EFF6FF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  overflow: hidden;
-  transition: all 0.25s ease;
-}
-
-.project-cell:hover .project-icon-wrapper {
-  background: rgba(22, 119, 255, 0.1);
-  transform: scale(1.05);
-}
-
-.project-svg {
-  width: 16px;
-  height: 16px;
-}
-
-.project-info {
-  overflow: hidden;
-}
-
-.project-name {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: color 0.2s ease;
-}
-
-.project-code {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ===== 负责人 ===== */
-.manager-text {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-}
-
-/* ===== 进度条 ===== */
-.progress-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 130px;
-}
-
-.progress-bar {
-  flex: 1;
-}
-
-.progress-text {
-  font-size: 11px;
-  color: var(--color-text-secondary);
-  width: 32px;
-  text-align: right;
-}
-
 /* ===== 状态标签 ===== */
 .status-tag {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: 100px;
-  font-size: 11px;
-  font-weight: 600;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
   white-space: nowrap;
   transition: all 0.25s ease;
 }
@@ -732,71 +568,46 @@ onMounted(() => {
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  50% { opacity: 0.4; }
 }
 
 .status-tag--draft {
-  background: rgba(134, 144, 156, 0.1);
-  color: var(--color-info);
+  background: #f3f4f6;
+  color: #4b5563;
+}
+.status-tag--draft .status-dot {
+  background: #9ca3af;
 }
 
 .status-tag--active {
-  background: rgba(22, 119, 255, 0.1);
-  color: var(--color-primary);
+  background: #e0f2fe;
+  color: #0284c7;
+}
+.status-tag--active .status-dot {
+  background: #0ea5e9;
 }
 
 .status-tag--paused {
-  background: rgba(255, 125, 0, 0.1);
-  color: var(--color-warning);
+  background: #ffedd5;
+  color: #ea580c;
+}
+.status-tag--paused .status-dot {
+  background: #f97316;
 }
 
 .status-tag--completed {
-  background: rgba(0, 180, 42, 0.1);
-  color: var(--color-success);
+  background: #dcfce7;
+  color: #16a34a;
+}
+.status-tag--completed .status-dot {
+  background: #22c55e;
 }
 
 .status-tag--archived {
-  background: rgba(134, 144, 156, 0.1);
-  color: var(--color-secondary);
+  background: #f1f5f9;
+  color: #64748b;
 }
-
-/* ===== 操作按钮组 ===== */
-.action-group {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-}
-
-.action-btn {
-  padding: 0 !important;
-  height: auto !important;
-  width: 28px !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.action-btn:hover {
-  transform: scale(1.1);
-  background: rgba(22, 119, 255, 0.08) !important;
-}
-
-.action-btn:active {
-  transform: scale(0.95);
-}
-
-.action-btn--success:hover {
-  background: rgba(0, 180, 42, 0.08) !important;
-}
-
-.action-btn--warning:hover {
-  background: rgba(255, 125, 0, 0.08) !important;
-}
-
-.action-btn--danger:hover {
-  background: rgba(245, 63, 63, 0.08) !important;
-}
-
-.action-btn--secondary:hover {
-  background: rgba(134, 144, 156, 0.08) !important;
+.status-tag--archived .status-dot {
+  background: #94a3b8;
 }
 </style>

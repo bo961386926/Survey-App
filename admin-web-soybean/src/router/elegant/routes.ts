@@ -287,6 +287,49 @@ export const generatedRoutes: GeneratedRoute[] = [
     ]
   },
   {
+    name: 'task',
+    path: '/task',
+    component: 'layout.base',
+    meta: {
+      title: 'task'
+    },
+    children: [
+      {
+        name: 'task_center',
+        path: '/task/center',
+        meta: {
+          title: 'task_center'
+        },
+        children: [
+          {
+            name: 'task_center_detail',
+            path: '/task/center/detail',
+            component: 'view.task_center_detail',
+            meta: {
+              title: 'task_center_detail'
+            }
+          },
+          {
+            name: 'task_center_list',
+            path: '/task/center/list',
+            component: 'view.task_center_list',
+            meta: {
+              title: 'task_center_list'
+            }
+          },
+          {
+            name: 'task_center_map',
+            path: '/task/center/map',
+            component: 'view.task_center_map',
+            meta: {
+              title: 'task_center_map'
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
     name: 'template',
     path: '/template',
     component: 'layout.base',

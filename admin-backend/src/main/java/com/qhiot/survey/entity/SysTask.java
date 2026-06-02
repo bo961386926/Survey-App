@@ -55,9 +55,25 @@ public class SysTask implements Serializable {
     private Long assigneeId;
 
     /**
+     * 创建人/负责人 ID
+     */
+    private Long ownerUserId;
+
+    private String category;
+
+    /**
      * 子任务清单，存储JSON数组的字符串
      */
     private String subtasks;
+
+    @com.baomidou.mybatisplus.annotation.TableField(exist = false)
+    private String projectName;
+
+    @com.baomidou.mybatisplus.annotation.TableField(exist = false)
+    private String assigneeName;
+
+    @com.baomidou.mybatisplus.annotation.TableField(exist = false)
+    private String ownerUserName;
 
     private LocalDateTime createTime;
 

@@ -12,7 +12,7 @@ public interface SysTaskService extends IService<SysTask> {
     /**
      * 分页查询任务列表
      */
-    Page<SysTask> getTaskPage(Long projectId, Long assigneeId, Integer status, String keyword, int pageNum, int pageSize);
+    Page<SysTask> getTaskPage(Long projectId, Long assigneeId, Integer status, String category, String keyword, int pageNum, int pageSize);
 
     /**
      * 根据ID获取任务详情

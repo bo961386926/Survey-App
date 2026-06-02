@@ -206,6 +206,38 @@ const customRoutes: CustomRoute[] = [
     ]
   },
   { name: 'point', path: '/point', meta: { hideInMenu: true } },
+  {
+    name: 'task',
+    path: '/task',
+    component: 'layout.base',
+    redirect: '/task/list',
+    meta: {
+      title: 'task_center',
+      i18nKey: 'route.task_center',
+      icon: 'carbon:task',
+      order: 3
+    },
+    children: [
+      {
+        name: 'task_center_list',
+        path: '/task/list',
+        component: 'view.task_center_list',
+        meta: { title: 'task_center_list', i18nKey: 'route.task_center_list', hideInMenu: true }
+      },
+      {
+        name: 'task_center_map',
+        path: '/task/map',
+        component: 'view.task_center_map',
+        meta: { title: 'task_center_map', i18nKey: 'route.task_center_map', hideInMenu: true }
+      },
+      {
+        name: 'task_center_detail',
+        path: '/task/detail/:id',
+        component: 'view.task_center_detail',
+        meta: { title: 'task_center_detail', i18nKey: 'route.task_center_detail', hideInMenu: true, activeMenu: 'task_center_list' }
+      }
+    ]
+  },
   { name: 'export', path: '/export', meta: { hideInMenu: true } },
   { name: 'exception', path: '/exception', meta: { hideInMenu: true } },
   {

@@ -1,266 +1,399 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref, watch } from 'vue';
+import { message } from 'ant-design-vue';
+import { useThemeStore } from '@/store/modules/theme';
+import { useEcharts } from '@/hooks/common/echarts';
 
 defineOptions({ name: 'Dashboard' });
 
-interface ProjectItem {
-  id: number;
-  name: string;
-  points: number;
-  members: string;
-  status: 'active' | 'pending' | 'new';
-  statusText: string;
-  progress: number;
-  icon: string;
-  theme: 'blue' | 'green' | 'orange';
-}
+const themeStore = useThemeStore();
+const selectedTimeRange = ref('月度');
+const timeRanges = ['月度', '季度', '年度'];
 
-const projects = ref<ProjectItem[]>([
+// Chart options with the hook
+const { domRef, updateOptions } = useEcharts(() => ({
+  tooltip: {
+    trigger: 'axis',
+    backgroundColor: 'rgba(255, 255, 255, 0.96)',
+    borderColor: 'var(--color-divider)',
+    borderWidth: 1,
+    textStyle: { color: 'var(--color-text-primary)', fontSize: 12 },
+    axisPointer: {
+      type: 'line',
+      lineStyle: { color: 'var(--color-primary)', width: 1, type: 'dashed' }
+    },
+    padding: [10, 14],
+    extraCssText: 'box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-radius: 6px;'
+  },
+  legend: {
+    show: false
+  },
+  grid: {
+    left: '24px',
+    right: '24px',
+    bottom: '24px',
+    top: '24px',
+    containLabel: true
+  },
+  xAxis: {
+    type: 'category',
+    boundaryGap: false,
+    axisLine: { show: false },
+    axisTick: { show: false },
+    axisLabel: {
+      color: 'rgba(0,0,0,0.45)',
+      fontSize: 11,
+      formatter: (value: string) => {
+        if (['01 MAY', '10 MAY', '20 MAY', '30 MAY', 'Q1', 'Q2', 'Q3', 'Q4', '2023', '2024', '2025', '2026'].includes(value)) {
+          return value;
+        }
+        return '';
+      }
+    },
+    data: ['01 MAY', '05 MAY', '10 MAY', '15 MAY', '20 MAY', '25 MAY', '30 MAY', '']
+  },
+  yAxis: {
+    type: 'value',
+    splitLine: { lineStyle: { color: 'rgba(226, 232, 240, 0.6)', type: 'dashed' } },
+    axisLabel: { show: false },
+    axisLine: { show: false },
+    axisTick: { show: false }
+  },
+  series: [
+    {
+      name: '本月采集频率',
+      type: 'line',
+      smooth: true,
+      showSymbol: false,
+      lineStyle: { width: 4, color: '#1677ff' },
+      itemStyle: { color: '#1677ff' },
+      areaStyle: {
+        opacity: 0.1,
+        color: {
+          type: 'linear',
+          x: 0,
+          y: 0,
+          x2: 0,
+          y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(22, 119, 255, 0.3)' },
+            { offset: 1, color: 'rgba(22, 119, 255, 0)' }
+          ]
+        }
+      },
+      data: [150, 220, 200, 480, 300, 680, 842, 450]
+    },
+    {
+      name: '历史均值',
+      type: 'line',
+      smooth: true,
+      showSymbol: false,
+      lineStyle: { width: 3, color: '#a0cfff', type: 'dashed' },
+      itemStyle: { color: '#a0cfff' },
+      data: [100, 150, 130, 320, 210, 400, 310, 280]
+    }
+  ]
+}));
+
+// Metric card data
+const metricCards = ref([
   {
-    id: 1,
-    name: '河道勘察A标段',
-    points: 456,
-    members: '张工等 5 人',
-    status: 'active',
-    statusText: '进行中',
-    progress: 72,
-    icon: '🏞️',
-    theme: 'blue'
+    title: '年度项目总数',
+    value: '1,284',
+    badge: '+12.5%',
+    badgeType: 'success',
+    icon: 'material-symbols:bar-chart-rounded'
   },
   {
-    id: 2,
-    name: '河道勘察B标段',
-    points: 312,
-    members: '李工等 3 人',
-    status: 'pending',
-    statusText: '待审核',
-    progress: 45,
-    icon: '🌊',
-    theme: 'green'
+    title: '当前活跃项目',
+    value: '42',
+    badge: '进行中',
+    badgeType: 'primary',
+    icon: 'material-symbols:timelapse-outline-rounded'
   },
   {
-    id: 3,
-    name: '排污口排查项目',
-    points: 189,
-    members: '王工等 4 人',
-    status: 'new',
-    statusText: '新启动',
-    progress: 18,
-    icon: '🏗️',
-    theme: 'orange'
+    title: '已验收成果物',
+    value: '8,902',
+    badge: '完成率 94%',
+    badgeType: 'info',
+    icon: 'material-symbols:check-circle-outline-rounded'
+  },
+  {
+    title: '预警异常项',
+    value: '07',
+    badge: '待审核',
+    badgeType: 'warning',
+    icon: 'material-symbols:warning-outline-rounded'
   }
 ]);
 
-interface ActivityItem {
-  id: number;
-  title: string;
-  desc: string;
-  time: string;
-  dotColor: 'green' | 'blue' | 'orange' | 'purple';
-}
-
-const activities = ref<ActivityItem[]>([
-  {
-    id: 1,
-    title: '张工 提交了 DK0+120 采集数据',
-    desc: '河道勘察A标段 · 水质采样',
-    time: '5 分钟前',
-    dotColor: 'green'
-  },
-  {
-    id: 2,
-    title: '审核员 通过了 PTN-003 数据',
-    desc: '河道勘察B标段 · 土壤采样',
-    time: '15 分钟前',
-    dotColor: 'blue'
-  },
-  {
-    id: 3,
-    title: '李工 驳回了 DK1+050 数据',
-    desc: '排污口排查项目 · 需要补充照片',
-    time: '30 分钟前',
-    dotColor: 'orange'
-  },
-  {
-    id: 4,
-    title: '系统生成了月度报告',
-    desc: '2024年3月勘察数据汇总',
-    time: '1 小时前',
-    dotColor: 'purple'
-  },
-  {
-    id: 5,
-    title: '管理员 创建了协作入口',
-    desc: '第三方协作 · 有效期72小时',
-    time: '2 小时前',
-    dotColor: 'green'
-  }
+// Coverage data
+const coverageItems = ref([
+  { label: '地质稳定性监测', percent: 78, color: '#1677ff' },
+  { label: '地下管线探测', percent: 45, color: '#475569' },
+  { label: '地形测绘绘图', percent: 92, color: '#10b981' }
 ]);
+
+// Watch selected time range to update chart options dynamically
+watch(selectedTimeRange, (val) => {
+  let xData = [];
+  let seriesData1 = [];
+  let seriesData2 = [];
+  if (val === '月度') {
+    xData = ['01 MAY', '05 MAY', '10 MAY', '15 MAY', '20 MAY', '25 MAY', '30 MAY', ''];
+    seriesData1 = [150, 220, 200, 480, 300, 680, 842, 450];
+    seriesData2 = [100, 150, 130, 320, 210, 400, 310, 280];
+  } else if (val === '季度') {
+    xData = ['Q1', '', 'Q2', '', 'Q3', '', 'Q4', ''];
+    seriesData1 = [300, 520, 450, 800, 600, 950, 1100, 850];
+    seriesData2 = [250, 350, 380, 600, 500, 700, 800, 650];
+  } else {
+    xData = ['2023', '', '2024', '', '2025', '', '2026', ''];
+    seriesData1 = [1200, 1500, 1800, 2500, 2200, 3100, 4200, 3600];
+    seriesData2 = [1000, 1200, 1400, 2000, 1800, 2500, 3000, 2800];
+  }
+  updateOptions(opts => {
+    opts.xAxis.data = xData;
+    opts.series[0].data = seriesData1;
+    opts.series[1].data = seriesData2;
+    return opts;
+  });
+});
+
+// Watch dark mode to update theme if needed
+watch(
+  () => themeStore.darkMode,
+  () => {
+    updateOptions(opts => {
+      opts.tooltip.backgroundColor = themeStore.darkMode ? '#1e1e1e' : 'rgba(255, 255, 255, 0.96)';
+      return opts;
+    });
+  }
+);
+
+// Click Handlers
+const handleViewLogs = () => {
+  message.info('正在获取云端数据同步日志...');
+};
+
+const handleViewAllActivities = () => {
+  message.info('正在加载全量历史活动流...');
+};
+
+onMounted(() => {
+  setTimeout(() => {
+    updateOptions();
+  }, 600);
+});
 </script>
 
 <template>
-  <div class="h-full flex-col overflow-y-auto custom-scrollbar dashboard-page">
-    <!-- 背景光效 -->
-    <div class="bg-effects"></div>
-    <div class="grid-pattern"></div>
-
-    <!-- 顶部 Header -->
-    <header class="header-section relative z-10 flex-y-center justify-between px-36px py-24px border-b border-[var(--color-divider)] bg-[rgba(255,255,255,0.85)] backdrop-blur-20px">
-      <div>
-        <h1 class="text-22px font-800 text-[var(--color-text-primary)] tracking-tight">勘察数据仪表板</h1>
-        <p class="text-13px text-[var(--color-text-secondary)] mt-4px">实时监控项目进度和数据质量</p>
+  <div class="h-full flex-col overflow-y-auto custom-scrollbar dashboard-page bg-[#f8fafc] dark:bg-[#0f172a] relative">
+    <div class="p-24px relative z-1 flex flex-col gap-24px">
+      <!-- Welcome Header -->
+      <div class="page-header flex flex-col gap-4px">
+        <h1 class="text-22px font-700 text-[#1e293b] dark:text-[#f8fafc]">项目概览工作台</h1>
+        <p class="text-13px text-[#64748b] dark:text-[#94a3b8]">欢迎回来，这是您当前的勘察数字化管理中心。</p>
       </div>
-      <div class="flex gap-12px">
-        <AButton class="action-btn">📅 今天</AButton>
-        <AButton class="action-btn">📥 导出</AButton>
-        <AButton type="primary" class="new-project-btn flex-center gap-6px">
-          <div class="i-material-symbols:add text-16px"></div>
-          新建项目
-        </AButton>
-      </div>
-    </header>
 
-    <!-- 主体内容 -->
-    <div class="p-36px relative z-10">
-      <!-- 统计卡片网格 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-24px mb-32px">
-        <!-- 1. 进行中项目 -->
-        <div class="stat-card blue-card">
-          <div class="stat-header">
-            <div class="stat-icon bg-[#E8F2FF] text-[#2563EB]">📋</div>
-            <div class="stat-trend up-trend">↑ 12%</div>
+      <!-- Core Metrics Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-20px">
+        <div
+          v-for="card in metricCards"
+          :key="card.title"
+          class="metric-card bg-white dark:bg-[#1e293b] border border-[#e2e8f0] dark:border-[#334155] rounded-16px p-20px shadow-sm transition-all duration-300 hover:shadow-md hover:-translate-y-2px"
+        >
+          <div class="flex items-center justify-between mb-16px">
+            <div class="icon-box w-40px h-40px rounded-10px bg-[#f1f5f9] dark:bg-[#334155] flex-center">
+              <SvgIcon :icon="card.icon" class="text-22px text-[#1677ff]" />
+            </div>
+            <span
+              class="px-8px py-2px rounded-full text-11px font-600"
+              :class="{
+                'bg-[#e6f4ff] text-[#1677ff]': card.badgeType === 'primary',
+                'bg-[#f6ffed] text-[#52c41a]': card.badgeType === 'success',
+                'bg-[#fffbe6] text-[#faad14]': card.badgeType === 'warning',
+                'bg-[#f0f5ff] text-[#2f54eb]': card.badgeType === 'info'
+              }"
+            >
+              {{ card.badge }}
+            </span>
           </div>
-          <div class="stat-value">28</div>
-          <div class="stat-label">进行中项目</div>
-        </div>
-
-        <!-- 2. 总点位数量 -->
-        <div class="stat-card green-card">
-          <div class="stat-header">
-            <div class="stat-icon bg-[#E6F9F0] text-[#10B981]">📍</div>
-            <div class="stat-trend up-trend">↑ 8%</div>
+          <div class="text-13px text-[#64748b] dark:text-[#94a3b8] mb-4px font-500">{{ card.title }}</div>
+          <div class="text-28px font-700 text-[#0f172a] dark:text-[#f8fafc] tracking-tight leading-none">
+            {{ card.value }}
           </div>
-          <div class="stat-value">1,247</div>
-          <div class="stat-label">总点位数量</div>
-        </div>
-
-        <!-- 3. 待审核数据 -->
-        <div class="stat-card orange-card">
-          <div class="stat-header">
-            <div class="stat-icon bg-[#FFF0E6] text-[#F97316]">✅</div>
-            <div class="stat-trend down-trend">↓ 3%</div>
-          </div>
-          <div class="stat-value">12</div>
-          <div class="stat-label">待审核数据</div>
-        </div>
-
-        <!-- 4. 已完成采集 -->
-        <div class="stat-card purple-card">
-          <div class="stat-header">
-            <div class="stat-icon bg-[#F3E8FF] text-[#8B5CF6]">📁</div>
-            <div class="stat-trend up-trend">↑ 24%</div>
-          </div>
-          <div class="stat-value">856</div>
-          <div class="stat-label">已完成采集</div>
         </div>
       </div>
 
-      <!-- 下方内容网格 -->
+      <!-- Main Layout Grid (2/3 & 1/3) -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-24px">
-        <!-- 左侧: 进行中的项目 -->
-        <div class="lg:col-span-2">
-          <div class="section-card">
-            <div class="section-header">
-              <h2 class="section-title">
-                <span class="section-title-icon bg-[#E8F2FF]">📋</span>
-                进行中的项目
-              </h2>
-              <a href="#" class="section-action">查看全部 →</a>
+        <!-- Left Side: Chart & Bottom Cards (2/3 width) -->
+        <div class="lg:col-span-2 flex flex-col gap-24px">
+          <!-- Trend Chart Card -->
+          <div class="bg-white dark:bg-[#1e293b] border border-[#e2e8f0] dark:border-[#334155] rounded-16px shadow-sm">
+            <div class="flex justify-between items-center px-24px py-20px border-b border-[#f1f5f9] dark:border-[#334155]">
+              <div>
+                <h3 class="text-15px font-700 text-[#1e293b] dark:text-[#f8fafc]">勘察任务趋势图</h3>
+                <p class="text-12px text-[#64748b] dark:text-[#94a3b8] mt-4px font-400">最近30天全平台数据采集频率分析</p>
+              </div>
+              <div class="tab-group flex gap-2px bg-[#f1f5f9] dark:bg-[#334155] p-2px rounded-6px">
+                <button
+                  v-for="range in timeRanges"
+                  :key="range"
+                  class="px-12px py-4px text-12px rounded-4px font-500 transition-all cursor-pointer border-none"
+                  :class="selectedTimeRange === range ? 'bg-white dark:bg-[#1e293b] text-[#1677ff] shadow-sm' : 'text-[#64748b] dark:text-[#94a3b8] bg-transparent'"
+                  @click="selectedTimeRange = range"
+                >
+                  {{ range }}
+                </button>
+              </div>
             </div>
-            <div class="section-body">
-              <div class="project-list">
-                <div v-for="item in projects" :key="item.id" class="project-item">
-                  <div class="project-icon-box" :class="item.theme">
-                    {{ item.icon }}
+            <div class="p-20px">
+              <div ref="domRef" class="h-320px w-full"></div>
+            </div>
+          </div>
+
+          <!-- Bottom Grid: Coverage & Sync -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-24px">
+            <!-- Coverage Card -->
+            <div class="bg-white dark:bg-[#1e293b] border border-[#e2e8f0] dark:border-[#334155] rounded-16px p-24px shadow-sm flex flex-col justify-between">
+              <div class="flex items-center gap-8px mb-20px">
+                <span class="i-material-symbols:diamond-outline-rounded text-18px text-[#1677ff]"></span>
+                <h3 class="text-15px font-700 text-[#1e293b] dark:text-[#f8fafc]">实地勘察覆盖分布</h3>
+              </div>
+              <div class="flex flex-col gap-16px">
+                <div v-for="item in coverageItems" :key="item.label" class="flex flex-col gap-6px">
+                  <div class="flex justify-between items-center">
+                    <span class="text-13px text-[#475569] dark:text-[#94a3b8] font-500">{{ item.label }}</span>
+                    <span class="text-12px font-700 text-[#0f172a] dark:text-[#f8fafc]">{{ item.percent }}%</span>
                   </div>
-                  <div class="project-info">
-                    <h3 class="project-name">{{ item.name }}</h3>
-                    <div class="project-meta">
-                      <span class="project-meta-item">📍 {{ item.points }} 点位</span>
-                      <span class="project-meta-item">👤 {{ item.members }}</span>
-                      <span class="status-badge" :class="item.status">
-                        {{ item.statusText }}
-                      </span>
-                    </div>
-                  </div>
-                  <div class="project-progress">
-                    <div class="progress-header">
-                      <span class="progress-label">进度</span>
-                      <span class="progress-value">{{ item.progress }}%</span>
-                    </div>
-                    <AProgress :percent="item.progress" :show-info="false" :stroke-width="6" class="m-0!" />
-                  </div>
+                  <AProgress :percent="item.percent" :show-info="false" :stroke-color="item.color" :stroke-width="6" class="m-0!" />
                 </div>
               </div>
+            </div>
+
+            <!-- Cloud Sync Card -->
+            <div class="bg-white dark:bg-[#1e293b] border border-[#e2e8f0] dark:border-[#334155] rounded-16px p-24px shadow-sm flex flex-col items-center justify-between">
+              <div class="flex flex-col items-center py-10px">
+                <div class="w-56px h-56px rounded-full bg-[#e6f4ff] dark:bg-[#1e3a5f] flex-center mb-16px">
+                  <span class="i-material-symbols:cloud-done-outline-rounded text-28px text-[#1677ff]"></span>
+                </div>
+                <h3 class="text-16px font-700 text-[#1e293b] dark:text-[#f8fafc] mb-6px">云端同步正常</h3>
+                <p class="text-12px text-[#64748b] dark:text-[#94a3b8]">最后同步于 2分钟前</p>
+              </div>
+              <AButton type="text" class="w-full bg-[#f0f5ff] hover:bg-[#e6f4ff]! text-[#1677ff] dark:bg-[#1e293b] dark:hover:bg-[#334155]! border-none! h-36px rounded-8px font-600 transition-colors" @click="handleViewLogs">
+                查看详细日志
+              </AButton>
             </div>
           </div>
         </div>
 
-        <!-- 右侧: 快捷操作 + 最近动态 -->
-        <div class="lg:col-span-1 flex-col gap-24px">
-          <!-- 快捷操作 -->
-          <div class="section-card mb-24px">
-            <div class="section-header">
-              <h2 class="section-title">
-                <span class="section-title-icon bg-[#E6F9F0]">⚡</span>
-                快捷操作
-              </h2>
+        <!-- Right Side: Recent Activity (1/3 width) -->
+        <div class="lg:col-span-1">
+          <div class="bg-white dark:bg-[#1e293b] border border-[#e2e8f0] dark:border-[#334155] rounded-16px shadow-sm h-full flex flex-col justify-between">
+            <div class="flex justify-between items-center px-24px py-20px border-b border-[#f1f5f9] dark:border-[#334155]">
+              <h3 class="text-15px font-700 text-[#1e293b] dark:text-[#f8fafc]">最近活动流</h3>
+              <span class="i-material-symbols:history-toggle-off-rounded text-18px text-[#64748b] dark:text-[#94a3b8] cursor-pointer"></span>
             </div>
-            <div class="section-body">
-              <div class="grid grid-cols-2 gap-16px">
-                <a href="#" class="quick-action-btn">
-                  <div class="quick-action-icon bg-[#E8F2FF] text-[#2563EB]">📋</div>
-                  <span class="quick-action-text">新建项目</span>
-                </a>
-                <a href="#" class="quick-action-btn">
-                  <div class="quick-action-icon bg-[#E6F9F0] text-[#10B981]">📍</div>
-                  <span class="quick-action-text">导入点位</span>
-                </a>
-                <a href="#" class="quick-action-btn">
-                  <div class="quick-action-icon bg-[#FFF0E6] text-[#F97316]">✅</div>
-                  <span class="quick-action-text">审核数据</span>
-                </a>
-                <a href="#" class="quick-action-btn">
-                  <div class="quick-action-icon bg-[#F3E8FF] text-[#8B5CF6]">📁</div>
-                  <span class="quick-action-text">导出报告</span>
-                </a>
-              </div>
-            </div>
-          </div>
 
-          <!-- 最近动态 -->
-          <div class="section-card">
-            <div class="section-header">
-              <h2 class="section-title">
-                <span class="section-title-icon bg-[#F3E8FF]">📅</span>
-                最近动态
-              </h2>
-              <a href="#" class="section-action">查看全部 →</a>
-            </div>
-            <div class="section-body">
-              <div class="activity-list">
-                <div v-for="item in activities" :key="item.id" class="activity-item">
-                  <div class="activity-dot-container">
-                    <div class="activity-dot" :class="item.dotColor"></div>
-                    <div class="activity-line"></div>
+            <!-- Timeline Body -->
+            <div class="p-24px flex-1 flex flex-col gap-24px">
+              <!-- Item 1: Upload Complete -->
+              <div class="flex gap-16px relative timeline-item pb-4px">
+                <div class="flex flex-col items-center">
+                  <div class="w-32px h-32px rounded-full bg-[#e6f4ff] flex-center z-2">
+                    <span class="i-material-symbols:description-outline-rounded text-16px text-[#1677ff]"></span>
                   </div>
-                  <div class="activity-content">
-                    <div class="activity-title">{{ item.title }}</div>
-                    <div class="activity-desc">{{ item.desc }}</div>
-                    <div class="activity-time">{{ item.time }}</div>
+                  <div class="w-2px bg-[#f1f5f9] dark:bg-[#334155] flex-1 my-4px"></div>
+                </div>
+                <div class="flex-1">
+                  <div class="flex justify-between items-center mb-6px">
+                    <span class="text-14px font-700 text-[#1e293b] dark:text-[#f8fafc]">成果物上传完成</span>
+                    <span class="text-12px text-[#94a3b8]">12:45</span>
+                  </div>
+                  <p class="text-13px text-[#64748b] dark:text-[#94a3b8] mb-10px">
+                    项目 #PJ-88293 的地质报告已由 <span class="bg-[#e6f4ff] text-[#1677ff] dark:bg-[#1e3a5f] px-6px py-2px rounded-4px text-12px font-500 mx-2px">李明</span> 提交系统.
+                  </p>
+                  <!-- Attachment card -->
+                  <div class="flex items-center justify-between p-10px bg-[#f8fafc] dark:bg-[#0f172a] border border-[#e2e8f0] dark:border-[#334155] rounded-8px">
+                    <div class="flex items-center gap-8px">
+                      <span class="i-material-symbols:picture-as-pdf-outline-rounded text-20px text-[#ef4444]"></span>
+                      <span class="text-12px font-500 text-[#475569] dark:text-[#cbd5e1] max-w-150px truncate">Survey_Report_V2.pdf</span>
+                    </div>
+                    <span class="i-material-symbols:download-rounded text-16px text-[#64748b] dark:text-[#94a3b8] cursor-pointer hover:text-[#1677ff] transition-colors"></span>
                   </div>
                 </div>
               </div>
+
+              <!-- Item 2: Audit Approved -->
+              <div class="flex gap-16px relative timeline-item pb-4px">
+                <div class="flex flex-col items-center">
+                  <div class="w-32px h-32px rounded-full bg-[#f6ffed] flex-center z-2">
+                    <span class="i-material-symbols:verified-user-outline-rounded text-16px text-[#52c41a]"></span>
+                  </div>
+                  <div class="w-2px bg-[#f1f5f9] dark:bg-[#334155] flex-1 my-4px"></div>
+                </div>
+                <div class="flex-1">
+                  <div class="flex justify-between items-center mb-6px">
+                    <span class="text-14px font-700 text-[#1e293b] dark:text-[#f8fafc]">审核通过</span>
+                    <span class="text-12px text-[#94a3b8]">10:20</span>
+                  </div>
+                  <p class="text-13px text-[#64748b] dark:text-[#94a3b8]">
+                    上海浦东新区基建项目已通过系统预审，准备下发实地指引。
+                  </p>
+                </div>
+              </div>
+
+              <!-- Item 3: New Member Join -->
+              <div class="flex gap-16px relative timeline-item pb-4px">
+                <div class="flex flex-col items-center">
+                  <div class="w-32px h-32px rounded-full bg-[#fff7e6] flex-center z-2">
+                    <span class="i-material-symbols:person-add-outline-rounded text-16px text-[#fa8c16]"></span>
+                  </div>
+                  <div class="w-2px bg-[#f1f5f9] dark:bg-[#334155] flex-1 my-4px"></div>
+                </div>
+                <div class="flex-1">
+                  <div class="flex justify-between items-center mb-6px">
+                    <span class="text-14px font-700 text-[#1e293b] dark:text-[#f8fafc]">新成员加入</span>
+                    <span class="text-12px text-[#94a3b8]">昨天</span>
+                  </div>
+                  <p class="text-13px text-[#64748b] dark:text-[#94a3b8] mb-10px">
+                    张晓华 加入了 <span class="bg-[#f5f5f5] text-[#595959] dark:bg-[#262626] dark:text-[#bfbfbf] px-6px py-2px rounded-4px text-12px font-500 mx-2px">地勘一组</span> 团队.
+                  </p>
+                  <!-- Avatars overlapping -->
+                  <div class="flex items-center -space-x-8px">
+                    <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=80&q=80" alt="avatar" class="w-24px h-24px rounded-full border-2 border-white dark:border-[#1e293b] object-cover" />
+                    <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=80&q=80" alt="avatar" class="w-24px h-24px rounded-full border-2 border-white dark:border-[#1e293b] object-cover" />
+                    <div class="w-24px h-24px rounded-full bg-[#1677ff] text-white flex-center text-9px border-2 border-white dark:border-[#1e293b] font-700">+4</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Item 4: System Update -->
+              <div class="flex gap-16px relative timeline-item">
+                <div class="flex flex-col items-center">
+                  <div class="w-32px h-32px rounded-full bg-[#f9f0ff] flex-center z-2">
+                    <span class="i-material-symbols:settings-outline-rounded text-16px text-[#722ed1]"></span>
+                  </div>
+                </div>
+                <div class="flex-1">
+                  <div class="flex justify-between items-center mb-6px">
+                    <span class="text-14px font-700 text-[#1e293b] dark:text-[#f8fafc]">系统更新</span>
+                    <span class="text-12px text-[#94a3b8]">昨天</span>
+                  </div>
+                  <p class="text-13px text-[#64748b] dark:text-[#94a3b8]">
+                    平台算法引擎升级至 V3.4.1，优化了坐标纠偏精度。
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- View All Button -->
+            <div class="p-16px border-t border-[#f1f5f9] dark:border-[#334155]">
+              <button class="w-full py-8px border border-dashed border-[#e2e8f0] dark:border-[#334155] rounded-8px text-13px font-600 text-[#64748b] dark:text-[#94a3b8] hover:text-[#1677ff] hover:border-[#1677ff] dark:hover:text-[#1677ff] dark:hover:border-[#1677ff] transition-all bg-transparent cursor-pointer" @click="handleViewAllActivities">
+                查看全量历史活动
+              </button>
             </div>
           </div>
         </div>
@@ -281,376 +414,22 @@ const activities = ref<ActivityItem[]>([
   border-radius: 10px;
 }
 
-/* 背景模糊与网格 */
-.bg-effects {
-  position: fixed;
+/* Glass effect background */
+.glass-bg-layer {
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  pointer-events: none;
   z-index: 0;
-  overflow: hidden;
-}
-.bg-effects::before {
-  content: '';
-  position: absolute;
-  top: -30%;
-  left: -20%;
-  width: 80%;
-  height: 80%;
-  background: radial-gradient(ellipse at center, rgba(37, 99, 235, 0.05) 0%, transparent 60%);
-  animation: float1 20s ease-in-out infinite;
-}
-@keyframes float1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(10%, 10%) scale(1.05); }
-}
-.grid-pattern {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image:
-    linear-gradient(rgba(226, 232, 240, 0.3) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(226, 232, 240, 0.3) 1px, transparent 1px);
-  background-size: 40px 40px;
   pointer-events: none;
-  z-index: 0;
+  background: radial-gradient(circle at 10% 10%, rgba(22, 119, 255, 0.04) 0%, transparent 40%),
+              radial-gradient(circle at 90% 80%, rgba(16, 185, 129, 0.03) 0%, transparent 40%);
 }
 
-/* Header UI */
-.action-btn {
-  height: 40px !important;
-  border-radius: 10px !important;
-  background-color: var(--bg-card-alt) !important;
-  border: 1px solid var(--color-border) !important;
-  color: var(--color-text-secondary) !important;
-  font-weight: 500 !important;
-}
-.action-btn:hover {
-  border-color: var(--color-primary) !important;
-  color: var(--color-primary) !important;
-}
-.new-project-btn {
-  height: 40px !important;
-  border-radius: 10px !important;
-  background: linear-gradient(135deg, #2563EB, #1D4ED8) !important;
-  border: none !important;
-  color: white !important;
-  font-weight: 600 !important;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25) !important;
-}
-.new-project-btn:hover {
-  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.35) !important;
-}
-
-/* Bento Grid Stats Cards */
-.stat-card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  border-radius: 16px;
-  padding: 24px;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
-}
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
-  border-color: rgba(37, 99, 235, 0.4);
-}
-.stat-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-}
-.blue-card::before { background: linear-gradient(90deg, #2563EB, #60A5FA); }
-.green-card::before { background: linear-gradient(90deg, #10B981, #34D399); }
-.orange-card::before { background: linear-gradient(90deg, #F97316, #FB923C); }
-.purple-card::before { background: linear-gradient(90deg, #8B5CF6, #A78BFA); }
-
-.stat-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-.stat-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+.flex-center {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-}
-.stat-trend {
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-}
-.up-trend {
-  background: rgba(16, 185, 129, 0.12);
-  color: #10B981;
-}
-.down-trend {
-  background: rgba(239, 68, 68, 0.12);
-  color: #EF4444;
-}
-.stat-value {
-  font-size: 32px;
-  font-weight: 800;
-  color: var(--color-text-primary);
-  letter-spacing: -1px;
-  margin-bottom: 4px;
-}
-.stat-label {
-  font-size: 13px;
-  color: var(--color-text-secondary);
-  font-weight: 500;
-}
-
-/* Sections */
-.section-card {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.02);
-}
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px 28px 20px;
-  border-b: 1px solid var(--color-divider);
-}
-.section-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.section-title-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-}
-.section-action {
-  font-size: 13px;
-  color: #3B82F6;
-  font-weight: 500;
-  text-decoration: none;
-}
-.section-action:hover {
-  color: #2563EB;
-}
-.section-body {
-  padding: 24px 28px;
-}
-
-/* Projects */
-.project-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.project-item {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px 20px;
-  background: var(--bg-card-alt);
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-.project-item:hover {
-  background: var(--bg-card);
-  border-color: var(--color-primary);
-  transform: translateX(4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
-}
-.project-icon-box {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  flex-shrink: 0;
-}
-.project-icon-box.blue { background: rgba(37, 99, 235, 0.12); }
-.project-icon-box.green { background: rgba(16, 185, 129, 0.12); }
-.project-icon-box.orange { background: rgba(249, 115, 22, 0.12); }
-
-.project-info {
-  flex: 1;
-  min-width: 0;
-}
-.project-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin-bottom: 6px;
-}
-.project-meta {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  font-size: 12px;
-  color: var(--color-text-secondary);
-}
-.project-meta-item {
-  display: flex;
-  align-items: center;
-}
-.status-badge {
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: 600;
-}
-.status-badge.active { background: rgba(16, 185, 129, 0.12); color: #10B981; }
-.status-badge.pending { background: rgba(245, 158, 11, 0.12); color: #D97706; }
-.status-badge.new { background: rgba(37, 99, 235, 0.12); color: #2563EB; }
-
-.project-progress {
-  width: 140px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.progress-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.progress-label {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-}
-.progress-value {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-/* Quick Actions */
-.quick-action-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 18px 12px;
-  background: var(--bg-card-alt);
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-.quick-action-btn:hover {
-  background: var(--bg-card);
-  border-color: var(--color-primary);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.03);
-}
-.quick-action-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-}
-.quick-action-text {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-}
-
-/* Activity List */
-.activity-list {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  position: relative;
-}
-.activity-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  position: relative;
-}
-.activity-dot-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 12px;
-  height: 100%;
-}
-.activity-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #CBD5E1;
-  z-index: 2;
-  margin-top: 5px;
-}
-.activity-dot.green { background: #10B981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
-.activity-dot.blue { background: #2563EB; box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2); }
-.activity-dot.orange { background: #F97316; box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2); }
-.activity-dot.purple { background: #8B5CF6; box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2); }
-
-.activity-line {
-  width: 2px;
-  background: var(--color-divider);
-  position: absolute;
-  top: 15px;
-  bottom: -25px;
-  left: 5px;
-  z-index: 1;
-}
-.activity-item:last-child .activity-line {
-  display: none;
-}
-
-.activity-content {
-  flex: 1;
-  min-width: 0;
-}
-.activity-title {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--color-text-primary);
-  margin-bottom: 4px;
-}
-.activity-desc {
-  font-size: 12px;
-  color: var(--color-text-secondary);
-  margin-bottom: 4px;
-}
-.activity-time {
-  font-size: 11px;
-  color: var(--color-text-placeholder);
 }
 </style>

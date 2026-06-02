@@ -5,9 +5,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qhiot.survey.common.BusinessException;
 import com.qhiot.survey.entity.SysTask;
+import com.qhiot.survey.entity.Project;
+import com.qhiot.survey.entity.SysUser;
 import com.qhiot.survey.mapper.SysTaskMapper;
 import com.qhiot.survey.service.MessageCenterService;
 import com.qhiot.survey.service.SysTaskService;
+import com.qhiot.survey.service.ProjectService;
+import com.qhiot.survey.service.SysUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -26,8 +30,16 @@ public class SysTaskServiceImpl extends ServiceImpl<SysTaskMapper, SysTask> impl
     @Autowired
     private MessageCenterService messageCenterService;
 
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private ProjectService projectService;
+
+    @Autowired
+    @org.springframework.context.annotation.Lazy
+    private SysUserService sysUserService;
+
     @Override
-    public Page<SysTask> getTaskPage(Long projectId, Long assigneeId, Integer status, String keyword, int pageNum, int pageSize) {
+    public Page<SysTask> getTaskPage(Long projectId, Long assigneeId, Integer status, String category, String keyword, int pageNum, int pageSize) {
         Page<SysTask> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<SysTask> wrapper = new LambdaQueryWrapper<>();
 
@@ -40,13 +52,24 @@ public class SysTaskServiceImpl extends ServiceImpl<SysTaskMapper, SysTask> impl
         if (status != null) {
             wrapper.eq(SysTask::getStatus, status);
         }
+        if (StringUtils.hasText(category)) {
+            wrapper.eq(SysTask::getCategory, category);
+        }
         if (StringUtils.hasText(keyword)) {
             wrapper.and(w -> w.like(SysTask::getTaskName, keyword)
                     .or().like(SysTask::getPlotCode, keyword));
         }
 
         wrapper.orderByDesc(SysTask::getCreateTime);
-        return page(page, wrapper);
+        Page<SysTask> resultPage = page(page, wrapper);
+
+        if (resultPage.getRecords() != null) {
+            for (SysTask task : resultPage.getRecords()) {
+                populateTaskNames(task);
+            }
+        }
+
+        return resultPage;
     }
 
     @Override
@@ -55,7 +78,29 @@ public class SysTaskServiceImpl extends ServiceImpl<SysTaskMapper, SysTask> impl
         if (task == null) {
             throw new BusinessException("任务不存在");
         }
+        populateTaskNames(task);
         return task;
+    }
+
+    private void populateTaskNames(SysTask task) {
+        if (task.getProjectId() != null) {
+            Project project = projectService.getById(task.getProjectId());
+            if (project != null) {
+                task.setProjectName(project.getProjectName());
+            }
+        }
+        if (task.getAssigneeId() != null) {
+            SysUser assignee = sysUserService.getById(task.getAssigneeId());
+            if (assignee != null) {
+                task.setAssigneeName(assignee.getRealName());
+            }
+        }
+        if (task.getOwnerUserId() != null) {
+            SysUser owner = sysUserService.getById(task.getOwnerUserId());
+            if (owner != null) {
+                task.setOwnerUserName(owner.getRealName() != null ? owner.getRealName() : owner.getUsername());
+            }
+        }
     }
 
     @Override

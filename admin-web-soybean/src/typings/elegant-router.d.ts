@@ -44,6 +44,11 @@ declare module "@elegant-router/types" {
     "system_message": "/system/message";
     "system_role": "/system/role";
     "system_user": "/system/user";
+    "task": "/task";
+    "task_center": "/task/center";
+    "task_center_detail": "/task/center/detail";
+    "task_center_list": "/task/center/list";
+    "task_center_map": "/task/center/map";
     "template": "/template";
     "template_design": "/template/design/:id";
     "template_list": "/template/list";
@@ -90,6 +95,7 @@ declare module "@elegant-router/types" {
     | "point"
     | "project"
     | "system"
+    | "task"
     | "template"
   >;
 
@@ -128,6 +134,9 @@ declare module "@elegant-router/types" {
     | "system_message"
     | "system_role"
     | "system_user"
+    | "task_center_detail"
+    | "task_center_list"
+    | "task_center_map"
     | "template_design"
     | "template_list"
   >;

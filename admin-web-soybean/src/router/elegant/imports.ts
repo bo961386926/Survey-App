@@ -36,6 +36,9 @@ export const views: Record<LastLevelRouteKey, RouteComponent | (() => Promise<Ro
   system_message: () => import("@/views/system/message/index.vue"),
   system_role: () => import("@/views/system/role/index.vue"),
   system_user: () => import("@/views/system/user/index.vue"),
+  task_center_detail: () => import("@/views/task_center/detail/index.vue"),
+  task_center_list: () => import("@/views/task_center/list/index.vue"),
+  task_center_map: () => import("@/views/task_center/map/index.vue"),
   template_design: () => import("@/views/template/design/[id].vue"),
   template_list: () => import("@/views/template/list/index.vue"),
 };

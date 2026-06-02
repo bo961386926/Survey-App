@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS sys_task (
   status TINYINT DEFAULT 0 COMMENT '0待分配 1进行中 2已完成 3已逾期 4已终止',
   deadline DATETIME COMMENT '截止日期',
   assignee_id BIGINT COMMENT '指派执行人ID',
+  category VARCHAR(100) COMMENT '任务类型/类别',
   subtasks JSON COMMENT '子任务清单，JSON数组',
   create_time DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',

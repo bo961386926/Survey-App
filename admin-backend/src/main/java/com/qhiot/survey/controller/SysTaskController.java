@@ -25,16 +25,17 @@ public class SysTaskController {
 
     private final SysTaskService sysTaskService;
 
-    @Operation(summary = "分页查询指派任务列表", description = "分页查询勘察指派任务，支持按项目、指派人、状态、关键词筛选")
+    @Operation(summary = "分页查询指派任务列表", description = "分页查询勘察指派任务，支持按项目、指派人、状态、类型、关键词筛选")
     @GetMapping(value = "/page", produces = "application/json;charset=UTF-8")
     public Result<Page<SysTask>> queryTaskPage(
             @RequestParam(required = false) Long projectId,
             @RequestParam(required = false) Long assigneeId,
             @RequestParam(required = false) Integer status,
+            @RequestParam(required = false) String category,
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
-        Page<SysTask> page = sysTaskService.getTaskPage(projectId, assigneeId, status, keyword, pageNum, pageSize);
+        Page<SysTask> page = sysTaskService.getTaskPage(projectId, assigneeId, status, category, keyword, pageNum, pageSize);
         return Result.success(page);
     }
 

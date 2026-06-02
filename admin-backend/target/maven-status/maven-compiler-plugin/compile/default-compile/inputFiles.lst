@@ -34,6 +34,7 @@
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/OssConfig.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/PasswordConfig.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/SnowflakeIdGeneratorConfig.java
+/Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/TaskDatabaseInitializer.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/WebMvcConfig.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/controller/AuthController.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java
