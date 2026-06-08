@@ -8,6 +8,7 @@ import com.qhiot.survey.common.ResultCode;
 import com.qhiot.survey.common.enums.ResultStatus;
 import com.qhiot.survey.common.enums.SurveyPointStatus;
 import com.qhiot.survey.common.enums.YesNo;
+import com.qhiot.survey.common.util.SecurityUtils;
 import com.qhiot.survey.dto.PageResult;
 import com.qhiot.survey.entity.SurveyAuditRecord;
 import com.qhiot.survey.entity.SurveyPoint;
@@ -15,6 +16,7 @@ import com.qhiot.survey.entity.SurveyResult;
 import com.qhiot.survey.mapper.SurveyAuditRecordMapper;
 import com.qhiot.survey.mapper.SurveyPointMapper;
 import com.qhiot.survey.mapper.SurveyResultMapper;
+import com.qhiot.survey.service.DataScopeService;
 import com.qhiot.survey.service.SurveyResultService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,9 +36,11 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
 
     private final SurveyPointMapper surveyPointMapper;
     private final SurveyAuditRecordMapper surveyAuditRecordMapper;
+    private final DataScopeService dataScopeService;
 
     @Override
     public List<SurveyResult> getResultsByPointId(Long pointId) {
+        checkPointAccess(pointId);
         return lambdaQuery()
                 .eq(SurveyResult::getPointId, pointId)
                 .orderByDesc(SurveyResult::getVersionNo)
@@ -44,7 +48,35 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
     }
 
     @Override
+    public List<SurveyResult> getAccessibleResults(Long pointId) {
+        LambdaQueryWrapper<SurveyResult> wrapper = new LambdaQueryWrapper<>();
+        if (pointId != null) {
+            checkPointAccess(pointId);
+            wrapper.eq(SurveyResult::getPointId, pointId);
+        } else {
+            List<Long> pointIds = getAccessibleResultPointIds(null, null);
+            if (pointIds.isEmpty()) {
+                return Collections.emptyList();
+            }
+            wrapper.in(SurveyResult::getPointId, pointIds);
+        }
+        wrapper.orderByDesc(SurveyResult::getCreateTime);
+        return list(wrapper);
+    }
+
+    @Override
+    public SurveyResult getAccessibleResultById(Long id) {
+        SurveyResult result = getById(id);
+        if (result == null) {
+            return null;
+        }
+        checkPointAccess(result.getPointId());
+        return result;
+    }
+
+    @Override
     public SurveyResult getLatestResultByPointId(Long pointId) {
+        checkPointAccess(pointId);
         return lambdaQuery()
                 .eq(SurveyResult::getPointId, pointId)
                 .orderByDesc(SurveyResult::getVersionNo)
@@ -55,6 +87,7 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
     @Override
     @Transactional
     public SurveyResult createResult(SurveyResult result) {
+        checkPointAccess(result.getPointId());
         // 检查点位是否存在（@TableLogic 自动过滤已删除点位）
         SurveyPoint point = surveyPointMapper.selectById(result.getPointId());
         if (point == null) {
@@ -88,6 +121,7 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
         if (existing == null) {
             throw new BusinessException("勘查结果不存在");
         }
+        checkPointAccess(existing.getPointId());
 
         // 乐观锁校验 - 并发控制
         if (expectedVersion != null && !existing.getOptimisticLockVersion().equals(expectedVersion)) {
@@ -112,6 +146,7 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
         if (result == null) {
             throw new BusinessException("勘查结果不存在");
         }
+        checkPointAccess(result.getPointId());
         // 逻辑删除（@TableLogic 注解在实体上，调用 removeById 生效）
         return removeById(id);
     }
@@ -127,13 +162,8 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
         }
 
         // 关联点位表进行项目/标段筛选（@TableLogic 自动过滤已删除点位）
-        if (projectId != null || sectionId != null) {
-            List<Long> pointIds = surveyPointMapper.selectList(
-                    new LambdaQueryWrapper<SurveyPoint>()
-                            .eq(projectId != null, SurveyPoint::getProjectId, projectId)
-                            .eq(sectionId != null, SurveyPoint::getSectionId, sectionId)
-            ).stream().map(SurveyPoint::getId).collect(Collectors.toList());
-
+        if (!dataScopeService.isSystemAdmin() || projectId != null || sectionId != null) {
+            List<Long> pointIds = getAccessibleResultPointIds(projectId, sectionId);
             if (pointIds.isEmpty()) {
                 return new PageResult<>(Collections.emptyList(), 0L, (int) page.getCurrent(), (int) page.getSize(), 0);
             }
@@ -161,6 +191,7 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
         if (result == null) {
             throw new BusinessException("勘查结果不存在");
         }
+        checkPointAccess(result.getPointId());
 
         // 只有待审核状态才能审核
         if (result.getResultStatus() != ResultStatus.PENDING_AUDIT.getCode()) {
@@ -195,6 +226,7 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
         if (rejectedResult == null) {
             throw new BusinessException("勘查结果不存在");
         }
+        checkPointAccess(rejectedResult.getPointId());
 
         // 只有待审核状态才能审核
         if (rejectedResult.getResultStatus() != ResultStatus.PENDING_AUDIT.getCode()) {
@@ -261,10 +293,17 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
 
     @Override
     public List<SurveyResult> getResultsByUser(Long surveyUserId) {
-        return lambdaQuery()
-                .eq(SurveyResult::getSurveyUserId, surveyUserId)
-                .orderByDesc(SurveyResult::getCreateTime)
-                .list();
+        LambdaQueryWrapper<SurveyResult> wrapper = new LambdaQueryWrapper<SurveyResult>()
+                .eq(SurveyResult::getSurveyUserId, surveyUserId);
+        if (!dataScopeService.isSystemAdmin()) {
+            List<Long> pointIds = getAccessibleResultPointIds(null, null);
+            if (pointIds.isEmpty()) {
+                return Collections.emptyList();
+            }
+            wrapper.in(SurveyResult::getPointId, pointIds);
+        }
+        wrapper.orderByDesc(SurveyResult::getCreateTime);
+        return list(wrapper);
     }
 
     @Override
@@ -274,6 +313,7 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
         if (result == null) {
             throw new BusinessException("勘查结果不存在");
         }
+        checkPointAccess(result.getPointId());
 
         // 只有草稿状态才能提交审核
         if (result.getResultStatus() != ResultStatus.DRAFT.getCode()) {
@@ -319,6 +359,7 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
             if (existing == null) {
                 throw new BusinessException("勘查结果不存在");
             }
+            checkPointAccess(existing.getPointId());
 
             // 校验操作人
             if (!existing.getSurveyUserId().equals(userId)) {
@@ -348,6 +389,8 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
         if (current == null || compare == null) {
             throw new BusinessException("勘查结果不存在");
         }
+        checkPointAccess(current.getPointId());
+        checkPointAccess(compare.getPointId());
 
         Map<String, Object> diff = new HashMap<>();
         diff.put("currentVersion", current.getVersionNo());
@@ -360,5 +403,64 @@ public class SurveyResultServiceImpl extends ServiceImpl<SurveyResultMapper, Sur
         diff.put("compareStatus", compare.getResultStatus());
 
         return diff;
+    }
+
+    private List<Long> getAccessibleResultPointIds(Long projectId, Long sectionId) {
+        LambdaQueryWrapper<SurveyPoint> pointWrapper = new LambdaQueryWrapper<>();
+        if (projectId != null) {
+            pointWrapper.eq(SurveyPoint::getProjectId, projectId);
+        }
+        if (sectionId != null) {
+            pointWrapper.eq(SurveyPoint::getSectionId, sectionId);
+        }
+        applyPointScope(pointWrapper);
+        return surveyPointMapper.selectList(pointWrapper)
+                .stream()
+                .map(SurveyPoint::getId)
+                .collect(Collectors.toList());
+    }
+
+    private void applyPointScope(LambdaQueryWrapper<SurveyPoint> wrapper) {
+        if (dataScopeService.isSystemAdmin()) {
+            return;
+        }
+        Long userId = SecurityUtils.getCurrentUserId();
+        List<Long> projectIds = dataScopeService.getAccessibleProjectIds();
+        List<Long> pointIds = dataScopeService.getAccessiblePointIds();
+        wrapper.and(w -> {
+            boolean hasProjectScope = projectIds != null && !projectIds.isEmpty();
+            boolean hasPointScope = pointIds != null && !pointIds.isEmpty();
+            boolean hasUserScope = userId != null;
+            boolean appended = false;
+            if (hasProjectScope) {
+                w.in(SurveyPoint::getProjectId, projectIds);
+                appended = true;
+            }
+            if (hasPointScope) {
+                if (appended) {
+                    w.or();
+                }
+                w.in(SurveyPoint::getId, pointIds);
+                appended = true;
+            }
+            if (hasUserScope) {
+                if (appended) {
+                    w.or();
+                }
+                w.eq(SurveyPoint::getAssigneeId, userId)
+                        .or()
+                        .eq(SurveyPoint::getCollectorId, userId);
+                appended = true;
+            }
+            if (!appended) {
+                w.eq(SurveyPoint::getId, -1L);
+            }
+        });
+    }
+
+    private void checkPointAccess(Long pointId) {
+        if (!dataScopeService.canAccessPoint(pointId)) {
+            throw new BusinessException(ResultCode.FORBIDDEN);
+        }
     }
 }

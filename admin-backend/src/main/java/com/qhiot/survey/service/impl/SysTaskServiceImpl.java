@@ -4,10 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qhiot.survey.common.BusinessException;
+import com.qhiot.survey.common.ResultCode;
+import com.qhiot.survey.common.util.SecurityUtils;
 import com.qhiot.survey.entity.SysTask;
 import com.qhiot.survey.entity.Project;
 import com.qhiot.survey.entity.SysUser;
 import com.qhiot.survey.mapper.SysTaskMapper;
+import com.qhiot.survey.service.DataScopeService;
 import com.qhiot.survey.service.MessageCenterService;
 import com.qhiot.survey.service.SysTaskService;
 import com.qhiot.survey.service.ProjectService;
@@ -19,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 勘察指派任务服务实现类
@@ -38,10 +42,14 @@ public class SysTaskServiceImpl extends ServiceImpl<SysTaskMapper, SysTask> impl
     @org.springframework.context.annotation.Lazy
     private SysUserService sysUserService;
 
+    @Autowired
+    private DataScopeService dataScopeService;
+
     @Override
     public Page<SysTask> getTaskPage(Long projectId, Long assigneeId, Integer status, String category, String keyword, int pageNum, int pageSize) {
         Page<SysTask> page = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<SysTask> wrapper = new LambdaQueryWrapper<>();
+        applyTaskScope(wrapper, projectId);
 
         if (projectId != null) {
             wrapper.eq(SysTask::getProjectId, projectId);
@@ -74,6 +82,7 @@ public class SysTaskServiceImpl extends ServiceImpl<SysTaskMapper, SysTask> impl
 
     @Override
     public SysTask getTaskById(Long id) {
+        checkTaskAccess(id);
         SysTask task = getById(id);
         if (task == null) {
             throw new BusinessException("任务不存在");
@@ -106,6 +115,13 @@ public class SysTaskServiceImpl extends ServiceImpl<SysTaskMapper, SysTask> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean createTask(SysTask task) {
+        if (task.getProjectId() != null && !dataScopeService.canAccessProject(task.getProjectId())) {
+            throw new BusinessException(ResultCode.FORBIDDEN);
+        }
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        if (task.getOwnerUserId() == null) {
+            task.setOwnerUserId(currentUserId);
+        }
         task.setCreateTime(LocalDateTime.now());
         task.setUpdateTime(LocalDateTime.now());
         if (task.getStatus() == null) {
@@ -124,6 +140,7 @@ public class SysTaskServiceImpl extends ServiceImpl<SysTaskMapper, SysTask> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateTask(SysTask task) {
+        checkTaskAccess(task.getId());
         SysTask oldTask = getById(task.getId());
         if (oldTask == null) {
             throw new BusinessException("任务不存在");
@@ -142,6 +159,7 @@ public class SysTaskServiceImpl extends ServiceImpl<SysTaskMapper, SysTask> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean changeTaskStatus(Long id, Integer status) {
+        checkTaskAccess(id);
         SysTask task = getById(id);
         if (task == null) {
             throw new BusinessException("任务不存在");
@@ -154,6 +172,7 @@ public class SysTaskServiceImpl extends ServiceImpl<SysTaskMapper, SysTask> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean assignTask(Long id, Long assigneeId) {
+        checkTaskAccess(id);
         SysTask task = getById(id);
         if (task == null) {
             throw new BusinessException("任务不存在");
@@ -173,6 +192,7 @@ public class SysTaskServiceImpl extends ServiceImpl<SysTaskMapper, SysTask> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean deleteTask(Long id) {
+        checkTaskAccess(id);
         SysTask task = getById(id);
         if (task == null) {
             throw new BusinessException("任务不存在");
@@ -189,6 +209,41 @@ public class SysTaskServiceImpl extends ServiceImpl<SysTaskMapper, SysTask> impl
             log.info("任务指派通知已发送给用户: {}", task.getAssigneeId());
         } catch (Exception e) {
             log.error("发送指派任务通知失败", e);
+        }
+    }
+
+    private void applyTaskScope(LambdaQueryWrapper<SysTask> wrapper, Long requestedProjectId) {
+        if (dataScopeService.isSystemAdmin()) {
+            return;
+        }
+        Long userId = SecurityUtils.getCurrentUserId();
+        List<Long> projectIds = dataScopeService.getAccessibleProjectIds();
+        wrapper.and(w -> {
+            boolean hasProjectScope = projectIds != null && !projectIds.isEmpty();
+            boolean hasUserScope = userId != null;
+            boolean appended = false;
+            if (hasProjectScope) {
+                w.in(SysTask::getProjectId, projectIds);
+                appended = true;
+            }
+            if (hasUserScope) {
+                if (appended) {
+                    w.or();
+                }
+                w.eq(SysTask::getAssigneeId, userId)
+                        .or()
+                        .eq(SysTask::getOwnerUserId, userId);
+                appended = true;
+            }
+            if (!appended) {
+                w.eq(SysTask::getId, -1L);
+            }
+        });
+    }
+
+    private void checkTaskAccess(Long taskId) {
+        if (!dataScopeService.canAccessTask(taskId)) {
+            throw new BusinessException(ResultCode.FORBIDDEN);
         }
     }
 }

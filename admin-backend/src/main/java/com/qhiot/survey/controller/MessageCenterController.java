@@ -3,6 +3,7 @@ package com.qhiot.survey.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qhiot.survey.common.Result;
 import com.qhiot.survey.common.annotation.OperationLog;
+import com.qhiot.survey.common.constant.Permissions;
 import com.qhiot.survey.entity.MessageCenter;
 import com.qhiot.survey.entity.SysUser;
 import com.qhiot.survey.service.MessageCenterService;
@@ -74,7 +75,7 @@ public class MessageCenterController {
 
     @Operation(summary = "推送消息给指定角色", description = "管理员向指定角色的所有用户推送消息")
     @PostMapping("/push/roles")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.MESSAGE_PUSH + "')")
     @OperationLog(module = "消息中心", action = "推送角色消息", description = "推送消息给指定角色, 标题: #title", riskLevel = 1)
     public Result<Integer> pushMessageToRoles(
             @RequestParam String title,
@@ -87,7 +88,7 @@ public class MessageCenterController {
 
     @Operation(summary = "推送消息给指定用户", description = "管理员向指定用户列表推送消息")
     @PostMapping("/push/users")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.MESSAGE_PUSH + "')")
     @OperationLog(module = "消息中心", action = "推送用户消息", description = "推送消息给指定用户, 标题: #title, 用户数量: #userIds.size()", riskLevel = 1)
     public Result<Integer> pushMessageToUsers(
             @RequestParam String title,

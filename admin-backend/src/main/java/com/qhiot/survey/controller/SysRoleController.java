@@ -3,6 +3,7 @@ package com.qhiot.survey.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qhiot.survey.common.Result;
 import com.qhiot.survey.common.annotation.OperationLog;
+import com.qhiot.survey.common.constant.Permissions;
 import com.qhiot.survey.entity.SysRole;
 import com.qhiot.survey.service.SysRoleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,6 +30,7 @@ public class SysRoleController {
 
     @Operation(summary = "分页查询角色列表", description = "分页查询角色，支持按关键词筛选")
     @GetMapping("/page")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_ROLE + "')")
     public Result<Page<SysRole>> listByPage(
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") Integer pageNum,
@@ -38,19 +40,21 @@ public class SysRoleController {
 
     @Operation(summary = "获取所有启用角色", description = "获取所有状态为启用的角色列表")
     @GetMapping("/list")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_ROLE + "')")
     public Result<List<SysRole>> listAll() {
         return Result.success(sysRoleService.listAllEnabled());
     }
 
     @Operation(summary = "获取角色详情", description = "根据角色ID获取详细信息")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_ROLE + "')")
     public Result<SysRole> getById(@Parameter(description = "角色ID") @PathVariable Long id) {
         return Result.success(sysRoleService.getById(id));
     }
 
-    @Operation(summary = "创建角色", description = "创建新角色，需ADMIN角色")
+    @Operation(summary = "创建角色", description = "创建新角色，需角色管理权限")
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_ROLE + "')")
     @OperationLog(module = "角色管理", action = "创建", description = "创建角色: #role.roleName", riskLevel = 1)
     public Result<SysRole> create(@RequestBody SysRole role) {
         log.info("====== [角色管理] 创建角色请求 - roleName: {} ======", role.getRoleName());
@@ -63,9 +67,9 @@ public class SysRoleController {
         return Result.success(result);
     }
 
-    @Operation(summary = "更新角色", description = "更新角色信息，需ADMIN角色")
+    @Operation(summary = "更新角色", description = "更新角色信息，需角色管理权限")
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_ROLE + "')")
     @OperationLog(module = "角色管理", action = "更新", description = "更新角色ID: #id", riskLevel = 1)
     public Result<SysRole> update(@Parameter(description = "角色ID") @PathVariable Long id, @RequestBody SysRole role) {
         log.info("====== [角色管理] 更新角色请求 - roleId: {} ======", id);
@@ -78,9 +82,9 @@ public class SysRoleController {
         return Result.success(result);
     }
 
-    @Operation(summary = "删除角色", description = "删除角色，需ADMIN角色")
+    @Operation(summary = "删除角色", description = "删除角色，需角色管理权限")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_ROLE + "')")
     @OperationLog(module = "角色管理", action = "删除", description = "删除角色ID: #id", riskLevel = 2)
     public Result<Void> delete(@Parameter(description = "角色ID") @PathVariable Long id) {
         log.info("====== [角色管理] 删除角色请求 - roleId: {} ======", id);
@@ -91,7 +95,7 @@ public class SysRoleController {
 
     @Operation(summary = "启用/禁用角色", description = "切换角色启用/禁用状态")
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_ROLE + "')")
     @OperationLog(module = "角色管理", action = "变更状态", description = "变更角色状态, ID: #id, 目标状态: #status", riskLevel = 1)
     public Result<Void> toggleStatus(@Parameter(description = "角色ID") @PathVariable Long id,
                                        @Parameter(description = "状态：0禁用/1启用") @RequestParam Integer status) {
@@ -101,9 +105,9 @@ public class SysRoleController {
         return Result.success();
     }
 
-    @Operation(summary = "为用户分配角色", description = "为指定用户分配多个角色，需ADMIN角色")
+    @Operation(summary = "为用户分配角色", description = "为指定用户分配多个角色，需角色管理权限")
     @PostMapping("/assign")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_ROLE + "')")
     @OperationLog(module = "角色管理", action = "分配角色", description = "为用户ID: #userId 分配角色", riskLevel = 1)
     public Result<Void> assignRole(@RequestParam Long userId, @RequestBody List<Long> roleIds) {
         log.info("====== [角色管理] 分配角色请求 - userId: {}, roleIds: {} ======", userId, roleIds);
@@ -114,13 +118,14 @@ public class SysRoleController {
 
     @Operation(summary = "获取角色权限配置", description = "获取指定角色的权限列表")
     @GetMapping("/{id}/permissions")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_ROLE + "')")
     public Result<List<String>> getRolePermissions(@Parameter(description = "角色ID") @PathVariable Long id) {
         return Result.success(sysRoleService.getRolePermissions(id));
     }
 
-    @Operation(summary = "更新角色权限配置", description = "更新指定角色的权限配置，需ADMIN角色")
+    @Operation(summary = "更新角色权限配置", description = "更新指定角色的权限配置，需角色管理权限")
     @PutMapping("/{id}/permissions")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_ROLE + "')")
     @OperationLog(module = "角色管理", action = "更新权限", description = "更新角色ID: #id 的权限配置", riskLevel = 1)
     public Result<Void> updateRolePermissions(@Parameter(description = "角色ID") @PathVariable Long id, @RequestBody List<String> permissions) {
         log.info("====== [角色管理] 更新角色权限请求 - roleId: {} ======", id);
@@ -131,6 +136,7 @@ public class SysRoleController {
 
     @Operation(summary = "获取用户角色列表", description = "获取指定用户的所有角色")
     @GetMapping("/user/{userId}")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_ROLE + "')")
     public Result<List<SysRole>> getUserRoles(@Parameter(description = "用户ID") @PathVariable Long userId) {
         return Result.success(sysRoleService.getUserRoles(userId));
     }

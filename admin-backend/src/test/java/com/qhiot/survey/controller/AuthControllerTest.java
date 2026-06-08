@@ -286,6 +286,7 @@ class AuthControllerTest {
         when(valueOperations.get("captcha:" + CAPTCHA_KEY)).thenReturn("9999");
 
         LoginRequest req = validLoginRequest("admin", "any");
+        req.setCaptcha("0000");
 
         mockMvc.perform(post("/api/v1/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

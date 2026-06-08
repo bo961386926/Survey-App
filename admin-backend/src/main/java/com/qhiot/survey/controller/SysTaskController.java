@@ -3,6 +3,7 @@ package com.qhiot.survey.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qhiot.survey.common.Result;
 import com.qhiot.survey.common.annotation.OperationLog;
+import com.qhiot.survey.common.constant.Permissions;
 import com.qhiot.survey.entity.SysTask;
 import com.qhiot.survey.service.SysTaskService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,6 +28,7 @@ public class SysTaskController {
 
     @Operation(summary = "分页查询指派任务列表", description = "分页查询勘察指派任务，支持按项目、指派人、状态、类型、关键词筛选")
     @GetMapping(value = "/page", produces = "application/json;charset=UTF-8")
+    @PreAuthorize("hasAuthority('" + Permissions.TASK_VIEW + "')")
     public Result<Page<SysTask>> queryTaskPage(
             @RequestParam(required = false) Long projectId,
             @RequestParam(required = false) Long assigneeId,
@@ -41,23 +43,24 @@ public class SysTaskController {
 
     @Operation(summary = "获取指派任务详情", description = "根据任务ID获取详细信息")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('" + Permissions.TASK_VIEW + "')")
     public Result<SysTask> queryTaskById(@Parameter(description = "任务ID") @PathVariable Long id) {
         SysTask task = sysTaskService.getTaskById(id);
         return Result.success(task);
     }
 
-    @Operation(summary = "创建勘察任务", description = "创建新的勘察指派任务，需ADMIN或PROJECT_MANAGER角色")
+    @Operation(summary = "创建勘察任务", description = "创建新的勘察指派任务，需任务编辑权限")
     @PostMapping(value = "/create", produces = "application/json;charset=UTF-8")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER')")
+    @PreAuthorize("hasAuthority('" + Permissions.TASK_EDIT + "')")
     @OperationLog(module = "任务中心", action = "创建任务", description = "创建勘察任务: #task.taskName", riskLevel = 1)
     public Result<Void> createTask(@RequestBody SysTask task) {
         boolean success = sysTaskService.createTask(task);
         return success ? Result.success() : Result.error("创建任务失败");
     }
 
-    @Operation(summary = "更新勘察任务", description = "更新勘察任务信息，需ADMIN或PROJECT_MANAGER角色")
+    @Operation(summary = "更新勘察任务", description = "更新勘察任务信息，需任务编辑权限")
     @PutMapping(value = "/update", produces = "application/json;charset=UTF-8")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER')")
+    @PreAuthorize("hasAuthority('" + Permissions.TASK_EDIT + "')")
     @OperationLog(module = "任务中心", action = "更新任务", description = "更新勘察任务ID: #task.id", riskLevel = 1)
     public Result<Void> updateTask(@RequestBody SysTask task) {
         boolean success = sysTaskService.updateTask(task);
@@ -66,7 +69,7 @@ public class SysTaskController {
 
     @Operation(summary = "变更任务状态", description = "变更勘察任务状态：0待分配/1进行中/2已完成/3已逾期/4已终止")
     @PutMapping(value = "/{id}/status", produces = "application/json;charset=UTF-8")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER', 'SURVEYOR')")
+    @PreAuthorize("hasAuthority('" + Permissions.TASK_EDIT + "')")
     @OperationLog(module = "任务中心", action = "变更任务状态", description = "变更任务状态, ID: #id, 目标状态: #status", riskLevel = 1)
     public Result<Void> changeStatus(
             @Parameter(description = "任务ID") @PathVariable Long id,
@@ -76,9 +79,9 @@ public class SysTaskController {
         return success ? Result.success() : Result.error("变更任务状态失败");
     }
 
-    @Operation(summary = "指派任务给采集人员", description = "将勘察任务指派给指定采集人员，需ADMIN或PROJECT_MANAGER角色")
+    @Operation(summary = "指派任务给采集人员", description = "将勘察任务指派给指定采集人员，需任务指派权限")
     @PutMapping(value = "/{id}/assign", produces = "application/json;charset=UTF-8")
-    @PreAuthorize("hasAnyRole('ADMIN', 'PROJECT_MANAGER')")
+    @PreAuthorize("hasAuthority('" + Permissions.TASK_ASSIGN + "')")
     @OperationLog(module = "任务中心", action = "指派任务", description = "指派任务ID: #id 给采集人员ID: #assigneeId", riskLevel = 1)
     public Result<Void> assignTask(
             @Parameter(description = "任务ID") @PathVariable Long id,
@@ -87,9 +90,9 @@ public class SysTaskController {
         return success ? Result.success() : Result.error("指派任务失败");
     }
 
-    @Operation(summary = "删除勘察任务", description = "删除勘察任务，需ADMIN角色，高风险操作")
+    @Operation(summary = "删除勘察任务", description = "删除勘察任务，需任务编辑权限，高风险操作")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.TASK_EDIT + "')")
     @OperationLog(module = "任务中心", action = "删除任务", description = "删除勘察任务ID: #id", riskLevel = 2)
     public Result<Void> deleteTask(@Parameter(description = "任务ID") @PathVariable Long id) {
         boolean success = sysTaskService.deleteTask(id);

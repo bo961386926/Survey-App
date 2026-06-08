@@ -587,7 +587,7 @@ public class AuthController {
                     }
                 }
             }
-            String[] permissions = permSet.toArray(new String[0]);
+            String[] permissions = com.qhiot.survey.common.util.PermissionRegistry.expandWildcard(permSet.toArray(new String[0]));
 
             String[] buttons = new String[]{};
 

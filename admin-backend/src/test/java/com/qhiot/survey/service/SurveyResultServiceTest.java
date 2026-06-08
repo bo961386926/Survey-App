@@ -64,12 +64,15 @@ class SurveyResultServiceTest {
 
     @Mock private SurveyPointMapper surveyPointMapper;
     @Mock private SurveyAuditRecordMapper surveyAuditRecordMapper;
+    @Mock private DataScopeService dataScopeService;
 
     private SurveyResultServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = Mockito.spy(new SurveyResultServiceImpl(surveyPointMapper, surveyAuditRecordMapper));
+        when(dataScopeService.isSystemAdmin()).thenReturn(true);
+        when(dataScopeService.canAccessPoint(anyLong())).thenReturn(true);
+        service = Mockito.spy(new SurveyResultServiceImpl(surveyPointMapper, surveyAuditRecordMapper, dataScopeService));
     }
 
     /**

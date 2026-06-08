@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qhiot.survey.common.BusinessException;
 import com.qhiot.survey.entity.SysTask;
 import com.qhiot.survey.mapper.SysTaskMapper;
+import com.qhiot.survey.service.DataScopeService;
 import com.qhiot.survey.service.MessageCenterService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,6 +37,9 @@ class SysTaskServiceImplTest {
     @Mock
     private MessageCenterService messageCenterService;
 
+    @Mock
+    private DataScopeService dataScopeService;
+
     @InjectMocks
     private SysTaskServiceImpl sysTaskService;
 
@@ -56,6 +60,8 @@ class SysTaskServiceImplTest {
         doReturn(true).when(sysTaskService).save(any(SysTask.class));
         doReturn(true).when(sysTaskService).updateById(any(SysTask.class));
         doReturn(true).when(sysTaskService).removeById(anyLong());
+        when(dataScopeService.canAccessProject(anyLong())).thenReturn(true);
+        when(dataScopeService.canAccessTask(anyLong())).thenReturn(true);
     }
 
     @Test
@@ -149,6 +155,7 @@ class SysTaskServiceImplTest {
     @DisplayName("getTaskById - 任务不存在时抛出 BusinessException")
     void testGetTaskByIdNotFound() {
         doReturn(null).when(sysTaskService).getById(999L);
+        when(dataScopeService.canAccessTask(999L)).thenReturn(true);
 
         assertThrows(BusinessException.class, () -> sysTaskService.getTaskById(999L));
     }

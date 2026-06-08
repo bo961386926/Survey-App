@@ -2,8 +2,11 @@ package com.qhiot.survey.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.qhiot.survey.common.BusinessException;
+import com.qhiot.survey.common.ResultCode;
 import com.qhiot.survey.entity.ProjectMember;
 import com.qhiot.survey.mapper.ProjectMemberMapper;
+import com.qhiot.survey.service.DataScopeService;
 import com.qhiot.survey.service.ProjectMemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,9 +25,12 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProjectMemberServiceImpl extends ServiceImpl<ProjectMemberMapper, ProjectMember> implements ProjectMemberService {
 
+    private final DataScopeService dataScopeService;
+
     @Override
     @Transactional
     public boolean addMember(Long projectId, Long userId, String role) {
+        checkProjectAccess(projectId);
         // 检查是否已存在
         LambdaQueryWrapper<ProjectMember> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ProjectMember::getProjectId, projectId)
@@ -47,6 +53,7 @@ public class ProjectMemberServiceImpl extends ServiceImpl<ProjectMemberMapper, P
     @Override
     @Transactional
     public int batchAddMembers(Long projectId, List<Long> userIds, String role) {
+        checkProjectAccess(projectId);
         int count = 0;
         List<ProjectMember> members = new ArrayList<>();
         LocalDateTime now = LocalDateTime.now();
@@ -78,6 +85,7 @@ public class ProjectMemberServiceImpl extends ServiceImpl<ProjectMemberMapper, P
     @Override
     @Transactional
     public boolean removeMember(Long projectId, Long userId) {
+        checkProjectAccess(projectId);
         LambdaQueryWrapper<ProjectMember> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ProjectMember::getProjectId, projectId)
                     .eq(ProjectMember::getUserId, userId);
@@ -86,6 +94,7 @@ public class ProjectMemberServiceImpl extends ServiceImpl<ProjectMemberMapper, P
 
     @Override
     public List<ProjectMember> getProjectMembers(Long projectId) {
+        checkProjectAccess(projectId);
         LambdaQueryWrapper<ProjectMember> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ProjectMember::getProjectId, projectId)
                     .eq(ProjectMember::getStatus, 1)
@@ -97,6 +106,7 @@ public class ProjectMemberServiceImpl extends ServiceImpl<ProjectMemberMapper, P
     @Override
     @Transactional
     public boolean updateMemberRole(Long projectId, Long userId, String newRole) {
+        checkProjectAccess(projectId);
         LambdaQueryWrapper<ProjectMember> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ProjectMember::getProjectId, projectId)
                     .eq(ProjectMember::getUserId, userId);
@@ -112,6 +122,7 @@ public class ProjectMemberServiceImpl extends ServiceImpl<ProjectMemberMapper, P
 
     @Override
     public boolean isProjectMember(Long projectId, Long userId) {
+        checkProjectAccess(projectId);
         LambdaQueryWrapper<ProjectMember> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ProjectMember::getProjectId, projectId)
                     .eq(ProjectMember::getUserId, userId)
@@ -121,11 +132,18 @@ public class ProjectMemberServiceImpl extends ServiceImpl<ProjectMemberMapper, P
 
     @Override
     public String getUserRoleInProject(Long projectId, Long userId) {
+        checkProjectAccess(projectId);
         LambdaQueryWrapper<ProjectMember> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ProjectMember::getProjectId, projectId)
                     .eq(ProjectMember::getUserId, userId)
                     .eq(ProjectMember::getStatus, 1);
         ProjectMember member = this.getOne(queryWrapper);
         return member != null ? member.getRole() : null;
+    }
+
+    private void checkProjectAccess(Long projectId) {
+        if (!dataScopeService.canAccessProject(projectId)) {
+            throw new BusinessException(ResultCode.FORBIDDEN);
+        }
     }
 }

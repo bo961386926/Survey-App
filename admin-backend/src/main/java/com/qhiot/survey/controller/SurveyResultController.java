@@ -2,6 +2,7 @@ package com.qhiot.survey.controller;
 
 import com.qhiot.survey.common.Result;
 import com.qhiot.survey.common.annotation.OperationLog;
+import com.qhiot.survey.common.constant.Permissions;
 import com.qhiot.survey.dto.PageResult;
 import com.qhiot.survey.entity.SurveyResult;
 import com.qhiot.survey.entity.SysUser;
@@ -32,33 +33,31 @@ public class SurveyResultController {
 
     @Operation(summary = "获取勘查结果列表", description = "查询所有勘查结果，可按点位ID筛选")
     @GetMapping("/list")
+    @PreAuthorize("hasAnyAuthority('" + Permissions.SURVEY_EDIT + "', '" + Permissions.AUDIT_VIEW + "')")
     public Result<List<SurveyResult>> getResultList(@Parameter(description = "勘察点位ID") @RequestParam(required = false) Long pointId) {
-        List<SurveyResult> results;
-        if (pointId != null) {
-            results = surveyResultService.getResultsByPointId(pointId);
-        } else {
-            results = surveyResultService.list();
-        }
+        List<SurveyResult> results = surveyResultService.getAccessibleResults(pointId);
         return Result.success(results);
     }
 
     @Operation(summary = "获取勘查结果详情", description = "根据结果ID获取勘查结果详细信息")
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('" + Permissions.SURVEY_EDIT + "', '" + Permissions.AUDIT_VIEW + "')")
     public Result<SurveyResult> getResultById(@Parameter(description = "勘查结果ID") @PathVariable Long id) {
-        SurveyResult result = surveyResultService.getById(id);
+        SurveyResult result = surveyResultService.getAccessibleResultById(id);
         return result != null ? Result.success(result) : Result.error("结果不存在");
     }
 
     @Operation(summary = "获取点位最新勘查结果", description = "获取指定点位的最新一条勘查结果")
     @GetMapping("/point/{pointId}/latest")
+    @PreAuthorize("hasAnyAuthority('" + Permissions.SURVEY_EDIT + "', '" + Permissions.AUDIT_VIEW + "')")
     public Result<SurveyResult> getLatestResult(@Parameter(description = "勘察点位ID") @PathVariable Long pointId) {
         SurveyResult result = surveyResultService.getLatestResultByPointId(pointId);
         return result != null ? Result.success(result) : Result.error("暂无勘查结果");
     }
 
-    @Operation(summary = "创建勘查结果", description = "采集人员创建新的勘查结果，需COLLECTOR角色")
+    @Operation(summary = "创建勘查结果", description = "采集人员创建新的勘查结果，需创建勘查权限")
     @PostMapping("/create")
-    @PreAuthorize("hasRole('COLLECTOR')")
+    @PreAuthorize("hasAuthority('" + Permissions.SURVEY_CREATE + "')")
     @OperationLog(module = "勘查管理", action = "创建", description = "创建勘查结果", riskLevel = 1)
     public Result<SurveyResult> createResult(@RequestBody SurveyResult result) {
         return Result.success(surveyResultService.createResult(result));
@@ -66,7 +65,7 @@ public class SurveyResultController {
 
     @Operation(summary = "更新勘查结果", description = "更新勘查结果数据，支持乐观锁版本号检测并发冲突")
     @PutMapping("/update/{id}")
-    @PreAuthorize("hasRole('COLLECTOR')")
+    @PreAuthorize("hasAuthority('" + Permissions.SURVEY_EDIT + "')")
     @OperationLog(module = "勘查管理", action = "更新", description = "更新勘查结果, ID: #id", riskLevel = 1)
     public Result<SurveyResult> updateResult(@Parameter(description = "勘查结果ID") @PathVariable Long id,
                                               @RequestBody SurveyResult result,
@@ -74,9 +73,9 @@ public class SurveyResultController {
         return Result.success(surveyResultService.updateResult(id, result, expectedVersion));
     }
 
-    @Operation(summary = "删除勘查结果", description = "删除勘查结果，需ADMIN角色")
+    @Operation(summary = "删除勘查结果", description = "删除勘查结果，需编辑勘查权限")
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SURVEY_EDIT + "')")
     @OperationLog(module = "勘查管理", action = "删除", description = "删除勘查结果, ID: #id", riskLevel = 2)
     public Result<Boolean> deleteResult(@Parameter(description = "勘查结果ID") @PathVariable Long id) {
         boolean success = surveyResultService.deleteResult(id);
@@ -85,7 +84,7 @@ public class SurveyResultController {
 
     @Operation(summary = "分页查询审核列表", description = "审核员分页查询待审核勘查结果，支持按项目、标段、状态筛选")
     @GetMapping("/audit/page")
-    @PreAuthorize("hasRole('AUDITOR')")
+    @PreAuthorize("hasAuthority('" + Permissions.AUDIT_VIEW + "')")
     public Result<PageResult<SurveyResult>> queryAuditPage(
             @RequestParam(required = false) Long projectId,
             @RequestParam(required = false) Long sectionId,
@@ -97,7 +96,7 @@ public class SurveyResultController {
 
     @Operation(summary = "审核通过", description = "审核员通过勘查结果审核")
     @PostMapping("/audit/{id}/pass")
-    @PreAuthorize("hasRole('AUDITOR')")
+    @PreAuthorize("hasAuthority('" + Permissions.AUDIT_PASS + "')")
     @OperationLog(module = "审核管理", action = "审核通过", description = "审核通过, 结果ID: #id", riskLevel = 1)
     public Result<Boolean> passAudit(@Parameter(description = "勘查结果ID") @PathVariable Long id,
                                       @Parameter(description = "审核备注") @RequestParam(required = false) String auditRemark) {
@@ -109,7 +108,7 @@ public class SurveyResultController {
 
     @Operation(summary = "审核驳回", description = "审核员驳回勘查结果，必须填写驳回理由")
     @PostMapping("/audit/{id}/reject")
-    @PreAuthorize("hasRole('AUDITOR')")
+    @PreAuthorize("hasAuthority('" + Permissions.AUDIT_REJECT + "')")
     @OperationLog(module = "审核管理", action = "审核驳回", description = "审核驳回, 结果ID: #id", riskLevel = 1)
     public Result<Boolean> rejectAudit(@Parameter(description = "勘查结果ID") @PathVariable Long id,
                                         @Parameter(description = "审核备注（必填）") @RequestParam String auditRemark) {
@@ -121,7 +120,7 @@ public class SurveyResultController {
 
     @Operation(summary = "批量审核通过", description = "批量通过多条勘查结果审核")
     @PostMapping("/audit/batch-pass")
-    @PreAuthorize("hasRole('AUDITOR')")
+    @PreAuthorize("hasAuthority('" + Permissions.AUDIT_PASS + "')")
     @OperationLog(module = "审核管理", action = "批量审核通过", description = "批量审核通过, 数量: #ids.size()", riskLevel = 1)
     public Result<Boolean> batchPassAudit(@RequestBody List<Long> ids,
                                            @RequestParam(required = false) String auditRemark) {
@@ -133,7 +132,7 @@ public class SurveyResultController {
 
     @Operation(summary = "提交审核", description = "采集人员提交勘查结果进行审核，支持versionNo乐观锁冲突检测")
     @PostMapping("/submit/{id}")
-    @PreAuthorize("hasRole('COLLECTOR')")
+    @PreAuthorize("hasAuthority('" + Permissions.SURVEY_SUBMIT + "')")
     @OperationLog(module = "勘查管理", action = "提交审核", description = "提交审核, 结果ID: #id", riskLevel = 0)
     public Result<Boolean> submitForAudit(@Parameter(description = "勘查结果ID") @PathVariable Long id,
                                            @Parameter(description = "客户端所持版本号，用于并发冲突检测") @RequestParam(required = false) Integer versionNo) {
@@ -145,16 +144,16 @@ public class SurveyResultController {
 
     @Operation(summary = "保存草稿", description = "采集人员保存勘查结果草稿")
     @PostMapping("/draft")
-    @PreAuthorize("hasRole('COLLECTOR')")
+    @PreAuthorize("hasAuthority('" + Permissions.SURVEY_EDIT + "')")
     @OperationLog(module = "勘查管理", action = "保存草稿", description = "保存勘查草稿", riskLevel = 0)
     public Result<SurveyResult> saveDraft(@RequestBody SurveyResult result) {
         Long userId = getCurrentUserId();
         return Result.success(surveyResultService.saveDraft(result, userId));
     }
 
-    @Operation(summary = "获取版本差异对比", description = "对比两个版本的勘查结果数据差异，需ADMIN/AUDITOR/PROJECT_LEADER角色")
+    @Operation(summary = "获取版本差异对比", description = "对比两个版本的勘查结果数据差异，需审核查看权限")
     @GetMapping("/version/diff")
-    @PreAuthorize("hasAnyRole('ADMIN', 'AUDITOR', 'PROJECT_LEADER')")
+    @PreAuthorize("hasAuthority('" + Permissions.AUDIT_VIEW + "')")
     public Result<Map<String, Object>> getVersionDiff(@RequestParam Long currentId,
                                                        @RequestParam Long compareId) {
         return Result.success(surveyResultService.getVersionDiff(currentId, compareId));
@@ -162,6 +161,7 @@ public class SurveyResultController {
 
     @Operation(summary = "获取用户勘查结果", description = "查询指定采集人员的所有勘查结果")
     @GetMapping("/user/{surveyUserId}")
+    @PreAuthorize("hasAnyAuthority('" + Permissions.SURVEY_EDIT + "', '" + Permissions.AUDIT_VIEW + "')")
     public Result<List<SurveyResult>> getResultsByUser(@Parameter(description = "采集人员用户ID") @PathVariable Long surveyUserId) {
         List<SurveyResult> results = surveyResultService.getResultsByUser(surveyUserId);
         return Result.success(results);

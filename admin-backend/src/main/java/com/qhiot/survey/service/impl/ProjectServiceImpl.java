@@ -5,13 +5,18 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qhiot.survey.common.BusinessException;
 import com.qhiot.survey.common.ResultCode;
+import com.qhiot.survey.common.util.SecurityUtils;
 import com.qhiot.survey.dto.PageResult;
 import com.qhiot.survey.dto.ProjectCreateRequest;
 import com.qhiot.survey.dto.ProjectQueryRequest;
 import com.qhiot.survey.entity.Project;
+import com.qhiot.survey.entity.ProjectMember;
+import com.qhiot.survey.mapper.ProjectMemberMapper;
 import com.qhiot.survey.mapper.ProjectMapper;
+import com.qhiot.survey.service.DataScopeService;
 import com.qhiot.survey.service.ProjectService;
 import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -23,7 +28,11 @@ import java.util.Map;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> implements ProjectService {
+
+    private final DataScopeService dataScopeService;
+    private final ProjectMemberMapper projectMemberMapper;
 
     /**
      * 项目状态常量
@@ -37,6 +46,13 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     @Override
     public PageResult<Project> queryProjectPage(ProjectQueryRequest request) {
         LambdaQueryWrapper<Project> queryWrapper = new LambdaQueryWrapper<>();
+        List<Long> accessibleProjectIds = dataScopeService.getAccessibleProjectIds();
+        if (accessibleProjectIds != null) {
+            if (accessibleProjectIds.isEmpty()) {
+                return new PageResult<>(List.of(), 0L, request.getPageNum(), request.getPageSize(), 0);
+            }
+            queryWrapper.in(Project::getId, accessibleProjectIds);
+        }
         
         // 条件查询
         if (StringUtils.hasText(request.getProjectName())) {
@@ -94,12 +110,17 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         project.setCreateTime(LocalDateTime.now());
         project.setUpdateTime(LocalDateTime.now());
         
-        return save(project);
+        boolean saved = save(project);
+        if (saved) {
+            addCreatorAsProjectMember(project.getId());
+        }
+        return saved;
     }
 
     @Override
     @Transactional
     public boolean updateProject(Long id, ProjectCreateRequest request) {
+        checkProjectAccess(id);
         Project project = getById(id);
         if (project == null) {
             throw new BusinessException(ResultCode.PROJECT_NOT_FOUND);
@@ -126,6 +147,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     @Override
     @Transactional
     public boolean deleteProject(Long id) {
+        checkProjectAccess(id);
         Project project = getById(id);
         if (project == null) {
             throw new BusinessException(ResultCode.PROJECT_NOT_FOUND);
@@ -147,6 +169,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     @Override
     public Project getProjectDetail(Long id) {
         log.info("====== [项目服务] 查询项目详情 - projectId: {} ======", id);
+        checkProjectAccess(id);
         Project project = getById(id);
         if (project != null) {
             log.info("====== [项目服务] 找到项目 - projectId: {}, projectName: {} ======", id, project.getProjectName());
@@ -159,6 +182,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     @Override
     @Transactional
     public boolean changeStatus(Long id, Integer targetStatus) {
+        checkProjectAccess(id);
         Project project = getById(id);
         if (project == null) {
             throw new BusinessException(ResultCode.PROJECT_NOT_FOUND);
@@ -198,6 +222,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
 
     @Override
     public Map<String, Object> getProjectStatistics(Long id) {
+        checkProjectAccess(id);
         Project project = getById(id);
         if (project == null) {
             throw new BusinessException(ResultCode.PROJECT_NOT_FOUND);
@@ -226,6 +251,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     @Override
     @Transactional
     public boolean archiveProject(Long id) {
+        checkProjectAccess(id);
         Project project = getById(id);
         if (project == null) {
             throw new BusinessException(ResultCode.PROJECT_NOT_FOUND);
@@ -245,6 +271,7 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     @Override
     @Transactional
     public boolean restoreProject(Long id) {
+        checkProjectAccess(id);
         Project project = getById(id);
         if (project == null) {
             throw new BusinessException(ResultCode.PROJECT_NOT_FOUND);
@@ -259,5 +286,26 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         project.setUpdateTime(LocalDateTime.now());
         
         return updateById(project);
+    }
+
+    private void checkProjectAccess(Long projectId) {
+        if (!dataScopeService.canAccessProject(projectId)) {
+            throw new BusinessException(ResultCode.FORBIDDEN);
+        }
+    }
+
+    private void addCreatorAsProjectMember(Long projectId) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        if (userId == null || dataScopeService.isSystemAdmin()) {
+            return;
+        }
+        ProjectMember member = new ProjectMember();
+        member.setProjectId(projectId);
+        member.setUserId(userId);
+        member.setRole("admin");
+        member.setStatus(1);
+        member.setCreateTime(LocalDateTime.now());
+        member.setUpdateTime(LocalDateTime.now());
+        projectMemberMapper.insert(member);
     }
 }

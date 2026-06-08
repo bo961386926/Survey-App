@@ -1,6 +1,7 @@
 package com.qhiot.survey.controller;
 
 import com.qhiot.survey.common.annotation.OperationLog;
+import com.qhiot.survey.common.constant.Permissions;
 import com.qhiot.survey.common.result.Result;
 import com.qhiot.survey.dto.PageResult;
 import com.qhiot.survey.dto.ProjectCreateRequest;
@@ -31,6 +32,7 @@ public class ProjectController {
 
     @Operation(summary = "分页查询项目列表", description = "支持按项目名称、编号、状态等条件分页查询")
     @GetMapping(value = "/page", produces = "application/json;charset=UTF-8")
+    @PreAuthorize("hasAuthority('" + Permissions.PROJECT_VIEW + "')")
     public Result<PageResult<Project>> queryProjectPage(ProjectQueryRequest request) {
         PageResult<Project> result = projectService.queryProjectPage(request);
         return Result.success(result);
@@ -38,6 +40,7 @@ public class ProjectController {
 
     @Operation(summary = "获取项目详情", description = "根据项目ID获取项目详细信息")
     @GetMapping(value = "/{id}", produces = "application/json;charset=UTF-8")
+    @PreAuthorize("hasAuthority('" + Permissions.PROJECT_VIEW + "')")
     public Result<Project> getProjectDetail(@PathVariable Long id) {
         log.info("====== [项目管理] 获取项目详情请求 - projectId: {} ======", id);
         Project project = projectService.getProjectDetail(id);
@@ -49,9 +52,9 @@ public class ProjectController {
         return Result.success(project);
     }
 
-    @Operation(summary = "创建项目", description = "创建新项目，需ADMIN角色")
+    @Operation(summary = "创建项目", description = "创建新项目，需项目编辑权限")
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.PROJECT_EDIT + "')")
     @OperationLog(module = "项目管理", action = "创建", description = "创建项目: #request.projectName", riskLevel = 1)
     public Result<Void> createProject(@RequestBody ProjectCreateRequest request) {
         log.info("====== [项目管理] 创建项目请求 - projectName: {} ======", request.getProjectName());
@@ -67,9 +70,9 @@ public class ProjectController {
         return success ? Result.success() : Result.error("创建项目失败");
     }
 
-    @Operation(summary = "更新项目", description = "更新项目信息，需ADMIN角色")
+    @Operation(summary = "更新项目", description = "更新项目信息，需项目编辑权限")
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.PROJECT_EDIT + "')")
     @OperationLog(module = "项目管理", action = "更新", description = "更新项目ID: #id", riskLevel = 1)
     public Result<Project> updateProject(@PathVariable Long id, @RequestBody ProjectCreateRequest request) {
         log.info("====== [项目管理] 更新项目请求 - projectId: {} ======", id);
@@ -84,9 +87,9 @@ public class ProjectController {
         }
     }
 
-    @Operation(summary = "删除项目", description = "删除项目，需ADMIN角色，高风险操作")
+    @Operation(summary = "删除项目", description = "删除项目，需项目编辑权限，高风险操作")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.PROJECT_EDIT + "')")
     @OperationLog(module = "项目管理", action = "删除", description = "删除项目ID: #id", riskLevel = 2)
     public Result<Void> deleteProject(@PathVariable Long id) {
         log.info("====== [项目管理] 删除项目请求 - projectId: {} ======", id);
@@ -107,7 +110,7 @@ public class ProjectController {
 
     @Operation(summary = "变更项目状态", description = "变更项目状态：0草稿、1进行中、2已暂停、3已完成、4已归档")
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.PROJECT_EDIT + "')")
     @OperationLog(module = "项目管理", action = "变更状态", description = "变更项目状态, ID: #id, 目标状态: #targetStatus", riskLevel = 1)
     public Result<Void> changeStatus(
             @PathVariable Long id,
@@ -119,6 +122,7 @@ public class ProjectController {
 
     @Operation(summary = "获取项目统计信息", description = "获取指定项目下的点位数、勘查完成率等统计数据")
     @GetMapping("/{id}/statistics")
+    @PreAuthorize("hasAuthority('" + Permissions.PROJECT_VIEW + "')")
     public Result<Map<String, Object>> getProjectStatistics(@PathVariable Long id) {
         Map<String, Object> statistics = projectService.getProjectStatistics(id);
         return Result.success(statistics);
@@ -126,7 +130,7 @@ public class ProjectController {
 
     @Operation(summary = "归档项目", description = "将已完成的项目归档，归档后数据只读")
     @PutMapping("/{id}/archive")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.PROJECT_EDIT + "')")
     @OperationLog(module = "项目管理", action = "归档", description = "归档项目ID: #id", riskLevel = 1)
     public Result<Void> archiveProject(@PathVariable Long id) {
         boolean success = projectService.archiveProject(id);
@@ -135,7 +139,7 @@ public class ProjectController {
 
     @Operation(summary = "恢复项目（取消归档）", description = "取消项目归档状态，恢复为可编辑状态")
     @PutMapping("/{id}/restore")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.PROJECT_EDIT + "')")
     @OperationLog(module = "项目管理", action = "恢复", description = "恢复项目ID: #id", riskLevel = 1)
     public Result<Void> restoreProject(@PathVariable Long id) {
         boolean success = projectService.restoreProject(id);

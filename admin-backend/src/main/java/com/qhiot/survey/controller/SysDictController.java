@@ -3,6 +3,7 @@ package com.qhiot.survey.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qhiot.survey.common.annotation.OperationLog;
+import com.qhiot.survey.common.constant.Permissions;
 import com.qhiot.survey.common.result.Result;
 import com.qhiot.survey.dto.PageResult;
 import com.qhiot.survey.entity.SysDict;
@@ -79,7 +80,7 @@ public class SysDictController {
 
     @Operation(summary = "创建字典", description = "创建新字典，字典编码必须唯一")
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_DICT + "')")
     @OperationLog(module = "数据字典", action = "创建", description = "创建字典: #dict.dictName", riskLevel = 1)
     public Result<Void> createDict(@RequestBody SysDict dict) {
         log.info("====== [数据字典] 创建字典请求 - dictName: {} ======", dict.getDictName());
@@ -111,7 +112,7 @@ public class SysDictController {
 
     @Operation(summary = "更新字典", description = "更新字典信息")
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_DICT + "')")
     @OperationLog(module = "数据字典", action = "更新", description = "更新字典ID: #id", riskLevel = 1)
     public Result<Void> updateDict(@PathVariable Long id, @RequestBody SysDict dict) {
         log.info("====== [数据字典] 更新字典请求 - dictId: {} ======", id);
@@ -127,7 +128,7 @@ public class SysDictController {
 
     @Operation(summary = "删除字典", description = "删除字典及其关联的所有字典项")
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_DICT + "')")
     @OperationLog(module = "数据字典", action = "删除", description = "删除字典ID: #id", riskLevel = 2)
     public Result<Void> deleteDict(@PathVariable Long id) {
         log.info("====== [数据字典] 删除字典请求 - dictId: {} ======", id);
@@ -162,7 +163,7 @@ public class SysDictController {
 
     @Operation(summary = "批量保存字典项", description = "批量保存指定字典下的字典项，会先清除原有项再重新写入")
     @PostMapping("/{id}/items/batch")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_DICT + "')")
     @OperationLog(module = "数据字典", action = "批量保存字典项", description = "批量保存字典项，字典ID: #id", riskLevel = 1)
     public Result<Void> batchSaveDictItems(@PathVariable Long id, @RequestBody List<SysDictItem> items) {
         log.info("====== [数据字典] 批量保存字典项请求 - dictId: {}, itemCount: {} ======", id, items.size());

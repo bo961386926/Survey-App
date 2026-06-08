@@ -327,6 +327,17 @@ public class SurveyTemplateServiceImpl extends ServiceImpl<SurveyTemplateMapper,
             SurveyTemplateVersion draftVersion = surveyTemplateVersionMapper.selectOne(wrapper);
 
             if (draftVersion != null) {
+                // 确保草稿版本号是当前所有版本中最大的，避免发布新版本后草稿版本号落后导致无法被前端加载
+                LambdaQueryWrapper<SurveyTemplateVersion> maxWrapper = new LambdaQueryWrapper<>();
+                maxWrapper.eq(SurveyTemplateVersion::getTemplateId, id)
+                        .orderByDesc(SurveyTemplateVersion::getVersionNo)
+                        .last("LIMIT 1");
+                SurveyTemplateVersion latest = surveyTemplateVersionMapper.selectOne(maxWrapper);
+                int maxVersion = latest != null ? latest.getVersionNo() : 1;
+                if (draftVersion.getVersionNo() < maxVersion) {
+                    draftVersion.setVersionNo(maxVersion + 1);
+                }
+                
                 draftVersion.setFieldsJson(fieldsJson);
                 draftVersion.setRulesJson(rulesJson);
                 draftVersion.setLinkageRulesJson(linkageRulesJson);

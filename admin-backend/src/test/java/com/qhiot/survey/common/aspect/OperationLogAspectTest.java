@@ -1,20 +1,24 @@
 package com.qhiot.survey.common.aspect;
 
 import com.qhiot.survey.common.annotation.OperationLog;
-import com.qhiot.survey.common.util.SecurityUtils;
+import com.qhiot.survey.security.LoginUser;
 import com.qhiot.survey.service.OperationLogService;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,6 +45,11 @@ class OperationLogAspectTest {
     @InjectMocks
     private OperationLogAspect operationLogAspect;
 
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
+
     @Test
     @DisplayName("测试正常拦截并记录日志")
     void testDoAfterReturning_Success() throws Exception {
@@ -53,24 +62,21 @@ class OperationLogAspectTest {
         mockUser.put("username", "testuser");
         when(joinPoint.getArgs()).thenReturn(new Object[]{mockUser});
 
-        try (MockedStatic<SecurityUtils> mockedSecurity = mockStatic(SecurityUtils.class)) {
-            mockedSecurity.when(SecurityUtils::getCurrentUserId).thenReturn(100L);
-            mockedSecurity.when(SecurityUtils::getCurrentUsername).thenReturn("admin");
+        loginAs(100L, "admin");
 
-            operationLogAspect.doAfterReturning(joinPoint, null);
+        operationLogAspect.doAfterReturning(joinPoint, null);
 
-            Thread.sleep(200);
-            verify(operationLogService, atLeastOnce()).logOperation(
-                eq(100L),
-                eq("admin"),
-                eq("用户管理"),
-                eq("创建"),
-                anyString(),
-                anyString(),
-                anyString(),
-                eq(1)
-            );
-        }
+        Thread.sleep(200);
+        verify(operationLogService, atLeastOnce()).logOperation(
+            eq(100L),
+            eq("admin"),
+            eq("用户管理"),
+            eq("创建"),
+            anyString(),
+            anyString(),
+            anyString(),
+            eq(1)
+        );
     }
 
     @Test
@@ -81,15 +87,12 @@ class OperationLogAspectTest {
         when(methodSignature.getMethod()).thenReturn(testMethod);
         lenient().when(methodSignature.getParameterNames()).thenReturn(new String[]{"user"});
 
-        try (MockedStatic<SecurityUtils> mockedSecurity = mockStatic(SecurityUtils.class)) {
-            mockedSecurity.when(SecurityUtils::getCurrentUserId).thenReturn(null);
-            mockedSecurity.when(SecurityUtils::getCurrentUsername).thenReturn("system");
+        SecurityContextHolder.clearContext();
 
-            operationLogAspect.doAfterReturning(joinPoint, null);
+        operationLogAspect.doAfterReturning(joinPoint, null);
 
-            Thread.sleep(200);
-            verify(operationLogService, never()).logOperation(any(), any(), any(), any(), any(), any(), any(), any());
-        }
+        Thread.sleep(200);
+        verify(operationLogService, never()).logOperation(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -105,28 +108,25 @@ class OperationLogAspectTest {
         user.put("realName", "新用户");
         when(joinPoint.getArgs()).thenReturn(new Object[]{user});
 
-        try (MockedStatic<SecurityUtils> mockedSecurity = mockStatic(SecurityUtils.class)) {
-            mockedSecurity.when(SecurityUtils::getCurrentUserId).thenReturn(100L);
-            mockedSecurity.when(SecurityUtils::getCurrentUsername).thenReturn("admin");
+        loginAs(100L, "admin");
 
-            operationLogAspect.doAfterReturning(joinPoint, null);
+        operationLogAspect.doAfterReturning(joinPoint, null);
 
-            Thread.sleep(200);
-            ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
-            verify(operationLogService).logOperation(
-                anyLong(),
-                anyString(),
-                anyString(),
-                anyString(),
-                descriptionCaptor.capture(),
-                anyString(),
-                anyString(),
-                anyInt()
-            );
+        Thread.sleep(200);
+        ArgumentCaptor<String> descriptionCaptor = ArgumentCaptor.forClass(String.class);
+        verify(operationLogService).logOperation(
+            anyLong(),
+            anyString(),
+            anyString(),
+            anyString(),
+            descriptionCaptor.capture(),
+            anyString(),
+            anyString(),
+            anyInt()
+        );
 
-            String description = descriptionCaptor.getValue();
-            assertTrue(description.contains("newuser") || description.contains("创建用户"));
-        }
+        String description = descriptionCaptor.getValue();
+        assertTrue(description.contains("newuser") || description.contains("创建用户"));
     }
 
     @Test
@@ -137,15 +137,12 @@ class OperationLogAspectTest {
         when(methodSignature.getMethod()).thenReturn(testMethod);
         lenient().when(methodSignature.getParameterNames()).thenReturn(new String[]{});
 
-        try (MockedStatic<SecurityUtils> mockedSecurity = mockStatic(SecurityUtils.class)) {
-            mockedSecurity.when(SecurityUtils::getCurrentUserId).thenReturn(100L);
-            mockedSecurity.when(SecurityUtils::getCurrentUsername).thenReturn("admin");
+        loginAs(100L, "admin");
 
-            operationLogAspect.doAfterReturning(joinPoint, null);
+        operationLogAspect.doAfterReturning(joinPoint, null);
 
-            Thread.sleep(200);
-            verify(operationLogService, never()).logOperation(any(), any(), any(), any(), any(), any(), any(), any());
-        }
+        Thread.sleep(200);
+        verify(operationLogService, never()).logOperation(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -161,24 +158,34 @@ class OperationLogAspectTest {
         String role = "ADMIN";
         when(joinPoint.getArgs()).thenReturn(new Object[]{user, role});
 
-        try (MockedStatic<SecurityUtils> mockedSecurity = mockStatic(SecurityUtils.class)) {
-            mockedSecurity.when(SecurityUtils::getCurrentUserId).thenReturn(100L);
-            mockedSecurity.when(SecurityUtils::getCurrentUsername).thenReturn("admin");
+        loginAs(100L, "admin");
 
-            operationLogAspect.doAfterReturning(joinPoint, null);
+        operationLogAspect.doAfterReturning(joinPoint, null);
 
-            Thread.sleep(200);
-            verify(operationLogService, atLeastOnce()).logOperation(
-                anyLong(),
-                anyString(),
-                eq("用户管理"),
-                eq("更新"),
-                anyString(),
-                anyString(),
-                anyString(),
-                eq(1)
-            );
-        }
+        Thread.sleep(200);
+        verify(operationLogService, atLeastOnce()).logOperation(
+            anyLong(),
+            anyString(),
+            eq("用户管理"),
+            eq("更新"),
+            anyString(),
+            anyString(),
+            anyString(),
+            eq(1)
+        );
+    }
+
+    private void loginAs(Long userId, String username) {
+        LoginUser loginUser = new LoginUser(
+                userId,
+                username,
+                "password",
+                username,
+                Collections.singletonList(new SimpleGrantedAuthority("system:log"))
+        );
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(loginUser, null, loginUser.getAuthorities())
+        );
     }
 
     static class TestService {

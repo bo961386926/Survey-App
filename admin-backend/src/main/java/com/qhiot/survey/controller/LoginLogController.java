@@ -1,6 +1,7 @@
 package com.qhiot.survey.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.qhiot.survey.common.constant.Permissions;
 import com.qhiot.survey.common.result.Result;
 import com.qhiot.survey.entity.LoginLog;
 import com.qhiot.survey.service.LoginLogService;
@@ -28,7 +29,7 @@ public class LoginLogController {
 
     @Operation(summary = "分页查询登录日志", description = "管理员分页查询登录日志，支持按用户名和登录状态筛选")
     @GetMapping("/page")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_LOG + "')")
     public Result<Page<LoginLog>> listByPage(
             @RequestParam(required = false) String username,
             @RequestParam(required = false) Integer status,
@@ -39,7 +40,7 @@ public class LoginLogController {
 
     @Operation(summary = "导出登录日志", description = "导出登录日志为Excel文件，支持筛选条件")
     @GetMapping("/export")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_LOG + "')")
     public ResponseEntity<byte[]> exportLogs(
             @RequestParam(required = false) String username,
             @RequestParam(required = false) Integer status) {

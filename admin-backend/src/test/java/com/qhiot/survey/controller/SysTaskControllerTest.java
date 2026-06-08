@@ -57,7 +57,7 @@ class SysTaskControllerTest {
         page.setTotal(1);
         page.setRecords(java.util.Collections.singletonList(activeTask()));
 
-        when(sysTaskService.getTaskPage(anyLong(), anyLong(), anyInt(), anyString(), anyString(), anyInt(), anyInt()))
+        when(sysTaskService.getTaskPage(any(), any(), any(), any(), any(), anyInt(), anyInt()))
                 .thenReturn(page);
 
         mockMvc.perform(get("/api/v1/task/page")

@@ -3,6 +3,7 @@ package com.qhiot.survey.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qhiot.survey.common.Result;
 import com.qhiot.survey.common.annotation.OperationLog;
+import com.qhiot.survey.common.constant.Permissions;
 import com.qhiot.survey.entity.SurveyAuditRecord;
 import com.qhiot.survey.entity.SurveyResult;
 import com.qhiot.survey.entity.SysUser;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +35,7 @@ public class SurveyAuditController {
 
     @Operation(summary = "分页查询待审核列表", description = "审核员查询分配给自己的待审核勘查结果列表")
     @GetMapping("/pending")
+    @PreAuthorize("hasAuthority('" + Permissions.AUDIT_VIEW + "')")
     public Result<Page<SurveyResult>> getPendingList(
             @RequestParam(required = false) String keyword,
             @RequestParam(defaultValue = "1") Integer pageNum,
@@ -43,12 +46,14 @@ public class SurveyAuditController {
 
     @Operation(summary = "获取审核详情", description = "根据勘查结果ID获取审核详细信息")
     @GetMapping("/detail/{resultId}")
+    @PreAuthorize("hasAuthority('" + Permissions.AUDIT_VIEW + "')")
     public Result<SurveyResult> getDetail(@Parameter(description = "勘查结果ID") @PathVariable Long resultId) {
         return Result.success(surveyAuditService.getAuditDetail(resultId));
     }
 
     @Operation(summary = "审核通过", description = "审核员通过勘查结果审核")
     @PostMapping("/pass")
+    @PreAuthorize("hasAuthority('" + Permissions.AUDIT_PASS + "')")
     @OperationLog(module = "审核管理", action = "审核通过", description = "审核通过, 结果ID: #resultId", riskLevel = 1)
     public Result<Void> pass(@RequestParam Long resultId, @RequestParam String comment) {
         Long auditorId = getCurrentUserId();
@@ -58,6 +63,7 @@ public class SurveyAuditController {
 
     @Operation(summary = "审核驳回", description = "审核员驳回勘查结果，必须填写驳回理由，可关联驳回模板")
     @PostMapping("/reject")
+    @PreAuthorize("hasAuthority('" + Permissions.AUDIT_REJECT + "')")
     @OperationLog(module = "审核管理", action = "审核驳回", description = "审核驳回, 结果ID: #resultId", riskLevel = 1)
     public Result<Void> reject(@RequestParam Long resultId,
                                @RequestParam String comment,
@@ -69,6 +75,7 @@ public class SurveyAuditController {
 
     @Operation(summary = "批量审核通过", description = "批量通过多条勘查结果审核")
     @PostMapping("/batch-pass")
+    @PreAuthorize("hasAuthority('" + Permissions.AUDIT_PASS + "')")
     @OperationLog(module = "审核管理", action = "批量审核通过", description = "批量审核通过, 数量: #resultIds.size()", riskLevel = 1)
     public Result<Void> batchPass(@RequestBody List<Long> resultIds, @RequestParam(required = false) String comment) {
         Long auditorId = getCurrentUserId();
@@ -78,12 +85,14 @@ public class SurveyAuditController {
 
     @Operation(summary = "获取审核记录", description = "获取指定点位的所有审核记录")
     @GetMapping("/records")
+    @PreAuthorize("hasAuthority('" + Permissions.AUDIT_VIEW + "')")
     public Result<List<SurveyAuditRecord>> getRecords(@Parameter(description = "勘察点位ID") @RequestParam Long pointId) {
         return Result.success(surveyAuditService.getAuditRecords(pointId));
     }
 
     @Operation(summary = "获取版本差异", description = "对比两个版本勘查结果的数据差异")
     @GetMapping("/version-diff")
+    @PreAuthorize("hasAuthority('" + Permissions.AUDIT_VIEW + "')")
     public Result<Object> getVersionDiff(@RequestParam Long pointId,
                                          @RequestParam Long currentVersionId,
                                          @RequestParam Long compareVersionId) {

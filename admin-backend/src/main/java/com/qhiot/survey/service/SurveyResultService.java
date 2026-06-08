@@ -16,6 +16,16 @@ public interface SurveyResultService extends IService<SurveyResult> {
     List<SurveyResult> getResultsByPointId(Long pointId);
 
     /**
+     * 获取当前主体可访问的勘查结果列表。
+     */
+    List<SurveyResult> getAccessibleResults(Long pointId);
+
+    /**
+     * 获取当前主体可访问的勘查结果详情。
+     */
+    SurveyResult getAccessibleResultById(Long id);
+
+    /**
      * 获取最新的勘查结果
      */
     SurveyResult getLatestResultByPointId(Long pointId);

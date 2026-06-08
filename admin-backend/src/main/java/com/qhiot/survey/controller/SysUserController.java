@@ -2,6 +2,7 @@ package com.qhiot.survey.controller;
 
 import com.qhiot.survey.common.Result;
 import com.qhiot.survey.common.annotation.OperationLog;
+import com.qhiot.survey.common.constant.Permissions;
 import com.qhiot.survey.common.util.ExcelUtil;
 import com.qhiot.survey.dto.CreateUserRequest;
 import com.qhiot.survey.dto.PageResult;
@@ -46,7 +47,7 @@ public class SysUserController {
 
     @Operation(summary = "分页查询用户列表", description = "管理员分页查询用户，支持按用户名和状态筛选，返回包含角色和项目信息")
     @GetMapping(value = "/page", produces = "application/json;charset=UTF-8")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_USER + "')")
     public Result<PageResult<UserResponse>> queryUserPage(
             @RequestParam(required = false) String username,
             @RequestParam(required = false) Integer status,
@@ -91,7 +92,7 @@ public class SysUserController {
 
     @Operation(summary = "获取用户列表", description = "获取所有用户的简要列表，不含角色和项目详情")
     @GetMapping(value = "/list", produces = "application/json;charset=UTF-8")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_USER + "')")
     public Result<List<SysUser>> getUserList() {
         List<SysUser> users = sysUserService.getUserList();
         return Result.success(users);
@@ -99,7 +100,7 @@ public class SysUserController {
 
     @Operation(summary = "获取用户详情", description = "根据用户ID获取详细信息，包含角色ID列表")
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_USER + "')")
     public Result<UserResponse> getUserById(@Parameter(description = "用户ID") @PathVariable Long id) {
         SysUser user = sysUserService.getById(id);
         if (user == null) {
@@ -123,7 +124,7 @@ public class SysUserController {
 
     @Operation(summary = "创建用户", description = "创建新用户并分配角色，默认启用且首次登录需改密")
     @PostMapping("/create")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_USER + "')")
     @OperationLog(module = "用户管理", action = "创建", description = "创建用户: #request.username", riskLevel = 1)
     public Result<Boolean> createUser(@Valid @RequestBody CreateUserRequest request) {
         log.info("====== [用户管理] 创建用户请求 - username: {}, realName: {}, roleIds: {} ======", 
@@ -160,7 +161,7 @@ public class SysUserController {
 
     @Operation(summary = "更新用户", description = "更新用户信息，支持同时更新密码和角色分配")
     @PutMapping("/update")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_USER + "')")
     @OperationLog(module = "用户管理", action = "更新", description = "更新用户: #request.id", riskLevel = 1)
     public Result<Boolean> updateUser(@Valid @RequestBody UpdateUserRequest request) {
         log.info("====== [用户管理] 更新用户请求 - userId: {}, realName: {}, roleIds: {} ======", 
@@ -199,7 +200,7 @@ public class SysUserController {
 
     @Operation(summary = "删除用户", description = "删除指定用户，高风险操作")
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_USER + "')")
     @OperationLog(module = "用户管理", action = "删除", description = "删除用户ID: #id", riskLevel = 2)
     public Result<Boolean> deleteUser(@Parameter(description = "用户ID") @PathVariable Long id) {
         boolean success = sysUserService.deleteUser(id);
@@ -208,7 +209,7 @@ public class SysUserController {
 
     @Operation(summary = "更新用户状态", description = "启用或禁用用户账号，0禁用/1启用")
     @PutMapping("/status/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_USER + "')")
     @OperationLog(module = "用户管理", action = "更新状态", description = "更新用户状态, ID: #id, 状态: #status", riskLevel = 1)
     public Result<Boolean> updateUserStatus(@Parameter(description = "用户ID") @PathVariable Long id,
                                              @Parameter(description = "状态：0禁用/1启用") @RequestParam Integer status) {
@@ -218,7 +219,7 @@ public class SysUserController {
 
     @Operation(summary = "重置用户密码", description = "管理员重置用户密码，新密码需符合复杂度要求，系统自动下发短信/邮件通知")
     @PutMapping("/reset-password/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_USER + "')")
     @OperationLog(module = "用户管理", action = "重置密码", description = "重置用户密码, ID: #id", riskLevel = 2)
     public Result<Boolean> resetPassword(
         @Parameter(description = "用户ID") @PathVariable Long id, 
@@ -237,7 +238,7 @@ public class SysUserController {
 
     @Operation(summary = "导出用户数据", description = "导出用户数据为Excel文件")
     @GetMapping("/export")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_USER + "')")
     public ResponseEntity<byte[]> exportUsers() {
         byte[] excelBytes = sysUserService.exportUsers();
         
@@ -250,7 +251,7 @@ public class SysUserController {
 
     @Operation(summary = "导入用户数据", description = "从Excel文件批量导入用户数据")
     @PostMapping("/import")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('" + Permissions.SYSTEM_USER + "')")
     @OperationLog(module = "用户管理", action = "导入", description = "批量导入用户数据", riskLevel = 1)
     public Result<Map<String, Integer>> importUsers(@RequestParam("file") MultipartFile file) throws IOException {
         // 读取Excel文件，6列：用户名、真实姓名、手机号、邮箱、角色、状态
