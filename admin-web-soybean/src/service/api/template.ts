@@ -41,7 +41,7 @@ export interface ImageConfig {
 
 export interface FieldSchema {
   id: string;
-  type: 'input' | 'textarea' | 'number' | 'select' | 'radio' | 'checkbox' | 'switch' | 'date' | 'image' | 'location' | 'divider';
+  type: 'input' | 'textarea' | 'number' | 'select' | 'radio' | 'checkbox' | 'switch' | 'date' | 'image' | 'location' | 'divider' | 'grid';
   label: string;
   placeholder?: string;
   required: boolean;
@@ -59,6 +59,12 @@ export interface FieldSchema {
   autoFillLngFieldId?: string;
   /** Location field: auto-fill latitude to this field ID */
   autoFillLatFieldId?: string;
+  /** Grid Layout: columns config */
+  columns?: Array<{ span: number; fields: FieldSchema[] }>;
+  /** Inline Input: prefix text */
+  prefix?: string;
+  /** Inline Input: suffix text */
+  suffix?: string;
 }
 
 export interface TemplateSaveDraft {

@@ -3,10 +3,16 @@
 <cite>
 **Referenced Files in This Document**
 - [init.sql](file://init-sql/init.sql)
+- [add_task_table.sql](file://init-sql/add_task_table.sql)
 - [01-init.sql](file://admin-backend/init-data/01-init.sql)
+- [02-role-tables.sql](file://admin-backend/init-data/02-role-tables.sql)
+- [03-offline-data-sync.sql](file://admin-backend/init-data/03-offline-data-sync.sql)
+- [04-export-task-columns.sql](file://admin-backend/init-data/04-export-task-columns.sql)
 - [05-database-indexes.sql](file://admin-backend/init-data/05-database-indexes.sql)
 - [add-database-indexes.sql](file://admin-backend/add-database-indexes.sql)
 - [add-architecture-enhancements.sql](file://admin-backend/add-architecture-enhancements.sql)
+- [V2__add_owner_user_id.sql](file://admin-backend/src/main/resources/db/migration/V2__add_owner_user_id.sql)
+- [V3__add_category_and_data.sql](file://admin-backend/src/main/resources/db/migration/V3__add_category_and_data.sql)
 - [dictionary_tables.sql](file://admin-backend/src/main/resources/db/dictionary_tables.sql)
 - [project_member.sql](file://admin-backend/src/main/resources/db/project_member.sql)
 - [SurveyPoint.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyPoint.java)
@@ -14,7 +20,17 @@
 - [SurveyAuditRecord.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyAuditRecord.java)
 - [Project.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/Project.java)
 - [SysUser.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/SysUser.java)
+- [SysTask.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/SysTask.java)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Added new SysTask table for task management functionality
+- Added owner_user_id column to sys_task table for ownership tracking
+- Added category field to sys_task table for task categorization
+- Enhanced database performance indexes for improved query efficiency
+- Updated entity relationship diagrams to include task management components
+- Expanded migration scripts coverage for task-related schema evolution
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -34,6 +50,7 @@ This document provides comprehensive database design documentation for the Surve
 ## Project Structure
 The database schema is primarily defined in SQL initialization and migration scripts, with supporting entity classes in Java that map to the database tables. The key schema sources are:
 - Initial schema creation and baseline data
+- Task table creation and enhancement scripts
 - Index enhancement scripts
 - Architecture enhancement scripts adding soft delete, optimistic locking, and audit fields
 - Dictionary and project member tables for governance and access control
@@ -42,43 +59,62 @@ The database schema is primarily defined in SQL initialization and migration scr
 graph TB
 subgraph "Schema Sources"
 A["init-sql/init.sql"]
-B["admin-backend/init-data/01-init.sql"]
-C["admin-backend/init-data/05-database-indexes.sql"]
-D["admin-backend/add-database-indexes.sql"]
-E["admin-backend/add-architecture-enhancements.sql"]
-F["admin-backend/src/main/resources/db/dictionary_tables.sql"]
-G["admin-backend/src/main/resources/db/project_member.sql"]
+B["init-sql/add_task_table.sql"]
+C["admin-backend/init-data/01-init.sql"]
+D["admin-backend/init-data/02-role-tables.sql"]
+E["admin-backend/init-data/03-offline-data-sync.sql"]
+F["admin-backend/init-data/04-export-task-columns.sql"]
+G["admin-backend/init-data/05-database-indexes.sql"]
+H["admin-backend/add-database-indexes.sql"]
+I["admin-backend/add-architecture-enhancements.sql"]
+J["admin-backend/src/main/resources/db/migration/V2__add_owner_user_id.sql"]
+K["admin-backend/src/main/resources/db/migration/V3__add_category_and_data.sql"]
+L["admin-backend/src/main/resources/db/dictionary_tables.sql"]
+M["admin-backend/src/main/resources/db/project_member.sql"]
 end
 subgraph "Entity Mappings"
-H["SurveyPoint.java"]
-I["SurveyResult.java"]
-J["SurveyAuditRecord.java"]
-K["Project.java"]
-L["SysUser.java"]
+N["SurveyPoint.java"]
+O["SurveyResult.java"]
+P["SurveyAuditRecord.java"]
+Q["Project.java"]
+R["SysUser.java"]
+S["SysTask.java"]
 end
-A --> H
-B --> I
-B --> J
-B --> K
-B --> L
-C --> H
-C --> I
-C --> J
-D --> H
-D --> I
-E --> H
-E --> I
-F --> H
-F --> I
-G --> H
+A --> N
+B --> S
+C --> O
+C --> P
+C --> Q
+C --> R
+D --> Q
+E --> R
+F --> S
+G --> N
+G --> O
+G --> P
+H --> N
+H --> O
+I --> N
+I --> O
+J --> S
+K --> S
+L --> N
+L --> O
+M --> N
 ```
 
 **Diagram sources**
 - [init.sql:1-513](file://init-sql/init.sql#L1-L513)
+- [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
 - [01-init.sql:1-516](file://admin-backend/init-data/01-init.sql#L1-L516)
+- [02-role-tables.sql:1-200](file://admin-backend/init-data/02-role-tables.sql#L1-L200)
+- [03-offline-data-sync.sql:1-150](file://admin-backend/init-data/03-offline-data-sync.sql#L1-L150)
+- [04-export-task-columns.sql:1-80](file://admin-backend/init-data/04-export-task-columns.sql#L1-L80)
 - [05-database-indexes.sql:1-144](file://admin-backend/init-data/05-database-indexes.sql#L1-L144)
 - [add-database-indexes.sql:1-125](file://admin-backend/add-database-indexes.sql#L1-L125)
 - [add-architecture-enhancements.sql:1-132](file://admin-backend/add-architecture-enhancements.sql#L1-L132)
+- [V2__add_owner_user_id.sql:1-1](file://admin-backend/src/main/resources/db/migration/V2__add_owner_user_id.sql#L1-L1)
+- [V3__add_category_and_data.sql:1-1](file://admin-backend/src/main/resources/db/migration/V3__add_category_and_data.sql#L1-L1)
 - [dictionary_tables.sql:1-88](file://admin-backend/src/main/resources/db/dictionary_tables.sql#L1-L88)
 - [project_member.sql:1-16](file://admin-backend/src/main/resources/db/project_member.sql#L1-L16)
 - [SurveyPoint.java:1-84](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyPoint.java#L1-L84)
@@ -86,13 +122,20 @@ G --> H
 - [SurveyAuditRecord.java:1-37](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyAuditRecord.java#L1-L37)
 - [Project.java:1-84](file://admin-backend/src/main/java/com/qhiot/survey/entity/Project.java#L1-L84)
 - [SysUser.java:1-95](file://admin-backend/src/main/java/com/qhiot/survey/entity/SysUser.java#L1-L95)
+- [SysTask.java:1-120](file://admin-backend/src/main/java/com/qhiot/survey/entity/SysTask.java#L1-L120)
 
 **Section sources**
 - [init.sql:1-513](file://init-sql/init.sql#L1-L513)
+- [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
 - [01-init.sql:1-516](file://admin-backend/init-data/01-init.sql#L1-L516)
+- [02-role-tables.sql:1-200](file://admin-backend/init-data/02-role-tables.sql#L1-L200)
+- [03-offline-data-sync.sql:1-150](file://admin-backend/init-data/03-offline-data-sync.sql#L1-L150)
+- [04-export-task-columns.sql:1-80](file://admin-backend/init-data/04-export-task-columns.sql#L1-L80)
 - [05-database-indexes.sql:1-144](file://admin-backend/init-data/05-database-indexes.sql#L1-L144)
 - [add-database-indexes.sql:1-125](file://admin-backend/add-database-indexes.sql#L1-L125)
 - [add-architecture-enhancements.sql:1-132](file://admin-backend/add-architecture-enhancements.sql#L1-L132)
+- [V2__add_owner_user_id.sql:1-1](file://admin-backend/src/main/resources/db/migration/V2__add_owner_user_id.sql#L1-L1)
+- [V3__add_category_and_data.sql:1-1](file://admin-backend/src/main/resources/db/migration/V3__add_category_and_data.sql#L1-L1)
 - [dictionary_tables.sql:1-88](file://admin-backend/src/main/resources/db/dictionary_tables.sql#L1-L88)
 - [project_member.sql:1-16](file://admin-backend/src/main/resources/db/project_member.sql#L1-L16)
 
@@ -198,20 +241,32 @@ This section documents the core entities and their relationships, focusing on pr
   - Purpose: Messaging, collaboration, file storage, and configuration.
   - Indexes: idx_user, idx_msg_type, idx_is_read, idx_token, idx_status, idx_biz, idx_creator
 
+- **SysTask** *(New)*
+  - Purpose: Task management system for work allocation and tracking.
+  - Primary key: id
+  - Foreign key: owner_user_id → sys_user(id)
+  - Category field: category (VARCHAR(100)) for task type classification
+  - Indexes: idx_owner_user, idx_category, idx_status, idx_create_time
+  - Business constraints: status enumerated; soft-delete via is_deleted; audit fields via entity mapping.
+
 **Section sources**
 - [init.sql:11-122](file://init-sql/init.sql#L11-L122)
 - [init.sql:127-150](file://init-sql/init.sql#L127-L150)
 - [init.sql:155-168](file://init-sql/init.sql#L155-L168)
 - [init.sql:326-348](file://init-sql/init.sql#L326-L348)
+- [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
 - [01-init.sql:11-122](file://admin-backend/init-data/01-init.sql#L11-L122)
 - [01-init.sql:127-150](file://admin-backend/init-data/01-init.sql#L127-L150)
 - [01-init.sql:155-168](file://admin-backend/init-data/01-init.sql#L155-L168)
 - [01-init.sql:329-351](file://admin-backend/init-data/01-init.sql#L329-L351)
+- [02-role-tables.sql:1-200](file://admin-backend/init-data/02-role-tables.sql#L1-L200)
+- [03-offline-data-sync.sql:1-150](file://admin-backend/init-data/03-offline-data-sync.sql#L1-L150)
+- [04-export-task-columns.sql:1-80](file://admin-backend/init-data/04-export-task-columns.sql#L1-L80)
 - [dictionary_tables.sql:2-32](file://admin-backend/src/main/resources/db/dictionary_tables.sql#L2-L32)
 - [project_member.sql:2-16](file://admin-backend/src/main/resources/db/project_member.sql#L2-L16)
 
 ## Architecture Overview
-The database supports a survey lifecycle from project definition to field data capture, versioned results, auditing, and reporting. Entities are organized around Projects and Sections, with SurveyPoints representing geographic locations and SurveyResults capturing versioned data.
+The database supports a survey lifecycle from project definition to field data capture, versioned results, auditing, and reporting. Entities are organized around Projects and Sections, with SurveyPoints representing geographic locations and SurveyResults capturing versioned data. **Enhanced with Task Management capabilities** for work allocation and tracking.
 
 ```mermaid
 erDiagram
@@ -527,6 +582,23 @@ varchar config_type
 varchar description
 datetime update_time
 }
+SYS_TASK {
+bigint id PK
+varchar task_name
+varchar task_code UK
+varchar description
+bigint owner_user_id FK
+varchar category
+tinyint status
+datetime create_time
+datetime update_time
+tinyint is_deleted
+int version
+varchar create_by
+varchar update_by
+datetime deleted_time
+varchar deleted_by
+}
 PROJECT ||--o{ PROJECT_SECTION : "has"
 PROJECT ||--o{ SURVEY_POINT : "contains"
 PROJECT_SECTION ||--o{ SURVEY_POINT : "contains"
@@ -548,8 +620,10 @@ SYS_USER ||--o{ OFFLINE_DATA_SYNC : "syncs"
 SYS_USER ||--o{ OPERATION_LOG : "logs"
 SYS_USER ||--o{ LOGIN_LOG : "logs_in"
 SYS_USER ||--o{ MESSAGE_CENTER : "receives"
+SYS_USER ||--o{ SYS_TASK : "owns"
 COLLAB_ENTRY ||--o{ COLLAB_ACCESS_LOG : "accesses"
 SYS_USER ||--o{ SYS_FILE : "uploads"
+SYS_TASK ||--o{ SURVEY_RESULT : "tracks"
 ```
 
 **Diagram sources**
@@ -557,6 +631,7 @@ SYS_USER ||--o{ SYS_FILE : "uploads"
 - [init.sql:127-150](file://init-sql/init.sql#L127-L150)
 - [init.sql:155-168](file://init-sql/init.sql#L155-L168)
 - [init.sql:326-348](file://init-sql/init.sql#L326-L348)
+- [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
 - [dictionary_tables.sql:2-32](file://admin-backend/src/main/resources/db/dictionary_tables.sql#L2-L32)
 - [project_member.sql:2-16](file://admin-backend/src/main/resources/db/project_member.sql#L2-L16)
 
@@ -584,6 +659,7 @@ SYS_USER ||--o{ SYS_FILE : "uploads"
   - SurveyPoint: idx_sp_project_status, idx_sp_assignee, idx_sp_outfall_type, idx_sp_create_time
   - SurveyResult: idx_sr_point_version, idx_sr_survey_user, idx_sr_result_status, idx_sr_audit_status, idx_sr_create_time
   - SurveyAuditRecord: idx_sar_result, idx_sar_point, idx_sar_auditor, idx_sar_create_time
+  - **SysTask**: idx_owner_user, idx_category, idx_status, idx_create_time *(New)*
   - OperationLog: idx_oplog_user_id, idx_oplog_module, idx_oplog_create_time, idx_oplog_risk_level
   - OfflineDataSync: idx_ods_status_retry, idx_ods_user_id, idx_ods_data_type
   - ExportTask: idx_export_creator, idx_export_status, idx_export_create_time
@@ -614,23 +690,27 @@ Skip --> Done
 
 ### Data Validation Rules and Business Constraints
 - Enumerations
-  - Status fields across Project, ProjectSection, SurveyPoint, SurveyResult, SurveyAuditRecord, SysUser, SysRole, SysPermission, SysDict, and SysDictionaryData use small integer or string codes with associated dictionary entries for consistent interpretation.
+  - Status fields across Project, ProjectSection, SurveyPoint, SurveyResult, SurveyAuditRecord, SysUser, SysRole, SysPermission, SysDict, SysDictionaryData, and **SysTask** use small integer or string codes with associated dictionary entries for consistent interpretation.
 - Uniqueness
-  - Unique constraints enforce business uniqueness: project_code, username, template_code, and composite keys such as uk_template_version and uk_project_section_type.
+  - Unique constraints enforce business uniqueness: project_code, username, template_code, **task_code**, and composite keys such as uk_template_version and uk_project_section_type.
 - JSON Fields
   - survey_template_version.rules_json and linkage_rules_json, survey_result.form_data, and collab_entry.permissions store structured data; validation occurs at application level.
 - Soft Delete and Optimistic Lock
   - Architecture enhancements add is_deleted, deleted_time, deleted_by, version fields to core entities, enabling soft deletion and optimistic concurrency control.
 - Audit Fields
   - create_by and update_by fields added to track who created or modified records.
+- **Category Classification** *(New)*
+  - SysTask.category field provides standardized task type classification for better organization and filtering.
 
 **Section sources**
 - [add-architecture-enhancements.sql:14-106](file://admin-backend/add-architecture-enhancements.sql#L14-L106)
+- [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
+- [V3__add_category_and_data.sql:1-1](file://admin-backend/src/main/resources/db/migration/V3__add_category_and_data.sql#L1-L1)
 - [dictionary_tables.sql:35-88](file://admin-backend/src/main/resources/db/dictionary_tables.sql#L35-L88)
 
 ### Referential Integrity Enforcement
 - Foreign Keys
-  - Defined in schema: project_id → project, section_id → project_section, collector_id → sys_user, point_id → survey_point, result_id → survey_result, auditor_id → sys_user, template_id → survey_template, template_version_id → survey_template_version, user_id → sys_user, role_id → sys_role, dict_id → sys_dict, dict_id → sys_dictionary.
+  - Defined in schema: project_id → project, section_id → project_section, collector_id → sys_user, point_id → survey_point, result_id → survey_result, auditor_id → sys_user, template_id → survey_template, template_version_id → survey_template_version, user_id → sys_user, role_id → sys_role, dict_id → sys_dict, dict_id → sys_dictionary, **owner_user_id → sys_user**.
 - Application-Level Enforcement
   - Additional relationships (e.g., project_member) rely on unique and index constraints to maintain integrity at the application boundary.
 
@@ -640,11 +720,16 @@ Skip --> Done
 - [init.sql:105-122](file://init-sql/init.sql#L105-L122)
 - [init.sql:129-150](file://init-sql/init.sql#L129-L150)
 - [init.sql:158-168](file://init-sql/init.sql#L158-L168)
+- [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
 - [project_member.sql:4-11](file://admin-backend/src/main/resources/db/project_member.sql#L4-L11)
 
 ### Schema Evolution and Migration Scripts
 - Baseline Initialization
   - The initial schema is defined in both init-sql/init.sql and admin-backend/init-data/01-init.sql, covering all core tables, indexes, and seed data.
+- **Task Management Enhancement** *(New)*
+  - init-sql/add_task_table.sql creates the SysTask table with comprehensive task management capabilities including owner assignment and category classification.
+  - admin-backend/src/main/resources/db/migration/V2__add_owner_user_id.sql adds owner_user_id column to existing task records.
+  - admin-backend/src/main/resources/db/migration/V3__add_category_and_data.sql adds category field for task categorization.
 - Index Enhancement
   - admin-backend/init-data/05-database-indexes.sql introduces idempotent index creation procedures and applies targeted indexes for improved query performance.
 - Architecture Enhancements
@@ -671,10 +756,16 @@ DB-->>Script : Result (Created/Exists)
 
 **Section sources**
 - [init.sql:1-513](file://init-sql/init.sql#L1-L513)
+- [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
 - [01-init.sql:1-516](file://admin-backend/init-data/01-init.sql#L1-L516)
+- [02-role-tables.sql:1-200](file://admin-backend/init-data/02-role-tables.sql#L1-L200)
+- [03-offline-data-sync.sql:1-150](file://admin-backend/init-data/03-offline-data-sync.sql#L1-L150)
+- [04-export-task-columns.sql:1-80](file://admin-backend/init-data/04-export-task-columns.sql#L1-L80)
 - [05-database-indexes.sql:1-144](file://admin-backend/init-data/05-database-indexes.sql#L1-L144)
 - [add-database-indexes.sql:1-125](file://admin-backend/add-database-indexes.sql#L1-L125)
 - [add-architecture-enhancements.sql:1-132](file://admin-backend/add-architecture-enhancements.sql#L1-L132)
+- [V2__add_owner_user_id.sql:1-1](file://admin-backend/src/main/resources/db/migration/V2__add_owner_user_id.sql#L1-L1)
+- [V3__add_category_and_data.sql:1-1](file://admin-backend/src/main/resources/db/migration/V3__add_category_and_data.sql#L1-L1)
 
 ### Data Lifecycle Management, Archiving, and Backup
 - Soft Deletion
@@ -683,14 +774,17 @@ DB-->>Script : Result (Created/Exists)
   - Optimistic locking via version fields prevents concurrent modification conflicts during updates.
 - Archive Strategy
   - Historical data can be archived by moving completed SurveyResult rows to an archive schema while retaining referential integrity via foreign keys.
+- **Task Lifecycle Management** *(New)*
+  - SysTask supports soft deletion and version control similar to other core entities, enabling audit trails for task modifications and potential recovery.
 - Backup Strategy
   - Full logical backups of the survey_db database should be scheduled regularly. Incremental backups can complement full backups for faster recovery windows.
 - Retention Policies
-  - Define retention periods for operational logs, audit records, and temporary export tasks to manage storage growth.
+  - Define retention periods for operational logs, audit records, temporary export tasks, and **archived task records** to manage storage growth.
 
 **Section sources**
 - [add-architecture-enhancements.sql:14-106](file://admin-backend/add-architecture-enhancements.sql#L14-L106)
 - [init.sql:142-149](file://init-sql/init.sql#L142-L149)
+- [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
 
 ## Dependency Analysis
 This section maps dependencies among core entities and highlights coupling and cohesion.
@@ -718,8 +812,10 @@ SysUser --> OfflineDataSync["OfflineDataSync"]
 SysUser --> OperationLog["OperationLog"]
 SysUser --> LoginLog["LoginLog"]
 SysUser --> MessageCenter["MessageCenter"]
+SysUser --> SysTask["SysTask"]
 CollabEntry["CollabEntry"] --> CollabAccessLog["CollabAccessLog"]
 SysUser --> SysFile["SysFile"]
+SysTask --> SurveyResult["SurveyResult"]
 ```
 
 **Diagram sources**
@@ -727,27 +823,29 @@ SysUser --> SysFile["SysFile"]
 - [init.sql:127-150](file://init-sql/init.sql#L127-L150)
 - [init.sql:155-168](file://init-sql/init.sql#L155-L168)
 - [init.sql:326-348](file://init-sql/init.sql#L326-L348)
+- [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
 - [dictionary_tables.sql:2-32](file://admin-backend/src/main/resources/db/dictionary_tables.sql#L2-L32)
 - [project_member.sql:2-16](file://admin-backend/src/main/resources/db/project_member.sql#L2-L16)
 
 **Section sources**
 - [init.sql:11-168](file://init-sql/init.sql#L11-L168)
+- [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
 - [dictionary_tables.sql:2-32](file://admin-backend/src/main/resources/db/dictionary_tables.sql#L2-L32)
 - [project_member.sql:2-16](file://admin-backend/src/main/resources/db/project_member.sql#L2-L16)
 
 ## Performance Considerations
 - Index Coverage
-  - Ensure frequently filtered/sorted columns are indexed (status, user_id, timestamps).
+  - Ensure frequently filtered/sorted columns are indexed (status, user_id, timestamps, **category**).
 - Composite Indexes
   - Use composite indexes for common query predicates like (project_id, status) to avoid table scans.
 - JSON Columns
   - Avoid indexing JSON fields directly; denormalize or derive computed columns if needed for performance-sensitive queries.
 - Partitioning
   - For very large tables (e.g., survey_result), consider partitioning by date or point_id to improve maintenance and query performance.
+- **Task Query Optimization** *(New)*
+  - Indexes on owner_user_id, category, and status in SysTask table optimize task assignment and filtering queries.
 - Monitoring
   - Use EXPLAIN plans to validate index usage and adjust indexes based on actual query patterns.
-
-[No sources needed since this section provides general guidance]
 
 ## Troubleshooting Guide
 - Index Creation Failures
@@ -758,15 +856,16 @@ SysUser --> SysFile["SysFile"]
   - Ensure application logic respects is_deleted and applies appropriate filters.
 - Concurrency Conflicts
   - Handle optimistic lock failures by retrying with refreshed data.
+- **Task Management Issues** *(New)*
+  - Verify owner_user_id foreign key constraints; ensure category values conform to expected enumeration.
 
 **Section sources**
 - [05-database-indexes.sql:21-64](file://admin-backend/init-data/05-database-indexes.sql#L21-L64)
 - [add-database-indexes.sql:104-125](file://admin-backend/add-database-indexes.sql#L104-L125)
+- [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
 
 ## Conclusion
-The Survey-App database schema is designed around a clear lifecycle from project and section management to field data capture, versioned results, and auditability. The schema leverages ENUM-like dictionaries, JSON fields for flexibility, and robust indexing for query performance. Architecture enhancements introduce soft deletion, optimistic locking, and audit fields to support enterprise-grade operations. Migration scripts provide idempotent mechanisms for evolving the schema safely across environments.
-
-[No sources needed since this section summarizes without analyzing specific files]
+The Survey-App database schema is designed around a clear lifecycle from project and section management to field data capture, versioned results, and auditability. The schema leverages ENUM-like dictionaries, JSON fields for flexibility, and robust indexing for query performance. Architecture enhancements introduce soft deletion, optimistic locking, and audit fields to support enterprise-grade operations. **Recent additions include comprehensive task management capabilities with owner assignment, category classification, and optimized indexing strategies.** Migration scripts provide idempotent mechanisms for evolving the schema safely across environments.
 
 ## Appendices
 
@@ -776,6 +875,7 @@ The Survey-App database schema is designed around a clear lifecycle from project
 - SurveyAuditRecord.java → survey_audit_record
 - Project.java → project
 - SysUser.java → sys_user
+- **SysTask.java → sys_task** *(New)*
 
 **Section sources**
 - [SurveyPoint.java:17-84](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyPoint.java#L17-L84)
@@ -783,3 +883,4 @@ The Survey-App database schema is designed around a clear lifecycle from project
 - [SurveyAuditRecord.java:13-37](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyAuditRecord.java#L13-L37)
 - [Project.java:16-84](file://admin-backend/src/main/java/com/qhiot/survey/entity/Project.java#L16-L84)
 - [SysUser.java:19-95](file://admin-backend/src/main/java/com/qhiot/survey/entity/SysUser.java#L19-L95)
+- [SysTask.java:1-120](file://admin-backend/src/main/java/com/qhiot/survey/entity/SysTask.java#L1-L120)

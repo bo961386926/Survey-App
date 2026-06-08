@@ -19,6 +19,14 @@ const permissionGroups = [
     permissions: [
       { key: 'project:view', name: '查看项目' },
       { key: 'project:edit', name: '编辑项目' },
+    ]
+  },
+  {
+    key: 'template',
+    name: '模板管理',
+    permissions: [
+      { key: 'template:view', name: '查看模板' },
+      { key: 'template:edit', name: '编辑模板' },
       { key: 'template:bind', name: '模板绑定' },
     ]
   },
@@ -50,10 +58,29 @@ const permissionGroups = [
     ]
   },
   {
+    key: 'task',
+    name: '任务管理',
+    permissions: [
+      { key: 'task:view', name: '查看任务' },
+      { key: 'task:edit', name: '编辑任务' },
+      { key: 'task:assign', name: '指派任务' },
+    ]
+  },
+  {
     key: 'system',
     name: '系统管理',
     permissions: [
+      { key: 'system:user', name: '用户管理' },
+      { key: 'system:role', name: '角色管理' },
+      { key: 'system:dict', name: '字典管理' },
       { key: 'system:log', name: '系统操作日志' },
+    ]
+  },
+  {
+    key: 'message',
+    name: '消息管理',
+    permissions: [
+      { key: 'message:push', name: '推送消息' },
     ]
   },
   {

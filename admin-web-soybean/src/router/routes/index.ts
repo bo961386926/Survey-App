@@ -17,6 +17,8 @@ const customRoutes: CustomRoute[] = [
       title: 'point_map',
       i18nKey: 'route.point_map',
       icon: 'material-symbols:map-outline-rounded',
+      permissions: ['point:view'],
+      hideInMenu: true,
       order: 2
     }
   },
@@ -29,26 +31,29 @@ const customRoutes: CustomRoute[] = [
       title: 'project',
       i18nKey: 'route.project',
       icon: 'material-symbols:inventory-2-outline-rounded',
+      permissions: ['project:view'],
       order: 2
     },
     children: [
       {
-        name: 'project_list_view',
+        name: 'project_list',
         path: '/project/list',
         component: 'view.project_list',
         meta: {
           title: 'project_list',
           i18nKey: 'route.project_list',
+          permissions: ['project:view'],
           hideInMenu: true
         }
       },
       {
-        name: 'project_detail_view',
+        name: 'project_detail',
         path: '/project/detail/:id',
         component: 'view.project_detail',
         meta: {
           title: 'project_detail',
           i18nKey: 'route.project_detail',
+          permissions: ['project:view'],
           hideInMenu: true,
           activeMenu: 'project'
         }
@@ -75,6 +80,7 @@ const customRoutes: CustomRoute[] = [
           title: 'system_user',
           i18nKey: 'route.system_user',
           icon: 'material-symbols:group-outline-rounded',
+          permissions: ['system:user'],
           order: 1
         }
       },
@@ -86,6 +92,7 @@ const customRoutes: CustomRoute[] = [
           title: 'system_role',
           i18nKey: 'route.system_role',
           icon: 'material-symbols:manage-accounts-outline-rounded',
+          permissions: ['system:role'],
           order: 2
         }
       },
@@ -97,6 +104,8 @@ const customRoutes: CustomRoute[] = [
           title: 'system_log',
           i18nKey: 'route.system_log',
           icon: 'material-symbols:history-rounded',
+          permissions: ['system:log'],
+          hideInMenu: true,
           order: 3
         }
       },
@@ -108,6 +117,8 @@ const customRoutes: CustomRoute[] = [
           title: 'system_message',
           i18nKey: 'route.system_message',
           icon: 'material-symbols:notifications-outline-rounded',
+          permissions: ['message:push'],
+          hideInMenu: true,
           order: 4
         }
       },
@@ -130,6 +141,8 @@ const customRoutes: CustomRoute[] = [
           title: 'system_dict',
           i18nKey: 'route.system_dict',
           icon: 'material-symbols:dictionary',
+          permissions: ['system:dict'],
+          hideInMenu: true,
           order: 6
         }
       }
@@ -144,26 +157,29 @@ const customRoutes: CustomRoute[] = [
       title: 'template',
       i18nKey: 'route.template',
       icon: 'material-symbols:schema-outline-rounded',
+      permissions: ['template:view'],
       order: 5
     },
     children: [
       {
-        name: 'template_list_view',
+        name: 'template_list',
         path: '/template/list',
         component: 'view.template_list',
         meta: {
           title: 'template_list',
           i18nKey: 'route.template_list',
+          permissions: ['template:view'],
           hideInMenu: true
         }
       },
       {
-        name: 'template_design_view',
+        name: 'template_design',
         path: '/template/design/:id',
         component: 'view.template_design',
         meta: {
           title: 'template_design',
           i18nKey: 'route.template_design',
+          permissions: ['template:edit'],
           hideInMenu: true,
           activeMenu: 'template'
         }
@@ -179,33 +195,36 @@ const customRoutes: CustomRoute[] = [
       title: 'audit',
       i18nKey: 'route.audit',
       icon: 'material-symbols:verified-user-outline-rounded',
+      permissions: ['audit:view'],
       order: 6
     },
     children: [
       {
-        name: 'audit_list_view',
+        name: 'audit_list',
         path: '/audit/list',
         component: 'view.audit_list',
         meta: {
           title: 'audit_list',
           i18nKey: 'route.audit_list',
+          permissions: ['audit:view'],
           hideInMenu: true
         }
       },
       {
-        name: 'audit_detail_view',
+        name: 'audit_detail',
         path: '/audit/detail/:id',
         component: 'view.audit_detail',
         meta: {
           title: 'audit_detail',
           i18nKey: 'route.audit_detail',
+          permissions: ['audit:view'],
           hideInMenu: true,
           activeMenu: 'audit'
         }
       }
     ]
   },
-  { name: 'point', path: '/point', meta: { hideInMenu: true } },
+  { name: 'point', path: '/point', meta: { hideInMenu: true, permissions: ['point:view'] } },
   {
     name: 'task',
     path: '/task',
@@ -215,6 +234,8 @@ const customRoutes: CustomRoute[] = [
       title: 'task_center',
       i18nKey: 'route.task_center',
       icon: 'carbon:task',
+      permissions: ['task:view'],
+      hideInMenu: true,
       order: 3
     },
     children: [
@@ -222,23 +243,23 @@ const customRoutes: CustomRoute[] = [
         name: 'task_center_list',
         path: '/task/list',
         component: 'view.task_center_list',
-        meta: { title: 'task_center_list', i18nKey: 'route.task_center_list', hideInMenu: true }
+        meta: { title: 'task_center_list', i18nKey: 'route.task_center_list', permissions: ['task:view'], hideInMenu: true }
       },
       {
         name: 'task_center_map',
         path: '/task/map',
         component: 'view.task_center_map',
-        meta: { title: 'task_center_map', i18nKey: 'route.task_center_map', hideInMenu: true }
+        meta: { title: 'task_center_map', i18nKey: 'route.task_center_map', permissions: ['task:view'], hideInMenu: true }
       },
       {
         name: 'task_center_detail',
         path: '/task/detail/:id',
         component: 'view.task_center_detail',
-        meta: { title: 'task_center_detail', i18nKey: 'route.task_center_detail', hideInMenu: true, activeMenu: 'task_center_list' }
+        meta: { title: 'task_center_detail', i18nKey: 'route.task_center_detail', permissions: ['task:view'], hideInMenu: true, activeMenu: 'task_center_list' }
       }
     ]
   },
-  { name: 'export', path: '/export', meta: { hideInMenu: true } },
+  { name: 'export', path: '/export', meta: { hideInMenu: true, permissions: ['export:project', 'export:audit'] } },
   { name: 'exception', path: '/exception', meta: { hideInMenu: true } },
   {
     name: 'dashboard',

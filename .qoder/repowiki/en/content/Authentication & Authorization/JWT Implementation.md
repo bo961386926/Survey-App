@@ -18,6 +18,14 @@
 - [CollabTokenSecurityTest.java](file://admin-backend/src/test/java/com/qhiot/survey/security/CollabTokenSecurityTest.java)
 </cite>
 
+## Update Summary
+**Changes Made**
+- Enhanced JWT authentication with dual-token support for internal and collaboration users
+- Improved token validation logic with separate handling for login types
+- Added comprehensive collaboration access control with whitelist/blacklist policies
+- Strengthened security boundaries between internal and external user authentication flows
+- Updated token structure to support distinct loginType claims for different user categories
+
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Project Structure](#project-structure)
@@ -31,17 +39,17 @@
 10. [Appendices](#appendices)
 
 ## Introduction
-This document provides comprehensive documentation for the JWT (JSON Web Token) implementation used for authentication in the backend service. It covers token structure, payload contents, and claims; the token generation process including username, login type, and expiration handling; token validation and signature verification; integration with Spring Security’s authentication system; extraction from HTTP headers; refresh strategies; expiration handling; and security best practices for production environments.
+This document provides comprehensive documentation for the JWT (JSON Web Token) implementation used for authentication in the backend service. The system now features enhanced dual-token support with separate authentication flows for internal employees and external collaborators. It covers token structure, payload contents, and claims used for both login types; the token generation process including username, login type differentiation, and expiration handling; token validation and signature verification; integration with Spring Security's authentication system; extraction from HTTP headers; refresh strategies; expiration handling; and security best practices for production environments.
 
 ## Project Structure
-The JWT implementation spans several modules:
-- Utility for JWT operations
-- Security filters and configuration
-- Authentication controller for login, refresh, and logout
+The JWT implementation spans several modules with enhanced dual-token architecture:
+- Utility for JWT operations supporting internal and collaboration tokens
+- Security filters and configuration with dual-token validation logic
+- Authentication controller for login, refresh, and logout operations
 - DTOs for request/response payloads
 - Application configuration for JWT secrets and expiration
 - Permission registry for wildcard expansion
-- Collaboration security service for third-party access tokens
+- Collaboration security service for third-party access tokens with strict access controls
 
 ```mermaid
 graph TB
@@ -108,14 +116,14 @@ CSS --> AC
 - [LoginResponse.java:1-56](file://admin-backend/src/main/java/com/qhiot/survey/dto/LoginResponse.java#L1-L56)
 
 ## Core Components
-- JwtUtil: Generates and validates JWTs, extracts claims, and checks expiration. Supports access tokens, refresh tokens, and collaboration tokens.
-- JwtAuthenticationFilter: Extracts Authorization Bearer tokens, validates them, and populates Spring Security context. Handles internal and collaboration login types differently.
-- SecurityConfig: Configures stateless sessions, CORS, and filter order for JWT processing.
-- AuthController: Implements login, SMS login, refresh, logout, and user info retrieval. Returns structured LoginResponse with roles and permissions.
-- CollabSecurityService: Validates collaboration entries, enforces a strict whitelist/blacklist policy for collaboration access, and logs access attempts.
-- CustomUserDetailsService and LoginUser: Load user roles and permissions, expand wildcards, and provide user principal with authorities.
-- PermissionRegistry: Scans @PreAuthorize annotations to register all permissions for wildcard expansion.
-- DTOs: LoginRequest and LoginResponse define the shape of authentication payloads.
+- **JwtUtil**: Generates and validates JWTs with dual-token support, extracting claims and checking expiration for both internal and collaboration tokens.
+- **JwtAuthenticationFilter**: Enhanced to support dual-token architecture with separate handling for loginType=internal and loginType=collab, extracting Authorization Bearer tokens and validating them appropriately.
+- **SecurityConfig**: Configures stateless sessions, CORS, and filter order for JWT processing with dual-token awareness.
+- **AuthController**: Implements login, SMS login, refresh, logout, and user info retrieval with dual-token response handling.
+- **CollabSecurityService**: Validates collaboration entries with strict whitelist/blacklist policy, enforces access control, and logs access attempts for collaboration tokens.
+- **CustomUserDetailsService and LoginUser**: Load user roles and permissions for internal users, expand wildcards, and provide user principal with authorities.
+- **PermissionRegistry**: Scans @PreAuthorize annotations to register all permissions for wildcard expansion.
+- **DTOs**: LoginRequest and LoginResponse define the shape of authentication payloads with dual-token considerations.
 
 **Section sources**
 - [JwtUtil.java:1-174](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java#L1-L174)
@@ -130,12 +138,14 @@ CSS --> AC
 - [LoginResponse.java:1-56](file://admin-backend/src/main/java/com/qhiot/survey/dto/LoginResponse.java#L1-L56)
 
 ## Architecture Overview
-The JWT authentication pipeline integrates with Spring Security as follows:
+The enhanced JWT authentication pipeline integrates with Spring Security through a dual-token architecture:
 - Requests arrive at the server and are intercepted by JwtAuthenticationFilter.
-- The filter extracts the Authorization header, validates the token via JwtUtil, and sets the SecurityContext.
-- For internal login type, the filter delegates to CustomUserDetailsService to load roles and permissions.
-- For collaboration login type, CollabSecurityService validates the entry and applies a strict access policy.
-- SecurityConfig defines stateless sessions and permits unauthenticated access to specific endpoints (e.g., /api/v1/auth/**).
+- The filter extracts the Authorization header and validates the token via JwtUtil.
+- **Enhanced**: Token validation now includes loginType differentiation between internal and collaboration users.
+- For loginType=internal: the filter delegates to CustomUserDetailsService to load roles and permissions.
+- For loginType=collab: CollabSecurityService validates the entry and applies strict access policy with whitelist/blacklist enforcement.
+- SecurityConfig defines stateless sessions and permits unauthenticated access to specific endpoints.
+- **New**: Collaboration tokens trigger separate authentication, authorization, and auditing chains with ROLE_COLLAB assignment.
 
 ```mermaid
 sequenceDiagram
@@ -152,7 +162,7 @@ alt "Token present and valid"
 Filter->>Util : "validateToken(token)"
 alt "loginType=collab"
 Filter->>Filter : "handleCollabToken()"
-Filter-->>Client : "401/403 or proceed"
+Filter-->>Client : "401/403 or proceed with ROLE_COLLAB"
 else "loginType=internal"
 Filter->>UDS : "loadUserByUsername(username)"
 UDS-->>Filter : "UserDetails with authorities"
@@ -177,25 +187,31 @@ end
 
 ## Detailed Component Analysis
 
-### JwtUtil: Token Generation, Parsing, and Validation
-- Claims and Payload:
-  - Access token: includes userId, username, tokenType=access, and optional loginType=internal.
+### JwtUtil: Enhanced Token Generation, Parsing, and Validation
+- **Enhanced Claims and Payload Support**:
+  - Access token: includes userId, username, tokenType=access, and loginType (internal/collab).
   - Refresh token: includes userId, username, tokenType=refresh.
   - Collaboration token: includes userId, username (prefixed), tokenType=access, loginType=collab, collabEntryId, and optional entryName.
-- Expiration:
+- **Improved Token Type Handling**:
+  - Enhanced validation logic supports dual-token architecture with loginType differentiation.
+  - Separate claim extraction methods for internal and collaboration tokens.
+- **Expiration Management**:
   - Access token expiration configured via jwt.expiration.
   - Refresh token expiration configured via jwt.refresh-expiration.
-- Signature and Algorithm:
+- **Signature and Algorithm**:
   - Uses HMAC SHA-256 with a symmetric secret derived from jwt.secret.
-- Methods:
-  - generateAccessToken/generateRefreshToken/generateCollabToken: construct claims and issue compact JWT.
-  - getClaimsFromToken/getUserIdFromToken/getUsernameFromToken/getTokenType/getLoginType/getCollabEntryIdFromToken: extract claims.
-  - validateToken/isTokenExpired: verify signature and expiration.
+- **Enhanced Methods**:
+  - generateAccessToken/generateRefreshToken/generateCollabToken: construct claims with loginType support.
+  - getClaimsFromToken/getUserIdFromToken/getUsernameFromToken/getTokenType/getLoginType/getCollabEntryIdFromToken: extract claims with dual-token awareness.
+  - validateToken/isTokenExpired: verify signature and expiration with loginType validation.
 
 ```mermaid
 flowchart TD
-Start(["generateAccessToken(userId, username, loginType)"]) --> BuildClaims["Build claims map<br/>userId, username, tokenType, loginType"]
-BuildClaims --> SetExpiry["Compute expiryDate = now + expiration"]
+Start(["generateAccessToken(userId, username, loginType)"]) --> CheckType{"loginType?"}
+CheckType --> |"internal"| BuildInternal["Build internal claims<br/>userId, username, tokenType, loginType=internal"]
+CheckType --> |"collab"| BuildCollab["Build collaboration claims<br/>userId, username, tokenType, loginType=collab, collabEntryId"]
+BuildInternal --> SetExpiry["Compute expiryDate = now + expiration"]
+BuildCollab --> SetExpiry
 SetExpiry --> Sign["SignWith(HS256, secret)"]
 Sign --> Compact["Compact to JWT"]
 Compact --> End(["Return token"])
@@ -211,15 +227,19 @@ Compact --> End(["Return token"])
 - [application.yml:9-14](file://admin-backend/src/main/resources/application.yml#L9-L14)
 - [application-prod.yml:64-69](file://admin-backend/src/main/resources/application-prod.yml#L64-L69)
 
-### JwtAuthenticationFilter: Header Extraction and Authentication
-- Header Extraction:
+### JwtAuthenticationFilter: Dual-Token Header Extraction and Authentication
+- **Enhanced Header Extraction**:
   - Reads Authorization header and expects Bearer <token>.
-- Validation and Authentication:
-  - Validates token via JwtUtil.
-  - For loginType=collab: validates entry via CollabSecurityService, enforces access policy, logs access, and sets ROLE_COLLAB.
-  - For loginType=internal: loads user via CustomUserDetailsService and sets SecurityContext with authorities.
-- Error Handling:
+- **Improved Validation and Authentication**:
+  - Validates token via JwtUtil with loginType awareness.
+  - **New**: For loginType=collab: validates entry via CollabSecurityService, enforces strict access policy, logs access, and sets ROLE_COLLAB.
+  - **Enhanced**: For loginType=internal: loads user via CustomUserDetailsService and sets SecurityContext with authorities.
+- **Dual-Token Processing Logic**:
+  - loginType=collab triggers separate collaboration authentication branch.
+  - loginType=internal or missing triggers standard internal user authentication.
+- **Error Handling**:
   - On failure, responds with 401 Unauthorized JSON body.
+  - Collaboration token failures return appropriate 403/401 responses based on policy enforcement.
 
 ```mermaid
 sequenceDiagram
@@ -232,6 +252,7 @@ Req->>Filter : "doFilterInternal()"
 Filter->>Filter : "getTokenFromRequest()"
 alt "Token present and valid"
 Filter->>Util : "validateToken(token)"
+Filter->>Util : "getLoginType(token)"
 alt "loginType=collab"
 Filter->>CSS : "loadValidEntry(entryId)"
 alt "Entry valid"
@@ -244,7 +265,7 @@ end
 else "Entry invalid"
 Filter-->>Req : "401 Unauthorized"
 end
-else "loginType=internal"
+else "loginType=internal or missing"
 Filter->>UDS : "loadUserByUsername(username)"
 Filter-->>Req : "Set SecurityContext and proceed"
 end
@@ -265,14 +286,14 @@ end
 - [CollabSecurityService.java:39-105](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L39-L105)
 - [CustomUserDetailsService.java:31-89](file://admin-backend/src/main/java/com/qhiot/survey/security/CustomUserDetailsService.java#L31-L89)
 
-### SecurityConfig: Stateless Session and CORS
-- Stateless Sessions:
+### SecurityConfig: Stateless Session and CORS with Dual-Token Awareness
+- **Stateless Sessions**:
   - SessionCreationPolicy.STATELESS ensures no server-side session is created.
-- Permit All:
+- **Enhanced Permit All Configuration**:
   - Public endpoints (e.g., /api/v1/auth/**, /api/v1/health/**, /api/public/**) are permitted without authentication.
-- Filter Order:
+- **Filter Order**:
   - Adds JwtAuthenticationFilter before UsernamePasswordAuthenticationFilter.
-- CORS:
+- **CORS Configuration**:
   - Configures allowed origins, methods, headers, credentials, and exposed headers.
 
 ```mermaid
@@ -291,17 +312,16 @@ AddFilter --> Build(["Build HttpSecurity"])
 **Section sources**
 - [SecurityConfig.java:39-99](file://admin-backend/src/main/java/com/qhiot/survey/security/SecurityConfig.java#L39-L99)
 
-### AuthController: Login, Refresh, Logout, and User Info
-- Login (Username/Password):
-  - Validates captcha against Redis, authenticates via AuthenticationManager, generates access and refresh tokens, and returns LoginResponse with roles and permissions.
-- SMS Login:
-  - Verifies SMS code, loads user by phone, generates tokens, and logs activity.
-- Refresh:
-  - Validates refresh token, verifies token type, loads user, and issues new access and refresh tokens.
-- Logout:
-  - Clears SecurityContext.
-- User Info:
-  - Retrieves current user, roles, and expanded permissions.
+### AuthController: Enhanced Login, Refresh, Logout, and User Info
+- **Enhanced Login Operations**:
+  - Login (Username/Password): Validates captcha against Redis, authenticates via AuthenticationManager, generates access and refresh tokens, and returns LoginResponse with roles and permissions.
+  - **New**: SMS Login: Verifies SMS code, loads user by phone, generates tokens with appropriate loginType, and logs activity.
+- **Improved Refresh Operations**:
+  - Refresh: Validates refresh token, verifies token type, loads user, and issues new access and refresh tokens.
+- **Enhanced Logout Operations**:
+  - Logout: Clears SecurityContext.
+- **User Information Retrieval**:
+  - User Info: Retrieves current user, roles, and expanded permissions.
 
 ```mermaid
 sequenceDiagram
@@ -335,15 +355,17 @@ Ctrl-->>Client : "LoginResponse{accessToken, refreshToken, roles, permissions}"
 - [LoginRequest.java:11-25](file://admin-backend/src/main/java/com/qhiot/survey/dto/LoginRequest.java#L11-L25)
 - [LoginResponse.java:17-56](file://admin-backend/src/main/java/com/qhiot/survey/dto/LoginResponse.java#L17-L56)
 
-### CollabSecurityService: Collaboration Access Control
-- Entry Validation:
+### CollabSecurityService: Enhanced Collaboration Access Control
+- **Enhanced Entry Validation**:
   - Loads entry by ID and checks status and expiration.
-- Access Policy:
-  - Blacklists sensitive operations and endpoints.
-  - Whitelists read-only GET endpoints for collaboration.
-  - Denies all write operations for collaboration.
-- Logging:
-  - Logs every access attempt with IP, UA, path, and response code.
+- **Strict Access Policy Enforcement**:
+  - **New**: Blacklists sensitive operations and endpoints (audit disposition, deletion, bulk export, user management, role management).
+  - **New**: Whitelists read-only GET endpoints for collaboration access.
+  - **New**: Denies all write operations for collaboration users.
+  - **Enhanced**: Comprehensive access control based on loginType=collab.
+- **Enhanced Logging**:
+  - Logs every access attempt with IP, UA, path, and response code to collab_access_log.
+  - **New**: Separate audit trail for collaboration token usage.
 
 ```mermaid
 flowchart TD
@@ -367,13 +389,13 @@ Return403 --> End
 - [CollabSecurityService.java:15-126](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L15-L126)
 - [JwtAuthenticationFilter.java:86-122](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java#L86-L122)
 
-### CustomUserDetailsService and LoginUser: Roles, Permissions, and Authorities
-- Role and Permission Loading:
-  - Loads user roles and aggregates raw permissions.
+### CustomUserDetailsService and LoginUser: Enhanced Roles, Permissions, and Authorities
+- **Enhanced Role and Permission Loading**:
+  - Loads user roles and aggregates raw permissions for internal users.
   - Expands wildcards using PermissionRegistry.
   - Converts roles to ROLE_* authorities and merges with expanded permissions.
-- LoginUser:
-  - Extends Spring Security’s User with userId and realName for downstream use.
+- **LoginUser Enhancement**:
+  - Extends Spring Security's User with userId and realName for downstream use.
 
 ```mermaid
 classDiagram
@@ -401,12 +423,13 @@ LoginUser <|-- org_springframework_security_core_userdetails_User : "extends"
 - [LoginUser.java:14-35](file://admin-backend/src/main/java/com/qhiot/survey/security/LoginUser.java#L14-L35)
 - [PermissionRegistry.java:56-88](file://admin-backend/src/main/java/com/qhiot/survey/common/util/PermissionRegistry.java#L56-L88)
 
-### Configuration: JWT Settings and Environment Profiles
-- application.yml:
+### Configuration: Enhanced JWT Settings and Environment Profiles
+- **Enhanced application.yml**:
   - Defines jwt.secret, jwt.expiration (access), and jwt.refresh-expiration.
   - Sets CORS allowed origins and application environment.
-- application-prod.yml:
+- **Enhanced application-prod.yml**:
   - Enforces production-safe defaults: disables Swagger UI/API docs, reduces logging verbosity, and requires JWT_SECRET via environment variable.
+  - **New**: Enhanced security configurations for dual-token environment.
 
 **Section sources**
 - [application.yml:9-14](file://admin-backend/src/main/resources/application.yml#L9-L14)
@@ -416,20 +439,21 @@ LoginUser <|-- org_springframework_security_core_userdetails_User : "extends"
 - [application-prod.yml:111-122](file://admin-backend/src/main/resources/application-prod.yml#L111-L122)
 
 ## Dependency Analysis
-- JwtUtil depends on:
+- **Enhanced JwtUtil Dependencies**:
   - jwt.secret, jwt.expiration, jwt.refresh-expiration from configuration.
   - io.jsonwebtoken APIs for signing and parsing.
-- JwtAuthenticationFilter depends on:
-  - JwtUtil for validation and claim extraction.
+  - **New**: Enhanced dependency on CollabSecurityService for collaboration token validation.
+- **Enhanced JwtAuthenticationFilter Dependencies**:
+  - JwtUtil for validation and claim extraction with loginType awareness.
   - CustomUserDetailsService for internal users.
   - CollabSecurityService for collaboration access control.
-- AuthController depends on:
-  - JwtUtil for token issuance and refresh.
+- **Enhanced AuthController Dependencies**:
+  - JwtUtil for token issuance and refresh with dual-token support.
   - AuthenticationManager for credential verification.
   - Services for user lookup, role aggregation, and logging.
-- SecurityConfig depends on:
-  - JwtAuthenticationFilter to intercept requests.
-- PermissionRegistry depends on:
+- **SecurityConfig Dependencies**:
+  - JwtAuthenticationFilter to intercept requests with dual-token awareness.
+- **PermissionRegistry Dependencies**:
   - Spring AOP scanning to register permissions from @PreAuthorize.
 
 ```mermaid
@@ -441,6 +465,7 @@ JAF --> CUS["CustomUserDetailsService"]
 JAF --> CSS["CollabSecurityService"]
 SC["SecurityConfig"] --> JAF
 CUS --> PR["PermissionRegistry"]
+CSS --> AC
 ```
 
 **Diagram sources**
@@ -458,30 +483,33 @@ CUS --> PR["PermissionRegistry"]
 - [PermissionRegistry.java:95-114](file://admin-backend/src/main/java/com/qhiot/survey/common/util/PermissionRegistry.java#L95-L114)
 
 ## Performance Considerations
-- Stateless Design:
-  - No server-side session storage improves scalability.
-- Minimal Claims:
-  - Keep claims minimal to reduce token size and parsing overhead.
-- Efficient Validation:
+- **Enhanced Stateless Design**:
+  - No server-side session storage improves scalability for both internal and collaboration users.
+- **Optimized Claims Processing**:
+  - Keep claims minimal to reduce token size and parsing overhead for dual-token architecture.
+- **Efficient Validation Logic**:
   - Signature verification is fast; avoid unnecessary repeated validations.
-- Caching:
-  - Consider caching frequently accessed user roles/permissions if needed, but rely on the existing service-layer caching patterns.
-- CORS:
+  - **New**: LoginType-based early exit for performance optimization.
+- **Enhanced Caching Strategy**:
+  - Consider caching frequently accessed user roles/permissions if needed, but rely on existing service-layer caching patterns.
+- **CORS Optimization**:
   - Configure allowed origins carefully to avoid wildcard origins in production.
 
-[No sources needed since this section provides general guidance]
-
 ## Troubleshooting Guide
-- 401 Unauthorized:
+- **Enhanced 401 Unauthorized Handling**:
   - Occurs when Authorization header is missing, malformed, or token validation fails.
+  - **New**: Distinguish between internal and collaboration token validation failures.
   - Verify jwt.secret matches across instances and that token is not expired.
-- 403 Forbidden (Collaboration):
+- **Enhanced 403 Forbidden (Collaboration)**:
   - Occurs when collaboration entry is invalid or access is denied by policy.
-  - Check collab entry status/expiry and endpoint access policy.
-- Token Claims Missing:
+  - **New**: Check collab entry status/expiry and endpoint access policy.
+  - **New**: Verify loginType=collab token is being processed by collaboration branch.
+- **Enhanced Token Claims Issues**:
   - Ensure the correct token type is used (access vs refresh) and that loginType is set appropriately for collaboration.
-- Production Misconfiguration:
+  - **New**: Verify collaboration tokens include collabEntryId and proper loginType=collab.
+- **Production Configuration Issues**:
   - Ensure JWT_SECRET is provided via environment variables and not hardcoded.
+  - **New**: Verify dual-token configuration in production environment.
   - Confirm CORS allowed origins are set correctly for production.
 
 **Section sources**
@@ -491,19 +519,17 @@ CUS --> PR["PermissionRegistry"]
 - [application-prod.yml:124-125](file://admin-backend/src/main/resources/application-prod.yml#L124-L125)
 
 ## Conclusion
-The JWT implementation provides secure, stateless authentication with clear separation between internal and collaboration access. Tokens carry minimal, sufficient claims, are validated with HMAC signatures, and integrate tightly with Spring Security. Collaboration access is strictly controlled via a whitelist/blacklist policy. Proper configuration and adherence to production best practices ensure robust operation.
-
-[No sources needed since this section summarizes without analyzing specific files]
+The enhanced JWT implementation provides secure, stateless authentication with clear separation between internal and collaboration access through dual-token support. Tokens carry minimal, sufficient claims with loginType differentiation, are validated with HMAC signatures, and integrate tightly with Spring Security. Collaboration access is strictly controlled via a comprehensive whitelist/blacklist policy with dedicated auditing. The dual-token architecture ensures robust security boundaries while maintaining performance and scalability. Proper configuration and adherence to production best practices ensure reliable operation across both internal and external user scenarios.
 
 ## Appendices
 
-### Token Structure and Claims Reference
-- Access Token:
+### Enhanced Token Structure and Claims Reference
+- **Access Token**:
   - Required: userId, username, tokenType=access.
-  - Optional: loginType=internal.
-- Refresh Token:
+  - **Enhanced**: Optional: loginType=internal or loginType=collab.
+- **Refresh Token**:
   - Required: userId, username, tokenType=refresh.
-- Collaboration Token:
+- **Collaboration Token**:
   - Required: userId, username (prefixed), tokenType=access, loginType=collab, collabEntryId.
   - Optional: entryName.
 
@@ -511,9 +537,9 @@ The JWT implementation provides secure, stateless authentication with clear sepa
 - [JwtUtil.java:34-68](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java#L34-L68)
 - [JwtUtil.java:102-130](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java#L102-L130)
 
-### Example Workflows
+### Enhanced Example Workflows
 
-#### Login Flow (Username/Password)
+#### Enhanced Login Flow (Username/Password)
 ```mermaid
 sequenceDiagram
 participant Client as "Client"
@@ -534,7 +560,7 @@ Ctrl-->>Client : "Resp{accessToken, refreshToken, roles, permissions}"
 - [JwtUtil.java:34-51](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java#L34-L51)
 - [LoginResponse.java:17-56](file://admin-backend/src/main/java/com/qhiot/survey/dto/LoginResponse.java#L17-L56)
 
-#### Token Refresh Flow
+#### Enhanced Token Refresh Flow
 ```mermaid
 sequenceDiagram
 participant Client as "Client"
@@ -557,7 +583,7 @@ Ctrl-->>Client : "Resp{newAccessToken, newRefreshToken}"
 - [JwtUtil.java:154-161](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java#L154-L161)
 - [JwtUtil.java:45-51](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java#L45-L51)
 
-#### Collaboration Access Flow
+#### Enhanced Collaboration Access Flow
 ```mermaid
 sequenceDiagram
 participant Client as "Client"
@@ -583,19 +609,24 @@ end
 - [JwtUtil.java:154-161](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java#L154-L161)
 - [CollabSecurityService.java:39-105](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L39-L105)
 
-### Security Best Practices for Production
-- Environment Variables:
+### Enhanced Security Best Practices for Production
+- **Environment Variables**:
   - Provide JWT_SECRET via environment variables; do not hardcode in configuration files.
-- Token Lifetimes:
+- **Enhanced Token Lifetimes**:
   - Use short-lived access tokens (e.g., hours) and longer refresh tokens (e.g., days) with rotation.
-- Transport Security:
+  - **New**: Implement separate expiration policies for internal vs collaboration tokens.
+- **Transport Security**:
   - Serve over HTTPS only; consider SameSite cookies and secure flags for clients.
-- Secret Management:
+- **Secret Management**:
   - Rotate secrets periodically and invalidate stale tokens.
-- Endpoint Exposure:
+  - **New**: Implement dual-secret strategy for internal and collaboration token validation.
+- **Enhanced Endpoint Exposure**:
   - Limit exposure of /v3/api-docs and swagger UI in production.
-- CORS:
+- **CORS Configuration**:
   - Configure allowed origins explicitly; avoid wildcard origins with credentials.
+- **Enhanced Monitoring**:
+  - **New**: Implement separate monitoring for internal and collaboration token validation failures.
+  - **New**: Track collaboration access patterns and policy violations.
 
 **Section sources**
 - [application-prod.yml:64-69](file://admin-backend/src/main/resources/application-prod.yml#L64-L69)

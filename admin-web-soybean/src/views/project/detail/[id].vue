@@ -2,7 +2,19 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { message, Modal } from 'ant-design-vue';
-import { fetchGetProjectDetail, fetchGetPointList } from '@/service/api';
+import {
+  fetchGetProjectDetail,
+  fetchGetPointList,
+  fetchGetSectionList,
+  fetchCreateSection,
+  fetchUpdateSection,
+  fetchDeleteSection,
+  fetchGetProjectMembers,
+  fetchAddProjectMember,
+  fetchRemoveProjectMember,
+  fetchUpdateProjectMemberRole,
+  fetchGetAllUsers
+} from '@/service/api';
 import {
   fetchGetBindings,
   fetchBindOutfallType,
@@ -26,10 +38,9 @@ const activeTab = ref('points');
 
 const tabs = [
   { key: 'points', label: '点位列表', icon: 'i-material-symbols:location-on-outline-rounded' },
-  { key: 'records', label: '勘查记录', icon: 'i-material-symbols:edit-note-outline-rounded' },
-  { key: 'map', label: '点位分布', icon: 'i-material-symbols:map-outline-rounded' },
-  { key: 'templates', label: '模板配置', icon: 'i-material-symbols:settings-outline-rounded' },
-  { key: 'logs', label: '活动日志', icon: 'i-material-symbols:history-outline-rounded' }
+  { key: 'sections', label: '标段管理', icon: 'i-material-symbols:grid-view-outline-rounded' },
+  { key: 'members', label: '人员管理', icon: 'i-material-symbols:group-outline-rounded' },
+  { key: 'templates', label: '模板配置', icon: 'i-material-symbols:settings-outline-rounded' }
 ];
 
 // Outfall types (should match dictionary or be fetched from API)
@@ -145,6 +156,11 @@ async function loadPoints() {
 function switchTab(key: string) {
   activeTab.value = key;
   if (key === 'points' && pointList.value.length === 0) loadPoints();
+  if (key === 'sections') loadSections();
+  if (key === 'members') {
+    loadMembers();
+    loadUsers();
+  }
   if (key === 'templates') loadTemplateBindings();
 }
 
@@ -270,6 +286,203 @@ function viewPointDetail(point: any) {
 function onEditSuccess() {
   loadDetail();
 }
+
+// --- Section Management ---
+const sectionList = ref<any[]>([]);
+const sectionLoading = ref(false);
+const sectionModalVisible = ref(false);
+const editingSection = ref<any>(null);
+const sectionForm = ref({ sectionName: '', sectionCode: '', description: '' });
+
+const loadSections = async () => {
+  sectionLoading.value = true;
+  try {
+    const projectId = route.params.id as string;
+    const { data, error } = await fetchGetSectionList(projectId);
+    if (!error && data) {
+      sectionList.value = data;
+    }
+  } catch (e) {
+    message.error('加载标段列表失败');
+  } finally {
+    sectionLoading.value = false;
+  }
+};
+
+const handleAddSection = () => {
+  editingSection.value = null;
+  sectionForm.value = { sectionName: '', sectionCode: '', description: '' };
+  sectionModalVisible.value = true;
+};
+
+const handleEditSection = (section: any) => {
+  editingSection.value = section;
+  sectionForm.value = {
+    sectionName: section.sectionName,
+    sectionCode: section.sectionCode,
+    description: section.description || ''
+  };
+  sectionModalVisible.value = true;
+};
+
+const handleSaveSection = async () => {
+  if (!sectionForm.value.sectionName || !sectionForm.value.sectionCode) {
+    message.warning('请填写标段名称和编号');
+    return;
+  }
+  try {
+    const projectId = route.params.id as string;
+    if (editingSection.value) {
+      const { error } = await fetchUpdateSection(editingSection.value.id, {
+        projectId,
+        ...sectionForm.value
+      });
+      if (!error) {
+        message.success('更新标段成功');
+        sectionModalVisible.value = false;
+        loadSections();
+      }
+    } else {
+      const { error } = await fetchCreateSection({
+        projectId,
+        ...sectionForm.value
+      });
+      if (!error) {
+        message.success('创建标段成功');
+        sectionModalVisible.value = false;
+        loadSections();
+      }
+    }
+  } catch (e) {
+    message.error('保存标段失败');
+  }
+};
+
+const handleDeleteSection = (id: number | string) => {
+  Modal.confirm({
+    title: '确认删除该标段？',
+    content: '删除后，该标段的信息将不可恢复。',
+    okText: '确认',
+    cancelText: '取消',
+    okType: 'danger',
+    onOk: async () => {
+      const { error } = await fetchDeleteSection(id);
+      if (!error) {
+        message.success('删除标段成功');
+        loadSections();
+      }
+    }
+  });
+};
+
+// --- Project Members ---
+const memberList = ref<any[]>([]);
+const memberLoading = ref(false);
+const memberModalVisible = ref(false);
+const memberForm = ref({ userId: undefined as number | string | undefined, role: 'collector' });
+const usersList = ref<any[]>([]);
+
+const loadUsers = async () => {
+  const { data, error } = await fetchGetAllUsers();
+  if (!error && data) {
+    usersList.value = data;
+  }
+};
+
+const loadMembers = async () => {
+  memberLoading.value = true;
+  try {
+    const projectId = route.params.id as string;
+    const { data, error } = await fetchGetProjectMembers(projectId);
+    if (!error && data) {
+      memberList.value = data;
+    }
+  } catch (e) {
+    message.error('加载成员列表失败');
+  } finally {
+    memberLoading.value = false;
+  }
+};
+
+const handleAddMember = () => {
+  memberForm.value = { userId: undefined, role: 'collector' };
+  memberModalVisible.value = true;
+};
+
+const handleSaveMember = async () => {
+  if (!memberForm.value.userId) {
+    message.warning('请选择用户');
+    return;
+  }
+  try {
+    const projectId = route.params.id as string;
+    const { error } = await fetchAddProjectMember(projectId, {
+      userId: memberForm.value.userId,
+      role: memberForm.value.role
+    });
+    if (!error) {
+      message.success('添加成员成功');
+      memberModalVisible.value = false;
+      loadMembers();
+    }
+  } catch (e) {
+    message.error('添加成员失败');
+  }
+};
+
+const handleRemoveMember = (userId: number | string) => {
+  Modal.confirm({
+    title: '确认移除该成员？',
+    content: '被移除后，该成员将失去对该项目的访问与采集权限。',
+    okText: '确认移除',
+    cancelText: '取消',
+    okType: 'danger',
+    onOk: async () => {
+      const projectId = route.params.id as string;
+      const { error } = await fetchRemoveProjectMember(projectId, userId);
+      if (!error) {
+        message.success('移除成员成功');
+        loadMembers();
+      }
+    }
+  });
+};
+
+const handleRoleChange = async (userId: number | string, newRole: string) => {
+  try {
+    const projectId = route.params.id as string;
+    const { error } = await fetchUpdateProjectMemberRole(projectId, userId, newRole);
+    if (!error) {
+      message.success('更新角色成功');
+      loadMembers();
+    }
+  } catch (e) {
+    message.error('更新角色失败');
+  }
+};
+
+const getUserRealName = (userId: number | string) => {
+  const user = usersList.value.find(u => String(u.id) === String(userId));
+  return user ? user.realName : `用户ID: ${userId}`;
+};
+
+const getUserUsername = (userId: number | string) => {
+  const user = usersList.value.find(u => String(u.id) === String(userId));
+  return user ? user.username : '';
+};
+
+// Avatar Initials
+const getInitials = (name: string) => {
+  if (!name) return '??';
+  if (/[\u4e00-\u9fa5]/.test(name)) {
+    return name.length > 2 ? name.substring(name.length - 2) : name;
+  }
+  const parts = name.split(' ');
+  if (parts.length > 1) {
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }
+  return name.substring(0, 2).toUpperCase();
+};
 
 watch(() => route.params.id, (newId) => {
   if (newId) {
@@ -505,17 +718,112 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Tab: Survey Records -->
-        <div v-show="activeTab === 'records'" class="py-60px text-center">
-          <div class="i-material-symbols:edit-note-outline-rounded text-48px mx-auto mb-12px text-[var(--color-text-placeholder)]"></div>
-          <p class="text-14px text-[var(--color-text-secondary)]">暂无勘查记录</p>
+        <!-- Tab: Sections -->
+        <div v-show="activeTab === 'sections'" class="px-24px py-16px">
+          <div class="flex justify-between items-center mb-16px">
+            <div class="text-13px text-[var(--color-text-secondary)]">
+              创建和管理该项目下的工程标段，可为各标段分配独立负责人及点位范围。
+            </div>
+            <AButton type="primary" size="small" class="btn-primary" @click="handleAddSection">
+              <span class="i-material-symbols:add-circle-outline-rounded text-14px mr-6px"></span>
+              新增标段
+            </AButton>
+          </div>
+
+          <div v-if="sectionLoading" class="flex justify-center py-24px"><ASpin /></div>
+          <div v-else-if="sectionList.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-16px">
+            <div v-for="sec in sectionList" :key="sec.id" class="glass-card rounded-12px p-16px flex flex-col justify-between border border-white/40 dark:border-white/10 hover:border-primary/30 transition-all duration-300">
+              <div>
+                <div class="flex justify-between items-start mb-8px">
+                  <div class="flex items-center gap-8px">
+                    <span class="i-material-symbols:grid-view-outline-rounded text-18px text-[var(--color-primary)]"></span>
+                    <span class="text-15px font-600 text-[var(--color-text-primary)]">{{ sec.sectionName }}</span>
+                  </div>
+                  <span class="px-8px py-2px rounded-4px text-11px font-mono bg-slate-100 dark:bg-slate-800 text-[var(--color-text-secondary)]">
+                    {{ sec.sectionCode }}
+                  </span>
+                </div>
+                <p class="text-12px text-[var(--color-text-secondary)] min-h-36px mb-12px">
+                  {{ sec.description || '暂无描述信息' }}
+                </p>
+              </div>
+              <div class="flex justify-between items-center pt-12px border-t border-[var(--color-divider)]">
+                <div class="flex items-center gap-6px text-12px text-[var(--color-text-secondary)]">
+                  <span class="i-material-symbols:person-outline-rounded text-14px"></span>
+                  负责人: <span class="font-500 text-[var(--color-text-primary)]">{{ getUserRealName(sec.managerId) || '未指派' }}</span>
+                </div>
+                <div class="flex items-center gap-4px">
+                  <AButton type="text" size="small" class="action-btn" @click="handleEditSection(sec)">
+                    <span class="i-material-symbols:edit-outline-rounded text-14px text-blue-500"></span>
+                  </AButton>
+                  <AButton type="text" size="small" class="action-btn" @click="handleDeleteSection(sec.id)">
+                    <span class="i-material-symbols:delete-outline-rounded text-14px text-red-500"></span>
+                  </AButton>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="py-40px text-center">
+            <div class="i-material-symbols:grid-view-outline-rounded text-48px mx-auto mb-12px text-[var(--color-text-placeholder)]"></div>
+            <p class="text-14px text-[var(--color-text-secondary)]">暂无标段数据</p>
+          </div>
         </div>
 
-        <!-- Tab: Map -->
-        <div v-show="activeTab === 'map'" class="p-24px min-h-400px">
-          <div class="flex flex-col items-center justify-center h-300px text-[var(--color-text-secondary)]">
-            <span class="i-material-symbols:map-outline-rounded text-48px mb-12px text-[var(--color-text-placeholder)]"></span>
-            <p class="text-14px">地图加载区</p>
+        <!-- Tab: Members -->
+        <div v-show="activeTab === 'members'" class="px-24px py-16px">
+          <div class="flex justify-between items-center mb-16px">
+            <div class="text-13px text-[var(--color-text-secondary)]">
+              管理参与此项目的成员列表，分配相应的操作角色权限（管理员、采集员、审核员）。
+            </div>
+            <AButton type="primary" size="small" class="btn-primary" @click="handleAddMember">
+              <span class="i-material-symbols:person-add-outline-rounded text-14px mr-6px"></span>
+              添加成员
+            </AButton>
+          </div>
+
+          <div v-if="memberLoading" class="flex justify-center py-24px"><ASpin /></div>
+          <div v-else-if="memberList.length > 0" class="point-table">
+            <div class="point-table-header bg-slate-50 dark:bg-slate-900 border-b border-[var(--color-divider)]">
+              <div class="point-th flex-1">成员姓名</div>
+              <div class="point-th w-180px">账号用户名</div>
+              <div class="point-th w-180px">项目内角色</div>
+              <div class="point-th w-120px text-right">操作</div>
+            </div>
+            <div class="point-table-body">
+              <div v-for="mbr in memberList" :key="mbr.id" class="point-table-row hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
+                <div class="point-td flex-1 flex items-center gap-8px">
+                  <div class="w-24px h-24px rounded-full bg-primary/10 flex items-center justify-center text-10px font-600 text-primary">
+                    {{ getInitials(getUserRealName(mbr.userId)) }}
+                  </div>
+                  <span class="text-13px font-500 text-[var(--color-text-primary)]">{{ getUserRealName(mbr.userId) }}</span>
+                </div>
+                <div class="point-td w-180px text-12px text-[var(--color-text-secondary)]">
+                  {{ getUserUsername(mbr.userId) }}
+                </div>
+                <div class="point-td w-180px">
+                  <a-select
+                    :value="mbr.role"
+                    size="small"
+                    class="w-140px"
+                    @change="(val: string) => handleRoleChange(mbr.userId, val)"
+                  >
+                    <a-select-option value="admin">项目管理员</a-select-option>
+                    <a-select-option value="collector">采集员</a-select-option>
+                    <a-select-option value="auditor">审核员</a-select-option>
+                    <a-select-option value="viewer">查看者</a-select-option>
+                  </a-select>
+                </div>
+                <div class="point-td w-120px text-right">
+                  <AButton type="text" size="small" class="action-btn inline-flex" @click="handleRemoveMember(mbr.userId)">
+                    <span class="i-material-symbols:delete-outline-rounded text-14px text-red-500"></span>
+                  </AButton>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-else class="py-40px text-center">
+            <div class="i-material-symbols:group-outline-rounded text-48px mx-auto mb-12px text-[var(--color-text-placeholder)]"></div>
+            <p class="text-14px text-[var(--color-text-secondary)]">暂无成员数据</p>
           </div>
         </div>
 
@@ -574,12 +882,6 @@ onMounted(() => {
             </div>
           </div>
         </div>
-
-        <!-- Tab: Activity Logs -->
-        <div v-show="activeTab === 'logs'" class="py-60px text-center">
-          <div class="i-material-symbols:history-outline-rounded text-48px mx-auto mb-12px text-[var(--color-text-placeholder)]"></div>
-          <p class="text-14px text-[var(--color-text-secondary)]">暂无活动日志</p>
-        </div>
       </div>
     </div>
 
@@ -590,6 +892,70 @@ onMounted(() => {
 
     <!-- Edit Modal -->
     <ProjectCreateModal v-model:visible="editModalVisible" :editData="projectInfo" @success="onEditSuccess" />
+
+    <!-- Section Create/Edit Modal -->
+    <AModal
+      v-model:open="sectionModalVisible"
+      :title="editingSection ? '编辑标段' : '新增标段'"
+      width="480px"
+      :maskClosable="false"
+      @ok="handleSaveSection"
+    >
+      <div class="flex flex-col gap-16px pt-12px">
+        <div>
+          <div class="text-12px font-500 text-[var(--color-text-secondary)] mb-6px">标段名称</div>
+          <AInput v-model:value="sectionForm.sectionName" placeholder="如: 亳州排口整治一标段" />
+        </div>
+        <div>
+          <div class="text-12px font-500 text-[var(--color-text-secondary)] mb-6px">标段编号</div>
+          <AInput v-model:value="sectionForm.sectionCode" placeholder="如: SEC-01" />
+        </div>
+        <div>
+          <div class="text-12px font-500 text-[var(--color-text-secondary)] mb-6px">备注描述</div>
+          <ATextarea v-model:value="sectionForm.description" placeholder="请输入标段备注描述..." :rows="3" />
+        </div>
+      </div>
+    </AModal>
+
+    <!-- Member Add Modal -->
+    <AModal
+      v-model:open="memberModalVisible"
+      title="添加项目成员"
+      width="400px"
+      :maskClosable="false"
+      @ok="handleSaveMember"
+    >
+      <div class="flex flex-col gap-16px pt-12px">
+        <div>
+          <div class="text-12px font-500 text-[var(--color-text-secondary)] mb-6px">选择系统用户</div>
+          <ASelect
+            v-model:value="memberForm.userId"
+            placeholder="请选择要添加的用户"
+            class="w-full"
+            show-search
+            option-filter-prop="label"
+          >
+            <a-select-option
+              v-for="user in usersList"
+              :key="user.id"
+              :value="user.id"
+              :label="`${user.realName} (${user.username})`"
+            >
+              {{ user.realName }} ({{ user.username }})
+            </a-select-option>
+          </ASelect>
+        </div>
+        <div>
+          <div class="text-12px font-500 text-[var(--color-text-secondary)] mb-6px">项目内角色</div>
+          <ASelect v-model:value="memberForm.role" class="w-full">
+            <a-select-option value="admin">项目管理员</a-select-option>
+            <a-select-option value="collector">采集员</a-select-option>
+            <a-select-option value="auditor">审核员</a-select-option>
+            <a-select-option value="viewer">查看者</a-select-option>
+          </ASelect>
+        </div>
+      </div>
+    </AModal>
   </div>
 </template>
 

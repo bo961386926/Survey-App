@@ -182,7 +182,7 @@ const getStatusText = (status: string) => {
   return '已完成';
 };
 
-const assignees = ['张伟', '李娜', '王强', '刘洋', '李建国', '王雅莉', '陈晓东'];
+const assignees = ['admin', '超级管理员', '张伟', '李娜', '王强', '刘洋', '李建国', '王雅莉', '陈晓东'];
 
 const handleAssign = (task: any, name: string) => {
   task.assigneeName = name;

@@ -118,14 +118,6 @@
         "text": "点位"
       },
       {
-        "pagePath": "pages/point-map/point-map",
-        "text": "地图"
-      },
-      {
-        "pagePath": "pages/survey/survey-list",
-        "text": "勘查"
-      },
-      {
         "pagePath": "pages/my/my",
         "text": "我的"
       }

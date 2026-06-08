@@ -19,6 +19,13 @@
 - [mobile-app/src/pages/survey/survey.vue](file://mobile-app/src/pages/survey/survey.vue)
 </cite>
 
+## Update Summary
+**Changes Made**
+- Removed references to legacy mobile application components and interfaces
+- Updated mobile app configuration and API connectivity documentation
+- Revised component architecture to reflect current implementation
+- Updated troubleshooting and dependency analysis sections
+
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Project Structure](#project-structure)
@@ -33,6 +40,8 @@
 
 ## Introduction
 This document describes the uni-app mobile application for field survey data collection. It covers the mobile-first design approach, responsive layout strategies, offline data collection with local storage and sync mechanisms, GPS integration for location services and manual correction workflows, the form collection interface optimized for mobile input and validation, and cross-platform compatibility and performance characteristics. The application is built with Vue 3 and Vite, integrates with a backend API, and uses high-precision location services via Amap.
+
+**Updated** Removed references to dropped mobile application components and legacy interfaces as part of the recent system modernization.
 
 ## Project Structure
 The mobile application resides under the mobile-app directory and follows a uni-app/H5 project layout:
@@ -113,6 +122,8 @@ API --> Config
 - Map integration: Amap initialization, marker rendering, info windows, external navigation, and view fitting.
 - Offline drafts: Local storage of form data with lists, expiration, and cleanup; sync attempts against backend.
 - Form collection: A dynamic form component supporting multiple input types, validation, linkage rules, and integration with image and location pickers.
+
+**Updated** Removed references to legacy components and interfaces that have been dropped from the system.
 
 **Section sources**
 - [mobile-app/src/main.js:33-43](file://mobile-app/src/main.js#L33-L43)
@@ -450,13 +461,17 @@ ViteCfg --> Router
 - Location issues: Verify GPS accuracy settings and Amap API keys; test fallback to system picker.
 - Draft corruption: Validate JSON parsing and storage quotas; implement cleanup for expired drafts.
 
+**Updated** Removed troubleshooting references to legacy components that have been dropped from the system.
+
 **Section sources**
 - [mobile-app/src/utils/api.js:47-68](file://mobile-app/src/utils/api.js#L47-L68)
 - [mobile-app/src/pages.json:140-150](file://mobile-app/src/pages.json#L140-L150)
 - [mobile-app/src/utils/draft.js:179-187](file://mobile-app/src/utils/draft.js#L179-L187)
 
 ## Conclusion
-The mobile application provides a robust, mobile-first solution for field survey data collection. It leverages uni-app’s cross-platform capabilities, integrates precise location services, offers a flexible dynamic form system, and implements reliable offline draft management with backend synchronization. The modular architecture and reusable components facilitate maintainability and scalability.
+The mobile application provides a robust, mobile-first solution for field survey data collection. It leverages uni-app's cross-platform capabilities, integrates precise location services, offers a flexible dynamic form system, and implements reliable offline draft management with backend synchronization. The modular architecture and reusable components facilitate maintainability and scalability.
+
+**Updated** Removed references to legacy mobile application components and interfaces that have been removed from the system.
 
 ## Appendices
 

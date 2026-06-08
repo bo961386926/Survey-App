@@ -2,7 +2,8 @@
 
 <cite>
 **Referenced Files in This Document**
-- [index.vue](file://admin-web-soybean/src/views/home/index.vue)
+- [index.vue](file://admin-web-soybean/src/views/dashboard/index.vue)
+- [home/index.vue](file://admin-web-soybean/src/views/home/index.vue)
 - [card-data.vue](file://admin-web-soybean/src/views/home/modules/card-data.vue)
 - [line-chart.vue](file://admin-web-soybean/src/views/home/modules/line-chart.vue)
 - [project-news.vue](file://admin-web-soybean/src/views/home/modules/project-news.vue)
@@ -15,6 +16,15 @@
 - [scrollbar.scss](file://admin-web-soybean/src/styles/scss/scrollbar.scss)
 - [vars.ts](file://admin-web-soybean/src/theme/vars.ts)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Added comprehensive dashboard component with enhanced analytics capabilities
+- Introduced new metrics cards with coverage distribution and cloud sync status
+- Enhanced line chart with dynamic time range switching and real-time data updates
+- Added recent activity timeline with attachment support and user avatars
+- Implemented new coverage progress bars and cloud synchronization indicators
+- Updated responsive design patterns with expanded grid system
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -29,336 +39,362 @@
 10. [Appendices](#appendices)
 
 ## Introduction
-This document describes the dashboard and analytics components of the Survey-App admin web application. It focuses on the home page layout with glass-morphism effects and a responsive grid system, core metrics cards, an interactive line chart for trend visualization, the project news feed, the recent projects widget with timeline visualization, and the anomaly warnings component. It also covers data binding, chart configurations, real-time update patterns, responsive design, and accessibility considerations.
+This document describes the comprehensive dashboard and analytics components of the Survey-App admin web application. The new dashboard provides system monitoring capabilities for administrators with real-time analytics and performance metrics. It features a modern glass-morphism design with responsive grid layouts, interactive data visualizations, and comprehensive system monitoring tools.
 
 ## Project Structure
-The dashboard is composed of a single-page layout that orchestrates multiple modular components. The home page coordinates:
-- A welcome header and glass background layer
-- A grid of four core metrics cards
-- A two-column main content area: a line chart on the left and a project news feed on the right
-- A two-column bottom area: recent projects and anomaly warnings
+The dashboard ecosystem now consists of two main implementations: a comprehensive dashboard with advanced analytics and a simplified home page version. The comprehensive dashboard includes:
+
+- **Comprehensive Dashboard** (`src/views/dashboard/index.vue`): Advanced system monitoring with real-time analytics
+- **Home Page Dashboard** (`src/views/home/index.vue`): Simplified version with core metrics and basic analytics
+- **Enhanced Components**: Metrics cards, interactive charts, activity feeds, and monitoring widgets
 
 ```mermaid
 graph TB
-Home["Home Page<br/>index.vue"] --> Header["Header Banner<br/>header-banner.vue"]
-Home --> Cards["Metrics Cards<br/>card-data.vue"]
-Home --> GridMain["Main Grid<br/>2/3 Chart + 1/3 News"]
-GridMain --> Chart["Line Chart<br/>line-chart.vue"]
-GridMain --> News["Project News<br/>project-news.vue"]
-Home --> GridBottom["Bottom Grid<br/>Recent Projects + Anomaly Warnings"]
-GridBottom --> Projects["Recent Projects<br/>recent-projects.vue"]
-GridBottom --> Warnings["Anomaly Warnings<br/>anomaly-warnings.vue"]
+Dashboard["Comprehensive Dashboard<br/>index.vue"] --> Header["Welcome Header<br/>Project Overview"]
+Dashboard --> Metrics["Enhanced Metrics Grid<br/>4 Cards + Coverage + Sync"]
+Dashboard --> Charts["Interactive Line Chart<br/>Dynamic Time Ranges"]
+Dashboard --> Activity["Recent Activity Timeline<br/>Attachments & Avatars"]
+Dashboard --> BottomGrid["Bottom Grid<br/>Coverage & Cloud Sync"]
+HomeDashboard["Home Dashboard<br/>home/index.vue"] --> HomeHeader["Simple Header<br/>Basic Overview"]
+HomeDashboard --> HomeMetrics["Basic Metrics Grid<br/>4 Core Cards"]
+HomeDashboard --> HomeCharts["Simple Line Chart<br/>Monthly View Only"]
+HomeDashboard --> HomeActivity["Project News Feed<br/>Basic Activity List"]
+HomeDashboard --> HomeBottom["Bottom Grid<br/>Recent Projects + Warnings"]
 ```
 
 **Diagram sources**
-- [index.vue:12-49](file://admin-web-soybean/src/views/home/index.vue#L12-L49)
-- [card-data.vue:58-103](file://admin-web-soybean/src/views/home/modules/card-data.vue#L58-L103)
-- [line-chart.vue:109-131](file://admin-web-soybean/src/views/home/modules/line-chart.vue#L109-L131)
-- [project-news.vue:87-139](file://admin-web-soybean/src/views/home/modules/project-news.vue#L87-L139)
-- [recent-projects.vue:54-136](file://admin-web-soybean/src/views/home/modules/recent-projects.vue#L54-L136)
-- [anomaly-warnings.vue:25-74](file://admin-web-soybean/src/views/home/modules/anomaly-warnings.vue#L25-L74)
+- [index.vue:190-403](file://admin-web-soybean/src/views/dashboard/index.vue#L190-L403)
+- [home/index.vue:12-49](file://admin-web-soybean/src/views/home/index.vue#L12-L49)
 
 **Section sources**
-- [index.vue:12-49](file://admin-web-soybean/src/views/home/index.vue#L12-L49)
+- [index.vue:190-403](file://admin-web-soybean/src/views/dashboard/index.vue#L190-L403)
+- [home/index.vue:12-49](file://admin-web-soybean/src/views/home/index.vue#L12-L49)
 
 ## Core Components
-- Home page layout with glass background and animated floating gradients
-- Four core metrics cards for project statistics, survey point counts, and completion rates
-- Interactive ECharts line chart with configurable time ranges and theme-aware rendering
-- Project news feed with activity timeline and quick actions
-- Recent projects widget with paginated data loading and status indicators
-- Anomaly warnings component for system alerts and overdue items
+The comprehensive dashboard introduces several enhanced components:
+
+### Enhanced Metrics System
+- **Annual Project Statistics**: Total projects, active projects, completed results, and warning items
+- **Coverage Distribution**: Real-time progress bars for geological stability, pipeline detection, and terrain mapping
+- **Cloud Synchronization**: Status indicators with last sync timestamps and log access
+
+### Advanced Analytics
+- **Interactive Line Chart**: Dynamic time range switching (monthly, quarterly, yearly)
+- **Real-time Data Updates**: Automatic chart refresh with theme-aware rendering
+- **Performance Monitoring**: Dual-series visualization comparing current performance vs historical averages
+
+### Comprehensive Activity Tracking
+- **Timeline Interface**: Detailed activity stream with timestamps and user interactions
+- **Attachment Support**: PDF previews and download capabilities
+- **Team Integration**: Avatar stacking for team member additions
+- **System Notifications**: Automated system update announcements
+
+### Monitoring & Alerts
+- **Coverage Progress Bars**: Visual indicators for different survey categories
+- **Cloud Sync Status**: Real-time synchronization health monitoring
+- **Activity Log Access**: Direct navigation to detailed system logs
 
 **Section sources**
-- [index.vue:12-49](file://admin-web-soybean/src/views/home/index.vue#L12-L49)
-- [card-data.vue:18-55](file://admin-web-soybean/src/views/home/modules/card-data.vue#L18-L55)
-- [line-chart.vue:15-106](file://admin-web-soybean/src/views/home/modules/line-chart.vue#L15-L106)
-- [project-news.vue:20-84](file://admin-web-soybean/src/views/home/modules/project-news.vue#L20-L84)
-- [recent-projects.vue:14-51](file://admin-web-soybean/src/views/home/modules/recent-projects.vue#L14-L51)
-- [anomaly-warnings.vue:16-22](file://admin-web-soybean/src/views/home/modules/anomaly-warnings.vue#L16-L22)
+- [index.vue:99-128](file://admin-web-soybean/src/views/dashboard/index.vue#L99-L128)
+- [index.vue:131-135](file://admin-web-soybean/src/views/dashboard/index.vue#L131-L135)
+- [index.vue:14-96](file://admin-web-soybean/src/views/dashboard/index.vue#L14-L96)
+- [index.vue:302-390](file://admin-web-soybean/src/views/dashboard/index.vue#L302-L390)
 
 ## Architecture Overview
-The dashboard integrates Vue composition APIs, a theme store for dark/light mode, and a reusable ECharts hook. Data flows from service APIs to widgets, while theme changes propagate to charts and UI components.
+The dashboard architecture supports both comprehensive and simplified implementations with shared components and enhanced data binding:
 
 ```mermaid
 graph TB
-subgraph "UI Layer"
-Home["Home Page<br/>index.vue"]
-Cards["Metrics Cards<br/>card-data.vue"]
-Chart["Line Chart<br/>line-chart.vue"]
-News["Project News<br/>project-news.vue"]
-Projects["Recent Projects<br/>recent-projects.vue"]
-Warnings["Anomaly Warnings<br/>anomaly-warnings.vue"]
+subgraph "Dashboard Layer"
+Dashboard["Dashboard Component<br/>index.vue"]
+HomeDashboard["Home Dashboard<br/>home/index.vue"]
 end
-subgraph "State & Theming"
+subgraph "Enhanced Components"
+Metrics["Enhanced Metrics<br/>4 Cards + Coverage + Sync"]
+Chart["Advanced Line Chart<br/>Dynamic Time Ranges"]
+Activity["Comprehensive Timeline<br/>Attachments & Avatars"]
+Coverage["Coverage Progress<br/>Real-time Bars"]
+CloudSync["Cloud Sync Status<br/>Health Monitoring"]
+end
+subgraph "Shared Infrastructure"
 ThemeStore["Theme Store<br/>theme/index.ts"]
 EChartsHook["ECharts Hook<br/>hooks/common/echarts.ts"]
+API["Project API<br/>service/api/project.ts"]
 end
-subgraph "Data Layer"
-ProjectAPI["Project API<br/>service/api/project.ts"]
-end
-Home --> Cards
-Home --> Chart
-Home --> News
-Home --> Projects
-Home --> Warnings
+Dashboard --> Metrics
+Dashboard --> Chart
+Dashboard --> Activity
+Dashboard --> Coverage
+Dashboard --> CloudSync
+HomeDashboard --> Metrics
+HomeDashboard --> Chart
+HomeDashboard --> Activity
 Chart --> EChartsHook
 EChartsHook --> ThemeStore
-Projects --> ProjectAPI
-Projects --> Home
+Coverage --> API
+CloudSync --> API
 ```
 
 **Diagram sources**
-- [index.vue:12-49](file://admin-web-soybean/src/views/home/index.vue#L12-L49)
-- [card-data.vue:58-103](file://admin-web-soybean/src/views/home/modules/card-data.vue#L58-L103)
-- [line-chart.vue:109-131](file://admin-web-soybean/src/views/home/modules/line-chart.vue#L109-L131)
-- [project-news.vue:87-139](file://admin-web-soybean/src/views/home/modules/project-news.vue#L87-L139)
-- [recent-projects.vue:54-136](file://admin-web-soybean/src/views/home/modules/recent-projects.vue#L54-L136)
-- [anomaly-warnings.vue:25-74](file://admin-web-soybean/src/views/home/modules/anomaly-warnings.vue#L25-L74)
+- [index.vue:190-403](file://admin-web-soybean/src/views/dashboard/index.vue#L190-L403)
+- [home/index.vue:12-49](file://admin-web-soybean/src/views/home/index.vue#L12-L49)
 - [theme/index.ts:18-221](file://admin-web-soybean/src/store/modules/theme/index.ts#L18-L221)
 - [echarts.ts:83-235](file://admin-web-soybean/src/hooks/common/echarts.ts#L83-L235)
-- [project.ts:4-18](file://admin-web-soybean/src/service/api/project.ts#L4-L18)
 
 ## Detailed Component Analysis
 
-### Home Page Layout and Glass Morphism
-- Glass background layer with animated floating gradients
-- Scrollbar customization via scoped styles
-- Hover effects on header and grid items
-- Responsive grid: 1 column on small screens, 2 columns on large screens for bottom widgets
+### Comprehensive Dashboard Layout
+The new dashboard implements a sophisticated three-column layout optimized for system monitoring:
 
 ```mermaid
 flowchart TD
-Start(["Mount Home"]) --> BG["Render Glass Background Layer"]
-BG --> Header["Render Header Title & Description"]
-Header --> Metrics["Render 4 Metrics Cards"]
-Metrics --> MainGrid["Render Main Grid (Chart + News)"]
-MainGrid --> BottomGrid["Render Bottom Grid (Projects + Warnings)"]
-BottomGrid --> End(["Ready"])
+Start(["Dashboard Mount"]) --> Header["Render Welcome Header<br/>Project Overview"]
+Header --> MetricsGrid["Render Enhanced Metrics Grid<br/>4 Cards + Coverage + Sync"]
+MetricsGrid --> MainLayout["Configure Main Layout<br/>2/3 Chart + 1/3 Activity"]
+MainLayout --> ChartCard["Render Interactive Chart<br/>Dynamic Time Ranges"]
+MainLayout --> BottomGrid["Render Bottom Grid<br/>Coverage + Cloud Sync"]
+BottomGrid --> CoverageCard["Render Coverage Progress<br/>Real-time Bars"]
+BottomGrid --> CloudCard["Render Cloud Sync Status<br/>Health Monitoring"]
+MainLayout --> ActivityStream["Render Activity Timeline<br/>Attachments & Avatars"]
+ActivityStream --> End(["Dashboard Ready"])
 ```
 
 **Diagram sources**
-- [index.vue:12-49](file://admin-web-soybean/src/views/home/index.vue#L12-L49)
-- [index.vue:52-151](file://admin-web-soybean/src/views/home/index.vue#L52-L151)
+- [index.vue:190-403](file://admin-web-soybean/src/views/dashboard/index.vue#L190-L403)
 
 **Section sources**
-- [index.vue:52-151](file://admin-web-soybean/src/views/home/index.vue#L52-L151)
-- [scrollbar.scss:1-22](file://admin-web-soybean/src/styles/scss/scrollbar.scss#L1-L22)
+- [index.vue:190-403](file://admin-web-soybean/src/views/dashboard/index.vue#L190-L403)
 
-### Core Metrics Cards
-- Data model defines key, title, value, optional badge, icon, and color classes
-- Responsive grid layout adapts from 1 to 4 columns based on viewport
-- Hover animations and badge coloring based on status semantics
+### Enhanced Metrics Cards
+The dashboard introduces four comprehensive metrics cards with semantic badges and iconography:
 
-```mermaid
-classDiagram
-class CardData {
-+string key
-+string title
-+number|string value
-+string icon
-+string colorClass
-+string bgColorClass
-}
-class CardDataWidget {
-+computed<CardData[]> cardData
-}
-CardDataWidget --> CardData : "renders"
-```
+#### Annual Project Statistics
+- **Total Projects**: Shows cumulative project count with growth percentage
+- **Active Projects**: Real-time indicator for currently running projects
+- **Completed Results**: Achievement tracking with completion rate percentages
+- **Warning Items**: Alert system for pending issues requiring attention
 
-**Diagram sources**
-- [card-data.vue:8-16](file://admin-web-soybean/src/views/home/modules/card-data.vue#L8-L16)
-- [card-data.vue:18-55](file://admin-web-soybean/src/views/home/modules/card-data.vue#L18-L55)
+#### Coverage Distribution System
+- **Geological Stability Monitoring**: Progress bar for ground stability surveys
+- **Underground Pipeline Detection**: Pipeline infrastructure mapping coverage
+- **Topographic Mapping**: Terrain and elevation survey completion rates
+
+#### Cloud Synchronization Status
+- **Sync Health Indicator**: Visual status for cloud data synchronization
+- **Last Sync Timestamp**: Real-time synchronization timing
+- **Log Access**: Direct navigation to detailed synchronization logs
 
 **Section sources**
-- [card-data.vue:18-103](file://admin-web-soybean/src/views/home/modules/card-data.vue#L18-L103)
+- [index.vue:99-128](file://admin-web-soybean/src/views/dashboard/index.vue#L99-L128)
+- [index.vue:131-135](file://admin-web-soybean/src/views/dashboard/index.vue#L131-L135)
+- [index.vue:258-289](file://admin-web-soybean/src/views/dashboard/index.vue#L258-L289)
 
-### Interactive Line Chart
-- ECharts integration via a composable hook that manages lifecycle, resizing, and theme switching
-- Configurable time range tabs (monthly, quarterly, yearly)
-- Smooth line with area fill and emphasis styling
-- Dark/light mode support via theme store
+### Advanced Interactive Line Chart
+The enhanced chart provides dynamic time range switching with real-time data updates:
 
-```mermaid
-sequenceDiagram
-participant C as "LineChart Component"
-participant H as "ECharts Hook"
-participant S as "Theme Store"
-C->>H : "Initialize with options factory"
-H->>S : "Subscribe to darkMode"
-C->>C : "Select time range"
-C->>H : "updateOptions()"
-H-->>C : "Render chart with theme"
-S-->>H : "Toggle dark mode"
-H-->>C : "Re-render with new theme"
-```
+#### Dynamic Time Range System
+- **Monthly View**: Daily granularity with 30-day rolling window
+- **Quarterly View**: Seasonal analysis with Q1-Q4 breakdown
+- **Yearly View**: Long-term trend analysis across multiple years
 
-**Diagram sources**
-- [line-chart.vue:15-106](file://admin-web-soybean/src/views/home/modules/line-chart.vue#L15-L106)
-- [echarts.ts:83-235](file://admin-web-soybean/src/hooks/common/echarts.ts#L83-L235)
-- [theme/index.ts:44-49](file://admin-web-soybean/src/store/modules/theme/index.ts#L44-L49)
+#### Real-time Data Management
+- **Watch-based Updates**: Automatic chart refresh when time range changes
+- **Theme-aware Rendering**: Dynamic tooltip and background color adaptation
+- **Smooth Transitions**: Animated data point updates with ECharts optimization
+
+#### Enhanced Visualization Features
+- **Dual Series Comparison**: Current performance vs historical averages
+- **Area Fill Effects**: Gradient overlays for visual depth
+- **Responsive Design**: Adaptive sizing for different screen dimensions
 
 **Section sources**
-- [line-chart.vue:15-106](file://admin-web-soybean/src/views/home/modules/line-chart.vue#L15-L106)
-- [echarts.ts:83-235](file://admin-web-soybean/src/hooks/common/echarts.ts#L83-L235)
-- [theme/index.ts:44-49](file://admin-web-soybean/src/store/modules/theme/index.ts#L44-L49)
+- [index.vue:14-96](file://admin-web-soybean/src/views/dashboard/index.vue#L14-L96)
+- [index.vue:137-172](file://admin-web-soybean/src/views/dashboard/index.vue#L137-L172)
 
-### Project News Feed
-- Static activity items with type-specific icons and colors
-- Quick action buttons mapped to routes
-- Hover states and transitions for interactive feedback
+### Comprehensive Activity Timeline
+The activity stream provides detailed system monitoring with rich interaction capabilities:
 
-```mermaid
-flowchart TD
-Load["Load Activities"] --> Render["Render Activity List"]
-Render --> Actions["Bind Quick Actions to Routes"]
-Actions --> Hover["Hover Effects & Transitions"]
-```
+#### Activity Stream Architecture
+- **Upload Completion**: Document submission notifications with PDF previews
+- **Audit Approvals**: Review process completions with team member tagging
+- **Team Additions**: New member integrations with avatar stacking
+- **System Updates**: Platform maintenance and feature rollouts
 
-**Diagram sources**
-- [project-news.vue:20-84](file://admin-web-soybean/src/views/home/modules/project-news.vue#L20-L84)
-- [project-news.vue:82-84](file://admin-web-soybean/src/views/home/modules/project-news.vue#L82-L84)
+#### Rich Media Integration
+- **PDF Attachments**: Preview and download capabilities for survey documents
+- **Avatar Stacking**: Visual representation of team member additions
+- **Timestamp Precision**: Real-time and relative time displays
+- **User Tagging**: Contextual highlighting of team members in activities
 
-**Section sources**
-- [project-news.vue:20-139](file://admin-web-soybean/src/views/home/modules/project-news.vue#L20-L139)
-
-### Recent Projects Widget
-- Fetches paginated project list from the backend API
-- Computes a subset of latest active projects
-- Renders status badges and handles navigation to detail or list views
-- Skeleton loaders during initial fetch
-
-```mermaid
-sequenceDiagram
-participant P as "RecentProjects Widget"
-participant API as "Project API"
-participant Router as "Vue Router"
-P->>API : "fetchGetProjectList({ current : 1, size : 5 })"
-API-->>P : "ProjectList records"
-P->>P : "Slice to latest 5 projects"
-P->>Router : "Push to /project/detail/ : id on click"
-P->>Router : "Push to /project on 'View All'"
-```
-
-**Diagram sources**
-- [recent-projects.vue:27-51](file://admin-web-soybean/src/views/home/modules/recent-projects.vue#L27-L51)
-- [project.ts:4-18](file://admin-web-soybean/src/service/api/project.ts#L4-L18)
+#### Navigation and Interaction
+- **Quick Action Buttons**: Direct navigation to relevant system sections
+- **View All History**: Access to complete activity archive
+- **Status Indicators**: Color-coded activity types and priorities
 
 **Section sources**
-- [recent-projects.vue:14-136](file://admin-web-soybean/src/views/home/modules/recent-projects.vue#L14-L136)
-- [project.ts:4-18](file://admin-web-soybean/src/service/api/project.ts#L4-L18)
+- [index.vue:302-390](file://admin-web-soybean/src/views/dashboard/index.vue#L302-L390)
 
-### Anomaly Warnings Component
-- Displays a list of warning items with project name, project, status, and delay days
-- Hover states and subtle animations for improved interactivity
-- Consistent color tokens and spacing for readability
+### Coverage Progress System
+The coverage monitoring provides real-time visualization of survey area completion:
 
-```mermaid
-flowchart TD
-Data["Computed Warnings Array"] --> Render["Render Warning Items"]
-Render --> Hover["Hover Effects & Indicators"]
-```
+#### Progress Bar Implementation
+- **Custom Styling**: Tailored progress bar appearance with brand colors
+- **Real-time Updates**: Live percentage calculations and visual feedback
+- **Category-based Colors**: Distinct visual indicators for different survey types
 
-**Diagram sources**
-- [anomaly-warnings.vue:16-22](file://admin-web-soybean/src/views/home/modules/anomaly-warnings.vue#L16-L22)
-- [anomaly-warnings.vue:41-73](file://admin-web-soybean/src/views/home/modules/anomaly-warnings.vue#L41-L73)
+#### Coverage Categories
+- **Geological Stability**: Ground condition monitoring and assessment
+- **Pipeline Detection**: Underground infrastructure mapping and verification
+- **Topographic Surveys**: Elevation and terrain mapping completion
 
 **Section sources**
-- [anomaly-warnings.vue:16-74](file://admin-web-soybean/src/views/home/modules/anomaly-warnings.vue#L16-L74)
+- [index.vue:131-135](file://admin-web-soybean/src/views/dashboard/index.vue#L131-L135)
+- [index.vue:265-273](file://admin-web-soybean/src/views/dashboard/index.vue#L265-L273)
 
-### Conceptual Overview
-The dashboard follows a modular, theme-aware architecture with responsive grids and interactive widgets. Data is bound from service APIs to components, while ECharts provides a robust visualization layer with automatic theme adaptation.
+### Cloud Synchronization Monitoring
+The cloud sync component provides comprehensive system health monitoring:
 
-```mermaid
-graph TB
-Theme["Theme Tokens<br/>vars.ts"] --> ThemeStore["Theme Store<br/>theme/index.ts"]
-ThemeStore --> ECharts["ECharts Hook<br/>echarts.ts"]
-ECharts --> Widgets["Widgets<br/>Cards/Chart/News/Projects/Warnings"]
-API["Project API<br/>project.ts"] --> Projects["Recent Projects"]
-Widgets --> Home["Home Page<br/>index.vue"]
-```
+#### Synchronization Status
+- **Health Indicators**: Visual status for cloud data synchronization
+- **Timing Information**: Last successful sync timestamp and frequency
+- **Alert Mechanisms**: Notification system for sync failures or delays
 
-**Diagram sources**
-- [vars.ts:21-35](file://admin-web-soybean/src/theme/vars.ts#L21-L35)
-- [theme/index.ts:18-221](file://admin-web-soybean/src/store/modules/theme/index.ts#L18-L221)
-- [echarts.ts:83-235](file://admin-web-soybean/src/hooks/common/echarts.ts#L83-L235)
-- [project.ts:4-18](file://admin-web-soybean/src/service/api/project.ts#L4-L18)
-- [index.vue:12-49](file://admin-web-soybean/src/views/home/index.vue#L12-L49)
+#### Integration Features
+- **Log Access**: Direct navigation to detailed synchronization logs
+- **Status Reporting**: Comprehensive sync history and error reporting
+- **Performance Metrics**: Synchronization speed and data volume tracking
+
+**Section sources**
+- [index.vue:276-289](file://admin-web-soybean/src/views/dashboard/index.vue#L276-L289)
+
+### Responsive Design and Accessibility
+The dashboard maintains comprehensive responsive design with enhanced accessibility features:
+
+#### Responsive Grid System
+- **Mobile-first Approach**: Optimized for mobile device viewing
+- **Adaptive Layouts**: Flexible grid system adapting to screen size
+- **Touch-friendly Controls**: Large interactive elements for mobile users
+
+#### Accessibility Enhancements
+- **Semantic HTML Structure**: Proper heading hierarchy and content organization
+- **Keyboard Navigation**: Full keyboard accessibility for all interactive elements
+- **Screen Reader Support**: Comprehensive ARIA labels and semantic markup
+- **Color Contrast**: High contrast ratios meeting WCAG guidelines
+- **Focus Management**: Clear focus indicators and logical tab order
+
+**Section sources**
+- [index.vue:200-227](file://admin-web-soybean/src/views/dashboard/index.vue#L200-L227)
+- [index.vue:405-436](file://admin-web-soybean/src/views/dashboard/index.vue#L405-L436)
 
 ## Dependency Analysis
-- Home page depends on child components for metrics, charts, news, projects, and warnings
-- Line chart depends on the ECharts hook and theme store for rendering and theming
-- Recent projects depend on the project API for data fetching
-- Theme store exposes dark mode and theme colors consumed by ECharts and components
+The comprehensive dashboard introduces enhanced dependencies and component relationships:
 
 ```mermaid
 graph LR
-Home["index.vue"] --> Cards["card-data.vue"]
-Home --> Chart["line-chart.vue"]
-Home --> News["project-news.vue"]
-Home --> Projects["recent-projects.vue"]
-Home --> Warnings["anomaly-warnings.vue"]
-Chart --> ECharts["hooks/common/echarts.ts"]
-ECharts --> ThemeStore["store/modules/theme/index.ts"]
-Projects --> ProjectAPI["service/api/project.ts"]
+Dashboard["Dashboard Component<br/>index.vue"] --> Metrics["Enhanced Metrics<br/>4 Cards + Coverage + Sync"]
+Dashboard --> Chart["Advanced Line Chart<br/>Dynamic Time Ranges"]
+Dashboard --> Activity["Comprehensive Timeline<br/>Rich Media Support"]
+Dashboard --> Coverage["Coverage Progress<br/>Real-time Bars"]
+Dashboard --> CloudSync["Cloud Sync Status<br/>Health Monitoring"]
+Chart --> EChartsHook["ECharts Hook<br/>hooks/common/echarts.ts"]
+EChartsHook --> ThemeStore["Theme Store<br/>theme/index.ts"]
+Coverage --> API["Project API<br/>service/api/project.ts"]
+CloudSync --> API
+Metrics --> ThemeStore
+Activity --> Router["Vue Router<br/>Navigation"]
 ```
 
 **Diagram sources**
-- [index.vue:12-49](file://admin-web-soybean/src/views/home/index.vue#L12-L49)
-- [line-chart.vue:15-106](file://admin-web-soybean/src/views/home/modules/line-chart.vue#L15-L106)
-- [recent-projects.vue:27-51](file://admin-web-soybean/src/views/home/modules/recent-projects.vue#L27-L51)
-- [project.ts:4-18](file://admin-web-soybean/src/service/api/project.ts#L4-L18)
+- [index.vue:190-403](file://admin-web-soybean/src/views/dashboard/index.vue#L190-L403)
 - [echarts.ts:83-235](file://admin-web-soybean/src/hooks/common/echarts.ts#L83-L235)
-- [theme/index.ts:44-49](file://admin-web-soybean/src/store/modules/theme/index.ts#L44-L49)
+- [theme/index.ts:18-221](file://admin-web-soybean/src/store/modules/theme/index.ts#L18-L221)
 
 **Section sources**
-- [index.vue:12-49](file://admin-web-soybean/src/views/home/index.vue#L12-L49)
-- [line-chart.vue:15-106](file://admin-web-soybean/src/views/home/modules/line-chart.vue#L15-L106)
-- [recent-projects.vue:27-51](file://admin-web-soybean/src/views/home/modules/recent-projects.vue#L27-L51)
-- [project.ts:4-18](file://admin-web-soybean/src/service/api/project.ts#L4-L18)
+- [index.vue:190-403](file://admin-web-soybean/src/views/dashboard/index.vue#L190-L403)
 - [echarts.ts:83-235](file://admin-web-soybean/src/hooks/common/echarts.ts#L83-L235)
-- [theme/index.ts:44-49](file://admin-web-soybean/src/store/modules/theme/index.ts#L44-L49)
+- [theme/index.ts:18-221](file://admin-web-soybean/src/store/modules/theme/index.ts#L18-L221)
 
 ## Performance Considerations
-- ECharts hook automatically handles resize and theme changes, minimizing redundant renders
-- Components use computed properties for derived data to reduce unnecessary updates
-- Skeleton loaders prevent layout shifts during initial data fetch
-- CSS animations and transitions are scoped to avoid global performance impact
+The comprehensive dashboard implements several performance optimizations:
 
-[No sources needed since this section provides general guidance]
+### Enhanced ECharts Integration
+- **Automatic Optimization**: ECharts lifecycle management with resize handling
+- **Theme-aware Rendering**: Efficient theme switching without full chart recreation
+- **Memory Management**: Proper cleanup of chart instances and event listeners
+
+### Data Management Strategies
+- **Lazy Loading**: Conditional loading of heavy components until needed
+- **Virtual Scrolling**: Efficient rendering of long activity timelines
+- **Component Caching**: Preserved state for frequently accessed dashboards
+
+### Responsive Performance
+- **CSS Grid Optimization**: Efficient layout calculations across breakpoints
+- **Image Lazy Loading**: Optimized avatar and attachment loading
+- **Animation Performance**: Hardware-accelerated CSS transitions and transforms
 
 ## Troubleshooting Guide
-- Chart not rendering: Verify DOM element size and ECharts initialization conditions
-- Theme mismatch: Ensure theme store dark mode is properly toggled and ECharts theme is re-initialized
-- API errors: Check network requests and error logging in the project list loader
-- Scrollbar visibility: Confirm custom scrollbar mixins are applied to scrollable containers
+Common issues and solutions for the comprehensive dashboard:
+
+### Chart Rendering Issues
+- **Chart Not Displaying**: Verify DOM element dimensions and ECharts initialization timing
+- **Theme Inconsistencies**: Ensure theme store dark mode is properly synchronized
+- **Data Update Failures**: Check watch-based update mechanisms for time range changes
+
+### Component Interaction Problems
+- **Time Range Switching**: Verify watch-based reactive updates are properly configured
+- **Activity Stream Loading**: Check API connectivity and data transformation logic
+- **Navigation Issues**: Validate router configuration and route resolution
+
+### Performance Optimization
+- **Slow Initial Load**: Implement lazy loading for non-critical components
+- **Memory Leaks**: Ensure proper cleanup of ECharts instances and event listeners
+- **Mobile Performance**: Optimize touch interactions and reduce unnecessary re-renders
 
 **Section sources**
-- [echarts.ts:154-187](file://admin-web-soybean/src/hooks/common/echarts.ts#L154-L187)
-- [theme/index.ts:172-199](file://admin-web-soybean/src/store/modules/theme/index.ts#L172-L199)
-- [recent-projects.vue:27-51](file://admin-web-soybean/src/views/home/modules/recent-projects.vue#L27-L51)
-- [scrollbar.scss:1-22](file://admin-web-soybean/src/styles/scss/scrollbar.scss#L1-L22)
+- [index.vue:137-172](file://admin-web-soybean/src/views/dashboard/index.vue#L137-L172)
+- [index.vue:183-187](file://admin-web-soybean/src/views/dashboard/index.vue#L183-L187)
 
 ## Conclusion
-The dashboard leverages a modular Vue architecture with theme-aware visuals, responsive design, and interactive data displays. The ECharts integration provides flexible, accessible trend visualization, while the project news and recent projects widgets offer contextual insights. The anomaly warnings component ensures timely awareness of system alerts.
-
-[No sources needed since this section summarizes without analyzing specific files]
+The comprehensive dashboard represents a significant enhancement to the Survey-App admin interface, providing administrators with powerful system monitoring capabilities. The new implementation combines advanced analytics, real-time data visualization, and comprehensive system oversight in a cohesive, accessible interface. The modular architecture ensures maintainability while the responsive design guarantees optimal user experience across all device types.
 
 ## Appendices
 
 ### Responsive Design Patterns
-- Breakpoints and grid behavior are defined in the home page layout and sample HTML
-- Components adapt to screen sizes with appropriate column spans and spacing
+The dashboard implements sophisticated responsive design patterns:
+
+#### Breakpoint Strategy
+- **Mobile**: Single column layout with stacked components
+- **Tablet**: Two-column adaptive layout with flexible component sizing
+- **Desktop**: Three-column optimized layout with enhanced analytics display
+- **Large Screens**: Expanded grid system supporting multiple concurrent monitors
+
+#### Component Adaptation
+- **Grid System**: CSS Grid with automatic column adjustment based on available space
+- **Typography Scaling**: Responsive font sizing with optimal readability at all breakpoints
+- **Interactive Elements**: Touch-friendly sizing and spacing for mobile devices
 
 **Section sources**
-- [index.vue:28-47](file://admin-web-soybean/src/views/home/index.vue#L28-L47)
-- [dashboard-analytics.html:547-582](file://admin-web-soybean/public/samples/dashboard-analytics.html#L547-L582)
+- [index.vue:200-227](file://admin-web-soybean/src/views/dashboard/index.vue#L200-L227)
+- [index.vue:230-290](file://admin-web-soybean/src/views/dashboard/index.vue#L230-L290)
 
 ### Accessibility Features
-- Semantic focus states and hover effects improve keyboard navigation
-- Color contrast maintained via theme tokens and CSS variables
-- Clear visual hierarchy and readable typography scales
+Comprehensive accessibility implementation across all dashboard components:
+
+#### Semantic Structure
+- **Proper Headings**: Logical heading hierarchy from H1 to H6
+- **ARIA Labels**: Descriptive labels for interactive elements and charts
+- **Landmark Regions**: Semantic sectioning for screen reader navigation
+
+#### Keyboard Navigation
+- **Full Keyboard Access**: All interactive elements accessible via keyboard
+- **Focus Management**: Logical tab order and visible focus indicators
+- **Shortcuts**: Keyboard shortcuts for common dashboard actions
+
+#### Visual Accessibility
+- **High Contrast Mode**: Full support for high contrast and reduced color schemes
+- **Text Scaling**: Responsive typography supporting text scaling preferences
+- **Color Independence**: Information conveyed through multiple modalities beyond color
 
 **Section sources**
-- [vars.ts:21-35](file://admin-web-soybean/src/theme/vars.ts#L21-L35)
-- [index.vue:106-145](file://admin-web-soybean/src/views/home/index.vue#L106-L145)
+- [index.vue:405-436](file://admin-web-soybean/src/views/dashboard/index.vue#L405-L436)
+- [index.vue:190-403](file://admin-web-soybean/src/views/dashboard/index.vue#L190-L403)

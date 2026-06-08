@@ -139,6 +139,7 @@
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/security/LoginUser.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/security/SecurityConfig.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/CollabEntryService.java
+/Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/DataScopeService.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/EmailService.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/ExportTaskProcessor.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/ExportTaskService.java
@@ -170,6 +171,7 @@
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/SysUserService.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/impl/AliyunSmsCodeServiceImpl.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java
+/Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/impl/DataScopeServiceImpl.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/impl/EmailServiceImpl.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/impl/ExportTaskServiceImpl.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/impl/LocationCorrectionServiceImpl.java
