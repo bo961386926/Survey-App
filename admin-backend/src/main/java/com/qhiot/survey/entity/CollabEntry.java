@@ -53,6 +53,9 @@ public class CollabEntry implements Serializable {
     
     private LocalDateTime lastAccessTime;
     
+    /** 租户ID */
+    private Long tenantId;
+
     private LocalDateTime createTime;
     
     private LocalDateTime updateTime;

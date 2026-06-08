@@ -78,6 +78,9 @@ public class SurveyPoint implements Serializable {
     @TableLogic
     private Integer isDeleted;
     
+    /** 租户ID */
+    private Long tenantId;
+
     private LocalDateTime createTime;
     
     private LocalDateTime updateTime;

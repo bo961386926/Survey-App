@@ -33,5 +33,8 @@ public class SurveyAuditRecord implements Serializable {
     
     private Long rejectTemplateId;
     
+    /** 租户ID */
+    private Long tenantId;
+
     private LocalDateTime createTime;
 }

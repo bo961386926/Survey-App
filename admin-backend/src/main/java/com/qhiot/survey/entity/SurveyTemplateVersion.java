@@ -34,5 +34,8 @@ public class SurveyTemplateVersion implements Serializable {
     
     private Long creatorId;
     
+    /** 租户ID */
+    private Long tenantId;
+
     private LocalDateTime createTime;
 }

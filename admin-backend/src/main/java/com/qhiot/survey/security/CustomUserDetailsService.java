@@ -79,12 +79,14 @@ public class CustomUserDetailsService implements UserDetailsService {
             authorities.add(new SimpleGrantedAuthority(auth));
         }
 
-        return new LoginUser(
+        LoginUser loginUser = new LoginUser(
                 user.getId(),
                 user.getUsername(),
                 user.getPassword(),
                 user.getRealName(),
                 authorities
         );
+        loginUser.setTenantId(user.getTenantId());
+        return loginUser;
     }
 }

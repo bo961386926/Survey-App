@@ -28,5 +28,8 @@ public class SurveyPointTemplateBinding implements Serializable {
     
     private Long templateVersionId;
     
+    /** 租户ID */
+    private Long tenantId;
+
     private LocalDateTime createTime;
 }

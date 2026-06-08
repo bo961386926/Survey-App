@@ -39,6 +39,9 @@ public class Announcement implements Serializable {
     /** 受众范围 */
     private String targetScope;
 
+    /** 租户ID */
+    private Long tenantId;
+
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;

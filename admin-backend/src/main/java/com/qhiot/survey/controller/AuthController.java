@@ -259,7 +259,7 @@ public class AuthController {
                 null, IpUtils.getClientIp(httpRequest), IpUtils.getUserAgent(httpRequest));
 
             // 生成Token
-            String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getUsername(), "internal");
+            String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getUsername(), "internal", user.getTenantId());
             String refreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getUsername());
 
             // 构建响应
@@ -329,7 +329,7 @@ public class AuthController {
             }
 
             // 生成Token
-            String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getUsername(), "internal");
+            String accessToken = jwtUtil.generateAccessToken(user.getId(), user.getUsername(), "internal", user.getTenantId());
             String refreshToken = jwtUtil.generateRefreshToken(user.getId(), user.getUsername());
 
             // 更新最后登录时间
@@ -474,7 +474,7 @@ public class AuthController {
                 return Result.error("用户不存在或已被禁用");
             }
 
-            String newAccessToken = jwtUtil.generateAccessToken(userId, username, "internal");
+            String newAccessToken = jwtUtil.generateAccessToken(userId, username, "internal", user.getTenantId());
             String newRefreshToken = jwtUtil.generateRefreshToken(userId, username);
 
             LoginResponse response = buildLoginResponse(user, newAccessToken, newRefreshToken);

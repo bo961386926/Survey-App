@@ -57,6 +57,9 @@ public class ExportTask implements Serializable {
     
     private Long creatorId;
     
+    /** 租户ID */
+    private Long tenantId;
+
     private LocalDateTime createTime;
     
     private LocalDateTime updateTime;

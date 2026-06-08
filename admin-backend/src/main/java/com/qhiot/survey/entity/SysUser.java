@@ -48,6 +48,9 @@ public class SysUser implements Serializable {
     
     private LocalDateTime updateTime;
     
+    /** 租户ID */
+    private Long tenantId;
+
     @TableLogic
     private Integer isDeleted;
     

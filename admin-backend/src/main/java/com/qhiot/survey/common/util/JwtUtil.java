@@ -32,10 +32,20 @@ public class JwtUtil {
      * 生成访问Token
      */
     public String generateAccessToken(Long userId, String username, String tokenType) {
+        return generateAccessToken(userId, username, tokenType, null);
+    }
+
+    /**
+     * 生成访问Token（含租户ID）
+     */
+    public String generateAccessToken(Long userId, String username, String tokenType, Long tenantId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("username", username);
         claims.put("tokenType", tokenType);
+        if (tenantId != null) {
+            claims.put("tenantId", tenantId);
+        }
         return generateToken(claims, expiration);
     }
 
@@ -127,6 +137,18 @@ public class JwtUtil {
         Claims claims = getClaimsFromToken(token);
         Object loginType = claims.get("loginType");
         return loginType == null ? null : loginType.toString();
+    }
+
+    /**
+     * 从Token中获取租户ID
+     */
+    public Long getTenantIdFromToken(String token) {
+        Claims claims = getClaimsFromToken(token);
+        Object tenantId = claims.get("tenantId");
+        if (tenantId == null) {
+            return 1L; // 默认租户
+        }
+        return ((Number) tenantId).longValue();
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.qhiot.survey.security;
 
 import lombok.Getter;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 
@@ -16,6 +17,10 @@ public class LoginUser extends User {
     private final Long userId;
 
     private final String realName;
+
+    /** 租户ID */
+    @Setter
+    private Long tenantId;
 
     public LoginUser(Long userId, String username, String password, String realName,
                      Collection<? extends GrantedAuthority> authorities) {

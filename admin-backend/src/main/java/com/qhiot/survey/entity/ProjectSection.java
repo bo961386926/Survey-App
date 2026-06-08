@@ -32,6 +32,9 @@ public class ProjectSection implements Serializable {
     
     private Integer isKeyArea; // 是否重点区域 0-否 1-是
     
+    /** 租户ID */
+    private Long tenantId;
+
     private LocalDateTime createTime;
     
     private LocalDateTime updateTime;

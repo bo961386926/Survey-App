@@ -75,6 +75,9 @@ public class SysTask implements Serializable {
     @com.baomidou.mybatisplus.annotation.TableField(exist = false)
     private String ownerUserName;
 
+    /** 租户ID */
+    private Long tenantId;
+
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;

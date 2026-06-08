@@ -45,5 +45,8 @@ public class MessageCenter implements Serializable {
      */
     private Integer pushStatus;
     
+    /** 租户ID */
+    private Long tenantId;
+
     private LocalDateTime createTime;
 }

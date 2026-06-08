@@ -37,6 +37,9 @@ public class ProjectMember implements Serializable {
      * 状态：0-禁用 1-启用
      */
     private Integer status;
+
+    /** 租户ID */
+    private Long tenantId;
     
     private LocalDateTime createTime;
     

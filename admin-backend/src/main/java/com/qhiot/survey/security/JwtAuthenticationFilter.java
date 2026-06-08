@@ -1,6 +1,7 @@
 package com.qhiot.survey.security;
 
 import com.qhiot.survey.common.util.JwtUtil;
+import com.qhiot.survey.common.util.TenantContext;
 import com.qhiot.survey.entity.CollabEntry;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -45,10 +46,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        TenantContext.clear();
         try {
             String token = getTokenFromRequest(request);
 
             if (StringUtils.hasText(token) && jwtUtil.validateToken(token)) {
+                // 解析并设置租户上下文
+                Long tenantId = jwtUtil.getTenantIdFromToken(token);
+                TenantContext.setTenantId(tenantId);
+
                 String loginType = jwtUtil.getLoginType(token);
 
                 if (CollabSecurityService.COLLAB_LOGIN_TYPE.equals(loginType)) {

@@ -78,6 +78,9 @@ public class Project implements Serializable {
      */
     private Integer pendingAuditCount;
     
+    /** 租户ID */
+    private Long tenantId;
+
     private LocalDateTime createTime;
     
     private LocalDateTime updateTime;
