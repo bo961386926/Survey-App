@@ -1,5 +1,6 @@
 package com.qhiot.survey.common.util;
 
+import com.qhiot.survey.common.constant.Permissions;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AopProxyUtils;
@@ -14,6 +15,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -37,6 +39,93 @@ public class PermissionRegistry implements BeanPostProcessor {
     public static final String WILDCARD = "*";
 
     /**
+     * 旧版权限码到新版领域权限码的兼容映射。
+     *
+     * 本地/线上已有角色数据不会因为初始化 SQL 更新而自动迁移，登录时统一归一化，避免旧权限码导致接口 403。
+     */
+    private static final Map<String, Set<String>> LEGACY_PERMISSION_ALIASES = Map.ofEntries(
+            Map.entry("user:list", Set.of(Permissions.SYSTEM_USER)),
+            Map.entry("user:create", Set.of(Permissions.SYSTEM_USER)),
+            Map.entry("user:edit", Set.of(Permissions.SYSTEM_USER)),
+            Map.entry("user:delete", Set.of(Permissions.SYSTEM_USER)),
+            Map.entry("user:reset-password", Set.of(Permissions.SYSTEM_USER)),
+            Map.entry("user:export", Set.of(Permissions.SYSTEM_USER)),
+            Map.entry("role:list", Set.of(Permissions.SYSTEM_ROLE)),
+            Map.entry("role:create", Set.of(Permissions.SYSTEM_ROLE)),
+            Map.entry("role:edit", Set.of(Permissions.SYSTEM_ROLE)),
+            Map.entry("role:delete", Set.of(Permissions.SYSTEM_ROLE)),
+            Map.entry("role:permission", Set.of(Permissions.SYSTEM_ROLE)),
+            Map.entry("dict:list", Set.of(Permissions.SYSTEM_DICT)),
+            Map.entry("dict:create", Set.of(Permissions.SYSTEM_DICT)),
+            Map.entry("dict:edit", Set.of(Permissions.SYSTEM_DICT)),
+            Map.entry("dict:delete", Set.of(Permissions.SYSTEM_DICT)),
+            Map.entry("dictionary:list", Set.of(Permissions.SYSTEM_DICT)),
+            Map.entry("dictionary:create", Set.of(Permissions.SYSTEM_DICT)),
+            Map.entry("dictionary:edit", Set.of(Permissions.SYSTEM_DICT)),
+            Map.entry("dictionary:delete", Set.of(Permissions.SYSTEM_DICT)),
+            Map.entry("dictionary-data:list", Set.of(Permissions.SYSTEM_DICT)),
+            Map.entry("dictionary-data:create", Set.of(Permissions.SYSTEM_DICT)),
+            Map.entry("dictionary-data:edit", Set.of(Permissions.SYSTEM_DICT)),
+            Map.entry("dictionary-data:delete", Set.of(Permissions.SYSTEM_DICT)),
+            Map.entry("log:list", Set.of(Permissions.SYSTEM_LOG)),
+            Map.entry("operation-log:list", Set.of(Permissions.SYSTEM_LOG)),
+            Map.entry("login-log:list", Set.of(Permissions.SYSTEM_LOG)),
+            Map.entry("project:list", Set.of(Permissions.PROJECT_VIEW)),
+            Map.entry("project:detail", Set.of(Permissions.PROJECT_VIEW)),
+            Map.entry("project:create", Set.of(Permissions.PROJECT_EDIT)),
+            Map.entry("project:update", Set.of(Permissions.PROJECT_EDIT)),
+            Map.entry("project:delete", Set.of(Permissions.PROJECT_EDIT)),
+            Map.entry("project:archive", Set.of(Permissions.PROJECT_EDIT)),
+            Map.entry("project:restore", Set.of(Permissions.PROJECT_EDIT)),
+            Map.entry("project:status", Set.of(Permissions.PROJECT_EDIT)),
+            Map.entry("point:list", Set.of(Permissions.POINT_VIEW)),
+            Map.entry("point:detail", Set.of(Permissions.POINT_VIEW)),
+            Map.entry("point:history", Set.of(Permissions.POINT_VIEW)),
+            Map.entry("point:create", Set.of(Permissions.POINT_EDIT)),
+            Map.entry("point:update", Set.of(Permissions.POINT_EDIT)),
+            Map.entry("point:delete", Set.of(Permissions.POINT_EDIT)),
+            Map.entry("point:import", Set.of(Permissions.POINT_EDIT)),
+            Map.entry("point:assign", Set.of(Permissions.POINT_EDIT)),
+            Map.entry("point:invalidate", Set.of(Permissions.POINT_EDIT)),
+            Map.entry("template:list", Set.of(Permissions.TEMPLATE_VIEW)),
+            Map.entry("template:detail", Set.of(Permissions.TEMPLATE_VIEW)),
+            Map.entry("template:create", Set.of(Permissions.TEMPLATE_EDIT)),
+            Map.entry("template:update", Set.of(Permissions.TEMPLATE_EDIT)),
+            Map.entry("template:delete", Set.of(Permissions.TEMPLATE_EDIT)),
+            Map.entry("template:publish", Set.of(Permissions.TEMPLATE_EDIT)),
+            Map.entry("template:draft", Set.of(Permissions.TEMPLATE_EDIT)),
+            Map.entry("template:bind", Set.of(Permissions.TEMPLATE_BIND)),
+            Map.entry("survey:list", Set.of(Permissions.SURVEY_EDIT, Permissions.AUDIT_VIEW)),
+            Map.entry("survey:detail", Set.of(Permissions.SURVEY_EDIT, Permissions.AUDIT_VIEW)),
+            Map.entry("survey:create", Set.of(Permissions.SURVEY_CREATE)),
+            Map.entry("survey:edit", Set.of(Permissions.SURVEY_EDIT)),
+            Map.entry("survey:submit", Set.of(Permissions.SURVEY_SUBMIT)),
+            Map.entry("result:list", Set.of(Permissions.SURVEY_EDIT, Permissions.AUDIT_VIEW)),
+            Map.entry("result:detail", Set.of(Permissions.SURVEY_EDIT, Permissions.AUDIT_VIEW)),
+            Map.entry("result:latest", Set.of(Permissions.SURVEY_EDIT, Permissions.AUDIT_VIEW)),
+            Map.entry("result:create", Set.of(Permissions.SURVEY_CREATE)),
+            Map.entry("result:update", Set.of(Permissions.SURVEY_EDIT)),
+            Map.entry("result:delete", Set.of(Permissions.SURVEY_EDIT)),
+            Map.entry("result:submit", Set.of(Permissions.SURVEY_SUBMIT)),
+            Map.entry("audit:list", Set.of(Permissions.AUDIT_VIEW)),
+            Map.entry("audit:detail", Set.of(Permissions.AUDIT_VIEW)),
+            Map.entry("audit:pass", Set.of(Permissions.AUDIT_PASS)),
+            Map.entry("audit:batch-pass", Set.of(Permissions.AUDIT_PASS)),
+            Map.entry("audit:reject", Set.of(Permissions.AUDIT_REJECT)),
+            Map.entry("task:list", Set.of(Permissions.TASK_VIEW)),
+            Map.entry("task:detail", Set.of(Permissions.TASK_VIEW)),
+            Map.entry("task:create", Set.of(Permissions.TASK_EDIT)),
+            Map.entry("task:update", Set.of(Permissions.TASK_EDIT)),
+            Map.entry("task:delete", Set.of(Permissions.TASK_EDIT)),
+            Map.entry("task:status", Set.of(Permissions.TASK_EDIT)),
+            Map.entry("task:assign", Set.of(Permissions.TASK_ASSIGN)),
+            Map.entry("export:list", Set.of(Permissions.EXPORT_PROJECT, Permissions.EXPORT_AUDIT)),
+            Map.entry("export:download", Set.of(Permissions.EXPORT_PROJECT, Permissions.EXPORT_AUDIT)),
+            Map.entry("message:list", Set.of(Permissions.MESSAGE_PUSH)),
+            Map.entry("message:push", Set.of(Permissions.MESSAGE_PUSH))
+    );
+
+    /**
      * 获取所有已注册的权限码
      */
     public static Set<String> getAllPermissions() {
@@ -51,7 +140,7 @@ public class PermissionRegistry implements BeanPostProcessor {
     }
 
     /**
-     * 展开通配符：如果包含 "*" 则返回所有已注册权限码
+     * 展开通配符并兼容旧版权限码：如果包含 "*" 则返回所有已注册权限码
      */
     public static Set<String> expandWildcard(Set<String> permissions) {
         if (permissions == null || permissions.isEmpty()) {
@@ -65,7 +154,7 @@ public class PermissionRegistry implements BeanPostProcessor {
                     .forEach(expanded::add);
             return expanded;
         }
-        return new HashSet<>(permissions);
+        return normalizeLegacyPermissions(permissions);
     }
 
     /**
@@ -84,7 +173,23 @@ public class PermissionRegistry implements BeanPostProcessor {
                     .forEach(expanded::add);
             return expanded.toArray(new String[0]);
         }
-        return permissions;
+        return normalizeLegacyPermissions(permSet).toArray(new String[0]);
+    }
+
+    private static Set<String> normalizeLegacyPermissions(Set<String> permissions) {
+        Set<String> normalized = new HashSet<>();
+        for (String permission : permissions) {
+            if (!StringUtils.hasText(permission)) {
+                continue;
+            }
+            String trimmed = permission.trim();
+            normalized.add(trimmed);
+            Set<String> aliases = LEGACY_PERMISSION_ALIASES.get(trimmed);
+            if (aliases != null) {
+                normalized.addAll(aliases);
+            }
+        }
+        return normalized;
     }
 
     @Override
@@ -166,6 +271,7 @@ public class PermissionRegistry implements BeanPostProcessor {
 
     @PostConstruct
     public void logSummary() {
+        ALL_PERMISSIONS.addAll(Arrays.asList(Permissions.getAll()));
         log.info("====== 权限码注册完成，共 {} 个 ======", ALL_PERMISSIONS.size());
         if (!ALL_PERMISSIONS.isEmpty()) {
             log.info("已注册权限码: {}", String.join(", ", ALL_PERMISSIONS));

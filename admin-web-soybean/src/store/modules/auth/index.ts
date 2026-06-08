@@ -15,8 +15,10 @@ import { ROLE } from '@/constants/role';
 // 后端 role_code 直接使用，无需映射
 function normalizeRoles(backendRoles: string[]): string[] {
   if (!backendRoles || backendRoles.length === 0) return [];
-  // 统一转换为小写以兼容大写遗留数据
-  return backendRoles.map(r => r.toLowerCase());
+  // 统一转换为小写，并兼容 ROLE_ADMIN / R_ADMIN 等旧角色编码
+  return backendRoles
+    .map(role => role.toLowerCase().replace(/^role_/, '').replace(/^r_/, ''))
+    .filter(Boolean);
 }
 
 export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
@@ -126,7 +128,7 @@ export const useAuthStore = defineStore(SetupStoreId.Auth, () => {
       userId: String(loginToken.userId),
       userName: loginToken.username,
       realName: loginToken.realName,
-      roles: mappedRoles.length > 0 ? mappedRoles : ['R_USER'],
+      roles: mappedRoles.length > 0 ? mappedRoles : ['user'],
       permissions,
       buttons: []
     });

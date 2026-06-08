@@ -14,6 +14,10 @@ export const PERMISSION = {
   PROJECT_EDIT: 'project:edit',
   /** 模板绑定 */
   TEMPLATE_BIND: 'template:bind',
+  /** 查看模板 */
+  TEMPLATE_VIEW: 'template:view',
+  /** 编辑模板 */
+  TEMPLATE_EDIT: 'template:edit',
 
   // ============================
   // 点位管理 (point)
@@ -36,6 +40,16 @@ export const PERMISSION = {
   SURVEY_ASSIST: 'survey:assist',
 
   // ============================
+  // 任务管理 (task)
+  // ============================
+  /** 查看任务 */
+  TASK_VIEW: 'task:view',
+  /** 编辑任务 */
+  TASK_EDIT: 'task:edit',
+  /** 指派任务 */
+  TASK_ASSIGN: 'task:assign',
+
+  // ============================
   // 审核管理 (audit)
   // ============================
   /** 查看审核 */
@@ -48,8 +62,20 @@ export const PERMISSION = {
   // ============================
   // 系统管理 (system)
   // ============================
+  /** 用户管理 */
+  SYSTEM_USER: 'system:user',
+  /** 角色管理 */
+  SYSTEM_ROLE: 'system:role',
+  /** 字典管理 */
+  SYSTEM_DICT: 'system:dict',
   /** 系统操作日志 */
   SYSTEM_LOG: 'system:log',
+
+  // ============================
+  // 消息管理 (message)
+  // ============================
+  /** 推送消息 */
+  MESSAGE_PUSH: 'message:push',
 
   // ============================
   // 导出 (export)

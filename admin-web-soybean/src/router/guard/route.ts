@@ -42,14 +42,21 @@ export function createRouteGuard(router: Router) {
     const isLogin = Boolean(localStg.get('token'));
     const needLogin = !to.meta.constant;
     const routeRoles = to.meta.roles || [];
+    const routePermissions = to.meta.permissions || [];
 
     const hasRole = authStore.userInfo.roles.some(role => routeRoles.includes(role));
-    const hasAuth = authStore.isStaticSuper || !routeRoles.length || hasRole;
+    const hasPermission = authStore.userInfo.permissions.some(permission => routePermissions.includes(permission));
+    const hasAuth =
+      authStore.isStaticSuper || (!routeRoles.length && !routePermissions.length) || hasRole || hasPermission;
 
     console.log('🔐 [RouteGuard] Auth check:', {
       isLogin,
       needLogin,
       hasAuth,
+      routeRoles,
+      routePermissions,
+      hasRole,
+      hasPermission,
       isStaticSuper: authStore.isStaticSuper,
       userInfo: authStore.userInfo
     });

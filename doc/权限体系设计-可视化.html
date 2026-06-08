@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Survey-App 权限体系设计 - 可视化全景</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<style>
+  :root {
+    --bg: #F0F7FF;
+    --card-bg: rgba(255,255,255,0.85);
+    --text-primary: #0F172A;
+    --text-body: #475569;
+    --text-muted: #94A3B8;
+    --brand: #1664FF;
+    --brand-light: #7DD3FC;
+    --success: #10B981;
+    --danger: #EF4444;
+    --warning: #F59E0B;
+    --radius: 24px;
+    --shadow: 0 8px 32px rgba(0, 40, 80, 0.05);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Manrope', 'PingFang SC', -apple-system, sans-serif;
+    background: linear-gradient(180deg, #F0F7FF 0%, #FFFFFF 100%);
+    color: var(--text-primary);
+    min-height: 100vh;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #1664FF, #7DD3FC);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header .subtitle {
+    font-size: 16px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+
+  /* Cards */
+  .card {
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: var(--radius);
+    padding: 32px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(255,255,255,0.6);
+  }
+  .card h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--brand);
+    margin: 24px 0 12px;
+  }
+  .card .icon { font-size: 24px; }
+
+  /* Layers */
+  .layers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 32px; }
+  .layer {
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    border-radius: 16px;
+    padding: 20px 12px;
+    text-align: center;
+    border: 2px solid transparent;
+    transition: all 0.3s;
+  }
+  .layer:nth-child(1) { border-color: #7DD3FC; }
+  .layer:nth-child(2) { border-color: #1664FF; }
+  .layer:nth-child(3) { border-color: #10B981; }
+  .layer:nth-child(4) { border-color: #F59E0B; }
+  .layer:nth-child(5) { border-color: #EF4444; }
+  .layer .layer-num {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .layer:nth-child(1) .layer-num { color: #7DD3FC; }
+  .layer:nth-child(2) .layer-num { color: #1664FF; }
+  .layer:nth-child(3) .layer-num { color: #10B981; }
+  .layer:nth-child(4) .layer-num { color: #F59E0B; }
+  .layer:nth-child(5) .layer-num { color: #EF4444; }
+  .layer .layer-title { font-size: 14px; font-weight: 600; margin-top: 6px; }
+  .layer .layer-desc { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+  /* Mermaid wrapper */
+  .mermaid-wrap {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px;
+    overflow-x: auto;
+  }
+
+  /* Table styles */
+  .perm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 12px;
+  }
+  .perm-table th, .perm-table td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid #E2E8F0;
+  }
+  .perm-table th {
+    background: rgba(22, 100, 255, 0.06);
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .perm-table tr:hover { background: rgba(22, 100, 255, 0.03); }
+  .check { color: var(--success); font-weight: 700; text-align: center; }
+  .cross { color: var(--text-muted); text-align: center; }
+
+  /* Badge */
+  .badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-blue { background: rgba(22, 100, 255, 0.1); color: #1664FF; }
+  .badge-green { background: rgba(16, 185, 129, 0.1); color: #10B981; }
+  .badge-red { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
+  .badge-yellow { background: rgba(245, 158, 11, 0.1); color: #F59E0B; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+  @media (max-width: 768px) {
+    .layers { grid-template-columns: 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+    .header h1 { font-size: 24px; }
+    .card { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>🔐 Survey-App 权限体系设计</h1>
+    <p class="subtitle">RBAC 五层纵深防御 · 前后端双重校验 · 全链路操作审计</p>
+  </div>
+
+  <!-- Five Layer Defense -->
+  <div class="card">
+    <h2><span class="icon">🛡️</span>五层权限纵深防御体系</h2>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-num">Layer 1</div>
+        <div class="layer-title">认证层</div>
+        <div class="layer-desc">JWT 双通道<br>内部用户 / 协作令牌</div>
+      </div>
+      <div class="layer">
+        <div class="layer-num">Layer 2</div>
+        <div class="layer-title">路由层</div>
+        <div class="layer-desc">前端路由守卫<br>meta.roles 过滤</div>
+      </div>
+      <div class="layer">
+        <div class="layer-num">Layer 3</div>
+        <div class="layer-title">接口层</div>
+        <div class="layer-desc">@PreAuthorize<br>hasRole / hasAuthority</div>
+      </div>
+      <div class="layer">
+        <div class="layer-num">Layer 4</div>
+        <div class="layer-title">数据层</div>
+        <div class="layer-desc">project_member<br>collab_entry 范围隔离</div>
+      </div>
+      <div class="layer">
+        <div class="layer-num">Layer 5</div>
+        <div class="layer-title">审计层</div>
+        <div class="layer-desc">@OperationLog<br>全链路操作留痕</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RBAC Data Model -->
+  <div class="card">
+    <h2><span class="icon">🗄️</span>RBAC 数据模型（五表设计）</h2>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+erDiagram
+    sys_user ||--o{ sys_user_role : "1:N"
+    sys_user_role }o--|| sys_role : "N:1"
+    sys_role ||--o{ sys_role_permission : "1:N"
+    sys_role_permission }o--|| sys_permission : "N:1"
+
+    sys_user {
+        bigint id PK "主键"
+        varchar username "用户名"
+        varchar password "BCrypt加密"
+        varchar real_name "真实姓名"
+        varchar phone "手机号"
+        tinyint status "1启用 0禁用"
+        datetime create_time "创建时间"
+    }
+
+    sys_role {
+        bigint id PK "主键"
+        varchar role_code UK "角色编码"
+        varchar role_name "角色名称"
+        json permissions "权限JSON字符串"
+        tinyint status "1启用 0禁用"
+        int sort "排序"
+    }
+
+    sys_user_role {
+        bigint user_id FK "用户ID"
+        bigint role_id FK "角色ID"
+        datetime create_time "创建时间"
+    }
+
+    sys_permission {
+        bigint id PK "主键"
+        varchar perm_code UK "权限编码"
+        varchar perm_name "权限名称"
+        varchar module "所属模块"
+        varchar description "权限描述"
+        tinyint status "1启用 0禁用"
+    }
+
+    sys_role_permission {
+        bigint role_id FK "角色ID"
+        varchar perm_code "权限编码"
+        datetime create_time "创建时间"
+    }
+      </div>
+    </div>
+  </div>
+
+  <!-- Authentication Flow -->
+  <div class="card">
+    <h2><span class="icon">🔑</span>认证流程（JWT 双通道）</h2>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant C as 客户端
+    participant F as JwtAuthenticationFilter
+    participant J as JWT Service
+    participant U as UserDetailsService
+    participant D as 数据库
+    participant S as SecurityContext
+
+    C->>F: HTTP请求 + Bearer Token
+    F->>J: 解析验证 Token
+
+    alt Token无效/过期
+        J-->>F: 验证失败
+        F-->>C: 401 Unauthorized
+    else Token有效
+        J-->>F: {username, loginType}
+
+        alt loginType = "collab" (协作入口)
+            F->>F: CollabSecurityService
+            Note over F: 黑名单过滤<br/>仅允许GET白名单<br/>记录collab_access_log
+            F->>S: ROLE_COLLAB
+        else loginType = "internal" (内部用户)
+            F->>U: loadUserByUsername(username)
+            U->>D: 查询用户+角色+权限
+            D-->>U: User + Roles + Permissions
+            U->>U: 通配符"*"展开
+            U-->>F: UserDetails(GrantedAuthorities)
+            F->>S: UsernamePasswordAuthToken
+        end
+
+        F-->>C: 放行到Controller
+    end
+      </div>
+    </div>
+  </div>
+
+  <!-- Complete Permission Flow -->
+  <div class="card">
+    <h2><span class="icon">🔄</span>完整权限校验流程</h2>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+    A["🌐 用户请求"] --> B{"JWT Token 有效?"}
+    B -->|"❌ 无效/过期"| C["401 未授权"]
+    B -->|"✅ 有效"| D{"Token 类型?"}
+
+    D -->|"internal"| E["CustomUserDetailsService<br/>加载用户+角色+权限"]
+    D -->|"collab"| F["CollabSecurityService<br/>协作入口安全策略"]
+
+    E --> G{"permissions 含 '*'?"}
+    G -->|"是"| H["展开为全部权限码<br/>（超级管理员）"]
+    G -->|"否"| I["使用原始权限码"]
+    H --> K["设置 SecurityContext"]
+    I --> K
+
+    F --> L{"请求在黑名单?"}
+    L -->|"是"| M["⛔ 403 + 记录日志"]
+    L -->|"否"| N{"方法=GET 且路径在白名单?"}
+    N -->|"否"| M
+    N -->|"是"| O["设置 ROLE_COLLAB<br/>写入 collab_access_log"]
+
+    K --> P["@PreAuthorize 校验"]
+    O --> P
+
+    P --> Q{"角色/权限匹配?"}
+    Q -->|"不匹配"| R["403 禁止访问"]
+    Q -->|"匹配"| S["进入 Controller 层"]
+
+    S --> T{"数据级权限过滤?"}
+    T -->|"是"| U["project_member 项目隔离<br/>collab_entry 点位范围"]
+    T -->|"否"| V["返回业务数据"]
+    U --> V
+
+    S --> W{"@OperationLog 注解?"}
+    W -->|"是"| X["AOP异步写入操作日志<br/>用户/IP/模块/风险等级"]
+    W -->|"否"| V
+    X --> V
+
+    style A fill:#F0F7FF,stroke:#1664FF
+    style C fill:#FEF2F2,stroke:#EF4444
+    style R fill:#FEF2F2,stroke:#EF4444
+    style M fill:#FEF2F2,stroke:#EF4444
+    style V fill:#F0FDF4,stroke:#10B981
+  </div>
+    </div>
+  </div>
+
+  <!-- Role-Permission Matrix -->
+  <div class="card">
+    <h2><span class="icon">📊</span>角色-权限映射矩阵</h2>
+    <div style="overflow-x: auto;">
+      <table class="perm-table">
+        <thead>
+          <tr>
+            <th>权限模块</th>
+            <th>权限码</th>
+            <th><span class="badge badge-blue">admin</span></th>
+            <th><span class="badge badge-green">project_manager</span></th>
+            <th><span class="badge badge-yellow">auditor</span></th>
+            <th><span class="badge badge-blue">surveyor</span></th>
+            <th><span class="badge badge-red">collab</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td rowspan="3" style="font-weight:600">项目管理</td><td>project:view</td><td class="check">✅</td><td class="check">✅</td><td class="cross">—</td><td class="cross">—</td><td class="cross">—</td></tr>
+          <tr><td>project:edit</td><td class="check">✅</td><td class="check">✅</td><td class="cross">—</td><td class="cross">—</td><td class="cross">—</td></tr>
+          <tr><td>template:bind</td><td class="check">✅</td><td class="check">✅</td><td class="cross">—</td><td class="cross">—</td><td class="cross">—</td></tr>
+          <tr><td rowspan="2" style="font-weight:600">点位管理</td><td>point:view</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td><td class="check">✅</td></tr>
+          <tr><td>point:edit</td><td class="check">✅</td><td class="check">✅</td><td class="cross">—</td><td class="cross">—</td><td class="cross">—</td></tr>
+          <tr><td rowspan="4" style="font-weight:600">勘查管理</td><td>survey:create</td><td class="check">✅</td><td class="cross">—</td><td class="cross">—</td><td class="check">✅</td><td class="cross">—</td></tr>
+          <tr><td>survey:edit</td><td class="check">✅</td><td class="cross">—</td><td class="cross">—</td><td class="check">✅</td><td class="cross">—</td></tr>
+          <tr><td>survey:submit</td><td class="check">✅</td><td class="cross">—</td><td class="cross">—</td><td class="check">✅</td><td class="cross">—</td></tr>
+          <tr><td>survey:assist</td><td class="check">✅</td><td class="cross">—</td><td class="cross">—</td><td class="cross">—</td><td class="check">✅</td></tr>
+          <tr><td rowspan="3" style="font-weight:600">审核管理</td><td>audit:view</td><td class="check">✅</td><td class="cross">—</td><td class="check">✅</td><td class="cross">—</td><td class="cross">—</td></tr>
+          <tr><td>audit:pass</td><td class="check">✅</td><td class="cross">—</td><td class="check">✅</td><td class="cross">—</td><td class="cross">—</td></tr>
+          <tr><td>audit:reject</td><td class="check">✅</td><td class="cross">—</td><td class="check">✅</td><td class="cross">—</td><td class="cross">—</td></tr>
+          <tr><td style="font-weight:600">系统管理</td><td>system:log</td><td class="check">✅</td><td class="cross">—</td><td class="cross">—</td><td class="cross">—</td><td class="cross">—</td></tr>
+          <tr><td rowspan="2" style="font-weight:600">导出管理</td><td>export:project</td><td class="check">✅</td><td class="check">✅</td><td class="cross">—</td><td class="cross">—</td><td class="cross">—</td></tr>
+          <tr><td>export:audit</td><td class="check">✅</td><td class="cross">—</td><td class="check">✅</td><td class="cross">—</td><td class="cross">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Third-party Collaboration Security -->
+  <div class="two-col">
+    <div class="card">
+      <h2><span class="icon">🚫</span>第三方黑名单策略</h2>
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+flowchart TD
+    REQ["第三方协作请求"] --> CHK1{"请求方法 = DELETE?"}
+    CHK1 -->|是| BLOCK["⛔ 拦截：禁止删除"]
+    CHK1 -->|否| CHK2{"路径在黑名单?"}
+    CHK2 -->|是| BLOCK2["⛔ 拦截：<br/>审核/导出/用户/角色/系统/日志"]
+    CHK2 -->|否| CHK3{"方法 = GET 且<br/>路径在白名单?"}
+    CHK3 -->|否| BLOCK3["⛔ 拦截"]
+    CHK3 -->|是| ALLOW["✅ 放行<br/>point/result/template<br/>project/section/file/health"]
+
+    style BLOCK fill:#FEF2F2,stroke:#EF4444
+    style BLOCK2 fill:#FEF2F2,stroke:#EF4444
+    style BLOCK3 fill:#FEF2F2,stroke:#EF4444
+    style ALLOW fill:#F0FDF4,stroke:#10B981
+  </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon">🔄</span>Token 生命周期</h2>
+      <div class="mermaid-wrap">
+        <div class="mermaid">
+sequenceDiagram
+    participant C as 客户端
+    participant API as 后端API
+    participant R as Redis/DB
+
+    C->>API: 请求 (accessToken)
+    API-->>C: 返回过期码
+
+    Note over C: 拦截器捕获过期码
+    C->>API: POST /auth/refresh (refreshToken)
+
+    alt 刷新成功
+        API-->>C: 新 accessToken + refreshToken
+        Note over C: 更新localStorage<br/>重试原请求
+        C->>API: 重试请求 (新Token)
+        API-->>C: 正常响应
+    else 刷新失败
+        API-->>C: 401
+        Note over C: 清除认证状态<br/>跳转登录页
+    end
+      </div>
+    </div>
+  </div>
+
+  <!-- Frontend Permission Architecture -->
+  <div class="card">
+    <h2><span class="icon">🎨</span>前端权限控制架构</h2>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+flowchart TD
+    subgraph 登录
+        L1["POST /auth/login"] --> L2["返回 token + roles + permissions"]
+        L2 --> L3["AuthStore 存储"]
+    end
+
+    subgraph 路由守卫
+        L3 --> R1["router.beforeEach"]
+        R1 --> R2{"路由 meta.roles?"}
+        R2 -->|"有配置"| R3{"用户角色命中?"}
+        R2 -->|"无配置"| R4["所有人可访问"]
+        R3 -->|"是"| R4
+        R3 -->|"否"| R5["重定向 /403"]
+    end
+
+    subgraph UI控制
+        R4 --> U1["hasPermission('xxx')"]
+        R4 --> U2["v-permission 指令"]
+        U1 --> U3["v-if 控制显隐"]
+        U2 --> U4["移除 DOM 元素"]
+    end
+
+    subgraph API拦截
+        R4 --> A1["请求拦截器: 附加 Bearer Token"]
+        A1 --> A2["响应拦截: 处理401/403"]
+        A2 --> A3{"Token过期?"}
+        A3 -->|"是"| A4["refreshToken 续期"]
+        A3 -->|"否"| A5["返回业务数据"]
+    end
+
+    style L3 fill:#F0F7FF,stroke:#1664FF
+    style R4 fill:#F0FDF4,stroke:#10B981
+    style R5 fill:#FEF2F2,stroke:#EF4444
+  </div>
+    </div>
+  </div>
+
+  <!-- Permission Registry -->
+  <div class="card">
+    <h2><span class="icon">📋</span>权限码自动注册与同步机制</h2>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant App as 应用启动
+    participant BP as BeanPostProcessor
+    participant PR as PermissionRegistry
+    participant PI as PermissionInitializer
+    participant DB as sys_permission表
+
+    App->>BP: 扫描所有 @RestController
+    BP->>PR: 提取 @PreAuthorize 注解
+    Note over PR: hasAuthority('point:view')<br/>hasAnyAuthority('audit:pass','audit:reject')
+    PR->>PR: 注册到 ALL_PERMISSIONS 集合
+    Note over PR: {point:view, audit:pass,<br/>audit:reject, project:edit, ...}
+
+    App->>PI: ApplicationReadyEvent 触发
+    PI->>DB: 查询现有权限码
+    DB-->>PI: 返回已存在权限码列表
+
+    loop 遍历 ALL_PERMISSIONS
+        alt 权限码不存在
+            PI->>DB: INSERT INTO sys_permission
+        else 权限码已废弃
+            PI->>DB: UPDATE SET status = 0
+        else 权限码已存在
+            PI->>PI: 跳过
+        end
+    end
+
+    PI-->>App: 权限同步完成
+      </div>
+    </div>
+  </div>
+
+  <!-- Audit Logging -->
+  <div class="card">
+    <h2><span class="icon">📝</span>操作审计日志体系</h2>
+    <div style="overflow-x: auto;">
+      <table class="perm-table">
+        <thead>
+          <tr>
+            <th>日志类型</th>
+            <th>记录内容</th>
+            <th>风险等级</th>
+            <th>存储表</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>登录日志</td>
+            <td>登录/登出、IP、设备、成功/失败</td>
+            <td><span class="badge badge-yellow">中</span></td>
+            <td>operation_log</td>
+          </tr>
+          <tr>
+            <td>审核日志</td>
+            <td>通过/驳回、审核人、时间、驳回原因</td>
+            <td><span class="badge badge-red">高</span></td>
+            <td>operation_log</td>
+          </tr>
+          <tr>
+            <td>导出日志</td>
+            <td>导出类型、范围、格式、文件大小</td>
+            <td><span class="badge badge-red">高</span></td>
+            <td>operation_log</td>
+          </tr>
+          <tr>
+            <td>权限变更</td>
+            <td>角色分配/移除、权限修改</td>
+            <td><span class="badge badge-red">高</span></td>
+            <td>operation_log</td>
+          </tr>
+          <tr>
+            <td>协作访问</td>
+            <td>第三方每次请求（路径、IP、时间）</td>
+            <td><span class="badge badge-red">高</span></td>
+            <td>collab_access_log</td>
+          </tr>
+          <tr>
+            <td>风控拦截</td>
+            <td>越权访问、异常请求</td>
+            <td><span class="badge badge-red">高</span></td>
+            <td>operation_log</td>
+          </tr>
+          <tr>
+            <td>纠偏操作</td>
+            <td>坐标修改前后值、修改人、偏移距离</td>
+            <td><span class="badge badge-yellow">中</span></td>
+            <td>location_correction_log</td>
+          </tr>
+          <tr>
+            <td>配置变更</td>
+            <td>系统参数修改、字典变更</td>
+            <td><span class="badge badge-yellow">中</span></td>
+            <td>operation_log</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Controller Permission Distribution -->
+  <div class="card">
+    <h2><span class="icon">⚙️</span>Controller 层权限分布</h2>
+    <div class="mermaid-wrap">
+      <div class="mermaid">
+pie title 后端 @PreAuthorize 注解分布
+    "hasRole('ADMIN')" : 45
+    "hasAnyRole('ADMIN','AUDITOR',...)" : 15
+    "hasAuthority('system:log')" : 6
+      </div>
+    </div>
+    <div style="margin-top: 16px; font-size: 13px; color: var(--text-muted); text-align: center;">
+      总计 <strong>66</strong> 处 @PreAuthorize 注解 · 覆盖 <strong>11</strong> 个 Controller · <strong>15</strong> 个权限码
+    </div>
+  </div>
+
+</div>
+
+<script>
+  mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    securityLevel: 'loose',
+    flowchart: { useMaxWidth: true, htmlLabels: true, curve: 'basis' },
+    sequence: { useMaxWidth: true, showSequenceNumbers: true },
+    er: { useMaxWidth: true }
+  });
+</script>
+</body>
+</html>

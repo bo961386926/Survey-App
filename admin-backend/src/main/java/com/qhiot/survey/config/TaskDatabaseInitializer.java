@@ -74,7 +74,17 @@ public class TaskDatabaseInitializer implements CommandLineRunner {
                 .or()
                 .eq(SysRole::getRoleCode, "SURVEYOR")
                 .one();
-        Long roleId = surveyorRole != null ? surveyorRole.getId() : 4L;
+        if (surveyorRole == null) {
+            surveyorRole = new SysRole();
+            surveyorRole.setRoleCode("surveyor");
+            surveyorRole.setRoleName("采集员");
+            surveyorRole.setPermissions("[\"point:view\", \"survey:create\", \"survey:edit\", \"survey:submit\"]");
+            surveyorRole.setSort(4);
+            surveyorRole.setStatus(1);
+            sysRoleService.save(surveyorRole);
+            log.info("====== [任务数据初始化] sys_role 表中缺失 surveyor 角色，已自动创建，ID: {} ======", surveyorRole.getId());
+        }
+        Long roleId = surveyorRole.getId();
 
         for (String[] spec : userSpecs) {
             String username = spec[0];

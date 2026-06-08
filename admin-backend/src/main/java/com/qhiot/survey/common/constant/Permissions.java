@@ -21,6 +21,14 @@ public final class Permissions {
     public static final String TEMPLATE_BIND = "template:bind";
 
     // ============================
+    // 模板管理 (template)
+    // ============================
+    /** 查看模板 */
+    public static final String TEMPLATE_VIEW = "template:view";
+    /** 编辑模板 */
+    public static final String TEMPLATE_EDIT = "template:edit";
+
+    // ============================
     // 点位管理 (point)
     // ============================
     /** 查看点位 */
@@ -41,6 +49,16 @@ public final class Permissions {
     public static final String SURVEY_ASSIST = "survey:assist";
 
     // ============================
+    // 任务管理 (task)
+    // ============================
+    /** 查看任务 */
+    public static final String TASK_VIEW = "task:view";
+    /** 编辑任务 */
+    public static final String TASK_EDIT = "task:edit";
+    /** 指派任务 */
+    public static final String TASK_ASSIGN = "task:assign";
+
+    // ============================
     // 审核管理 (audit)
     // ============================
     /** 查看审核 */
@@ -53,8 +71,20 @@ public final class Permissions {
     // ============================
     // 系统管理 (system)
     // ============================
+    /** 用户管理 */
+    public static final String SYSTEM_USER = "system:user";
+    /** 角色管理 */
+    public static final String SYSTEM_ROLE = "system:role";
+    /** 字典管理 */
+    public static final String SYSTEM_DICT = "system:dict";
     /** 系统操作日志 */
     public static final String SYSTEM_LOG = "system:log";
+
+    // ============================
+    // 消息管理 (message)
+    // ============================
+    /** 推送消息 */
+    public static final String MESSAGE_PUSH = "message:push";
 
     // ============================
     // 导出 (export)
@@ -70,10 +100,13 @@ public final class Permissions {
     public static String[] getAll() {
         return new String[]{
                 PROJECT_VIEW, PROJECT_EDIT, TEMPLATE_BIND,
+                TEMPLATE_VIEW, TEMPLATE_EDIT,
                 POINT_VIEW, POINT_EDIT,
                 SURVEY_CREATE, SURVEY_EDIT, SURVEY_SUBMIT, SURVEY_ASSIST,
+                TASK_VIEW, TASK_EDIT, TASK_ASSIGN,
                 AUDIT_VIEW, AUDIT_PASS, AUDIT_REJECT,
-                SYSTEM_LOG,
+                SYSTEM_USER, SYSTEM_ROLE, SYSTEM_DICT, SYSTEM_LOG,
+                MESSAGE_PUSH,
                 EXPORT_PROJECT, EXPORT_AUDIT
         };
     }

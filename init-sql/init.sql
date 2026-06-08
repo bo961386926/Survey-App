@@ -455,10 +455,10 @@ INSERT IGNORE INTO sys_user (username, password, real_name, status) VALUES
 -- 插入默认角色
 INSERT IGNORE INTO sys_role (role_code, role_name, permissions) VALUES
 ('admin', '管理员', '*'),
-('project_manager', '项目负责人', 'project:view,project:edit,point:view,point:edit,template:bind,export:project'),
-('auditor', '审核员', 'point:view,audit:view,audit:pass,audit:reject,export:audit'),
-('surveyor', '采集员', 'point:view,survey:create,survey:edit,survey:submit'),
-('collab', '第三方协作', 'point:view,survey:assist');
+('project_manager', '项目负责人', 'project:view,project:edit,point:view,point:edit,template:view,template:edit,template:bind,task:view,task:edit,task:assign,export:project'),
+('auditor', '审核员', 'point:view,task:view,audit:view,audit:pass,audit:reject,export:audit'),
+('surveyor', '采集员', 'point:view,template:view,task:view,task:edit,survey:create,survey:edit,survey:submit'),
+('collab', '第三方协作', 'point:view,template:view,survey:assist');
 
 -- 关联用户与角色（通过 sys_user_role 中间表）
 -- admin(user_id=1) -> admin(role_id=1)

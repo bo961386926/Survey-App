@@ -1,5 +1,7 @@
 package com.qhiot.survey.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qhiot.survey.common.constant.Permissions;
 import com.qhiot.survey.common.util.JwtUtil;
 import com.qhiot.survey.entity.CollabAccessLog;
 import com.qhiot.survey.entity.CollabEntry;
@@ -11,21 +13,23 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.lang.reflect.Proxy;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
 
 /**
  * 协作令牌安全测试
@@ -50,19 +54,28 @@ class CollabTokenSecurityTest {
     private JwtUtil jwtUtil;
     private UserDetailsService userDetailsService;
     private JwtAuthenticationFilter filter;
+    private Map<Long, CollabEntry> collabEntries;
+    private List<CollabAccessLog> accessLogs;
+    private boolean userDetailsCalled;
 
     @BeforeEach
     void setUp() {
-        collabEntryMapper = mock(CollabEntryMapper.class);
-        collabAccessLogMapper = mock(CollabAccessLogMapper.class);
-        collabSecurityService = new CollabSecurityService(collabEntryMapper, collabAccessLogMapper);
+        collabEntries = new HashMap<>();
+        accessLogs = new ArrayList<>();
+        userDetailsCalled = false;
+        collabEntryMapper = proxy(CollabEntryMapper.class);
+        collabAccessLogMapper = proxy(CollabAccessLogMapper.class);
+        collabSecurityService = new CollabSecurityService(collabEntryMapper, collabAccessLogMapper, new ObjectMapper());
 
         jwtUtil = new JwtUtil();
         ReflectionTestUtils.setField(jwtUtil, "secret", SECRET);
         ReflectionTestUtils.setField(jwtUtil, "expiration", 7200000L);
         ReflectionTestUtils.setField(jwtUtil, "refreshExpiration", 604800000L);
 
-        userDetailsService = mock(UserDetailsService.class);
+        userDetailsService = username -> {
+            userDetailsCalled = true;
+            throw new RuntimeException("simulated");
+        };
         filter = new JwtAuthenticationFilter(jwtUtil, userDetailsService, collabSecurityService);
 
         SecurityContextHolder.clearContext();
@@ -74,6 +87,9 @@ class CollabTokenSecurityTest {
         entry.setEntryName("第三方-测试");
         entry.setStatus(1);
         entry.setExpireTime(LocalDateTime.now().plusDays(7));
+        entry.setProjectIds("[100,101]");
+        entry.setPointIds("[200,201]");
+        entry.setPermissions("[\"project:view\",\"point:view\",\"audit:view\"]");
         return entry;
     }
 
@@ -91,37 +107,61 @@ class CollabTokenSecurityTest {
         @Test
         @DisplayName("受限端点：审核通过 / 驳回 / 删除 / 全量导出 / 用户 / 角色 / 系统 全部拒绝")
         void restrictedEndpointsAreDenied() {
-            assertThat(collabSecurityService.isAccessAllowed(req("POST", "/api/v1/audit/pass"))).isFalse();
-            assertThat(collabSecurityService.isAccessAllowed(req("POST", "/api/v1/audit/reject"))).isFalse();
-            assertThat(collabSecurityService.isAccessAllowed(req("POST", "/api/v1/audit/batch-pass"))).isFalse();
-            assertThat(collabSecurityService.isAccessAllowed(req("DELETE", "/api/v1/point/1"))).isFalse();
-            assertThat(collabSecurityService.isAccessAllowed(req("DELETE", "/api/v1/result/1"))).isFalse();
-            assertThat(collabSecurityService.isAccessAllowed(req("GET", "/api/v1/export/list"))).isFalse();
-            assertThat(collabSecurityService.isAccessAllowed(req("GET", "/api/v1/user"))).isFalse();
-            assertThat(collabSecurityService.isAccessAllowed(req("POST", "/api/v1/user"))).isFalse();
-            assertThat(collabSecurityService.isAccessAllowed(req("GET", "/api/v1/role"))).isFalse();
-            assertThat(collabSecurityService.isAccessAllowed(req("GET", "/api/v1/system/config"))).isFalse();
-            assertThat(collabSecurityService.isAccessAllowed(req("GET", "/api/v1/dict"))).isFalse();
-            assertThat(collabSecurityService.isAccessAllowed(req("GET", "/api/v1/log/operation"))).isFalse();
-            assertThat(collabSecurityService.isAccessAllowed(req("GET", "/api/v1/collab/page"))).isFalse();
+            CollabEntry entry = validEntry(1L);
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("POST", "/api/v1/audit/pass"))).isFalse();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("POST", "/api/v1/audit/reject"))).isFalse();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("POST", "/api/v1/audit/batch-pass"))).isFalse();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("DELETE", "/api/v1/point/1"))).isFalse();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("DELETE", "/api/v1/result/1"))).isFalse();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("GET", "/api/v1/export/list"))).isFalse();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("GET", "/api/v1/user"))).isFalse();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("POST", "/api/v1/user"))).isFalse();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("GET", "/api/v1/role"))).isFalse();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("GET", "/api/v1/system/config"))).isFalse();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("GET", "/api/v1/dict"))).isFalse();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("GET", "/api/v1/log/operation"))).isFalse();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("GET", "/api/v1/collab/page"))).isFalse();
         }
 
         @Test
         @DisplayName("白名单端点：GET 点位 / 结果 / 模板 / 项目 / 标段 允许")
         void whitelistedReadEndpointsAreAllowed() {
-            assertThat(collabSecurityService.isAccessAllowed(req("GET", "/api/v1/point/list"))).isTrue();
-            assertThat(collabSecurityService.isAccessAllowed(req("GET", "/api/v1/result/123"))).isTrue();
-            assertThat(collabSecurityService.isAccessAllowed(req("GET", "/api/v1/template/page"))).isTrue();
-            assertThat(collabSecurityService.isAccessAllowed(req("GET", "/api/v1/project/1"))).isTrue();
-            assertThat(collabSecurityService.isAccessAllowed(req("GET", "/api/v1/section/list"))).isTrue();
+            CollabEntry entry = validEntry(1L);
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("GET", "/api/v1/point/list"))).isTrue();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("GET", "/api/v1/result/123"))).isTrue();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("GET", "/api/v1/template/page"))).isTrue();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("GET", "/api/v1/project/100"))).isTrue();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("GET", "/api/v1/section/list"))).isTrue();
         }
 
         @Test
         @DisplayName("白名单端点上的写方法（POST/PUT）依然拒绝")
         void writeMethodsOnWhitelistedPathsAreDenied() {
-            assertThat(collabSecurityService.isAccessAllowed(req("POST", "/api/v1/point"))).isFalse();
-            assertThat(collabSecurityService.isAccessAllowed(req("PUT", "/api/v1/result/1"))).isFalse();
-            assertThat(collabSecurityService.isAccessAllowed(req("PATCH", "/api/v1/template/1"))).isFalse();
+            CollabEntry entry = validEntry(1L);
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("POST", "/api/v1/point"))).isFalse();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("PUT", "/api/v1/result/1"))).isFalse();
+            assertThat(collabSecurityService.isAccessAllowed(entry, req("PATCH", "/api/v1/template/1"))).isFalse();
+        }
+
+        @Test
+        @DisplayName("对象级范围：未授权项目/点位拒绝，已授权项目/点位允许")
+        void objectScopeIsEnforced() {
+            CollabEntry entry = validEntry(1L);
+            MockHttpServletRequest allowedProject = req("GET", "/api/v1/project/100");
+            MockHttpServletRequest deniedProject = req("GET", "/api/v1/project/999");
+            MockHttpServletRequest allowedPoint = req("GET", "/api/v1/point/200");
+            MockHttpServletRequest deniedPoint = req("GET", "/api/v1/point/999");
+            MockHttpServletRequest allowedProjectParam = req("GET", "/api/v1/point/list");
+            allowedProjectParam.setParameter("projectId", "101");
+            MockHttpServletRequest deniedProjectParam = req("GET", "/api/v1/point/list");
+            deniedProjectParam.setParameter("projectId", "999");
+
+            assertThat(collabSecurityService.isAccessAllowed(entry, allowedProject)).isTrue();
+            assertThat(collabSecurityService.isAccessAllowed(entry, deniedProject)).isFalse();
+            assertThat(collabSecurityService.isAccessAllowed(entry, allowedPoint)).isTrue();
+            assertThat(collabSecurityService.isAccessAllowed(entry, deniedPoint)).isFalse();
+            assertThat(collabSecurityService.isAccessAllowed(entry, allowedProjectParam)).isTrue();
+            assertThat(collabSecurityService.isAccessAllowed(entry, deniedProjectParam)).isFalse();
         }
     }
 
@@ -133,7 +173,7 @@ class CollabTokenSecurityTest {
         @DisplayName("协作令牌访问受限端点 -> 403 + 写入 collab_access_log")
         void collabTokenOnRestrictedEndpointReturns403AndLogs() throws Exception {
             Long entryId = 9001L;
-            when(collabEntryMapper.selectById(entryId)).thenReturn(validEntry(entryId));
+            collabEntries.put(entryId, validEntry(entryId));
 
             String token = jwtUtil.generateCollabToken(entryId, "Restricted-Test", 60_000L);
             MockHttpServletRequest request = new MockHttpServletRequest();
@@ -143,28 +183,28 @@ class CollabTokenSecurityTest {
             request.setRemoteAddr("10.0.0.1");
 
             MockHttpServletResponse response = new MockHttpServletResponse();
-            FilterChain chain = mock(FilterChain.class);
+            boolean[] chainCalled = {false};
+            FilterChain chain = (req, res) -> chainCalled[0] = true;
 
             filter.doFilter(request, response, chain);
 
             assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_FORBIDDEN);
-            verify(chain, never()).doFilter(any(), any());
-            ArgumentCaptor<CollabAccessLog> captor = ArgumentCaptor.forClass(CollabAccessLog.class);
-            verify(collabAccessLogMapper).insert(captor.capture());
-            CollabAccessLog log = captor.getValue();
+            assertThat(chainCalled[0]).isFalse();
+            assertThat(accessLogs).hasSize(1);
+            CollabAccessLog log = accessLogs.get(0);
             assertThat(log.getEntryId()).isEqualTo(entryId);
             assertThat(log.getRequestPath()).isEqualTo("/api/v1/audit/pass");
             assertThat(log.getResponseCode()).isEqualTo(HttpServletResponse.SC_FORBIDDEN);
             assertThat(log.getIp()).isEqualTo("10.0.0.1");
             // 协作令牌不应触发内部 UserDetails 加载
-            verifyNoInteractions(userDetailsService);
+            assertThat(userDetailsCalled).isFalse();
         }
 
         @Test
         @DisplayName("协作令牌访问白名单端点 -> 放行 + 设置 ROLE_COLLAB 鉴权 + 写入访问日志")
         void collabTokenOnAllowedEndpointPassesThroughAndLogs() throws Exception {
             Long entryId = 9002L;
-            when(collabEntryMapper.selectById(entryId)).thenReturn(validEntry(entryId));
+            collabEntries.put(entryId, validEntry(entryId));
 
             String token = jwtUtil.generateCollabToken(entryId, "Allowed-Test", 60_000L);
             MockHttpServletRequest request = new MockHttpServletRequest();
@@ -179,15 +219,15 @@ class CollabTokenSecurityTest {
                 assertThat(auth.getPrincipal()).isEqualTo("collab:" + entryId);
                 assertThat(auth.getAuthorities())
                         .extracting(GrantedAuthority::getAuthority)
-                        .containsExactly(CollabSecurityService.COLLAB_ROLE);
+                        .contains(CollabSecurityService.COLLAB_ROLE, Permissions.POINT_VIEW, Permissions.AUDIT_VIEW);
                 ((HttpServletResponse) res).setStatus(200);
             };
 
             filter.doFilter(request, response, chain);
 
             assertThat(response.getStatus()).isEqualTo(200);
-            verify(collabAccessLogMapper).insert(any(CollabAccessLog.class));
-            verifyNoInteractions(userDetailsService);
+            assertThat(accessLogs).hasSize(1);
+            assertThat(userDetailsCalled).isFalse();
         }
 
         @Test
@@ -196,7 +236,7 @@ class CollabTokenSecurityTest {
             Long entryId = 9003L;
             CollabEntry revoked = validEntry(entryId);
             revoked.setStatus(3); // 已撤销
-            when(collabEntryMapper.selectById(entryId)).thenReturn(revoked);
+            collabEntries.put(entryId, revoked);
 
             String token = jwtUtil.generateCollabToken(entryId, "Revoked", 60_000L);
             MockHttpServletRequest request = new MockHttpServletRequest();
@@ -204,13 +244,14 @@ class CollabTokenSecurityTest {
             request.setRequestURI("/api/v1/point/list");
             request.addHeader("Authorization", "Bearer " + token);
             MockHttpServletResponse response = new MockHttpServletResponse();
-            FilterChain chain = mock(FilterChain.class);
+            boolean[] chainCalled = {false};
+            FilterChain chain = (req, res) -> chainCalled[0] = true;
 
             filter.doFilter(request, response, chain);
 
             assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_UNAUTHORIZED);
-            verify(chain, never()).doFilter(any(), any());
-            verify(collabAccessLogMapper).insert(any(CollabAccessLog.class));
+            assertThat(chainCalled[0]).isFalse();
+            assertThat(accessLogs).hasSize(1);
         }
 
         @Test
@@ -222,19 +263,31 @@ class CollabTokenSecurityTest {
             request.setRequestURI("/api/v1/audit/pass");
             request.addHeader("Authorization", "Bearer " + token);
             MockHttpServletResponse response = new MockHttpServletResponse();
-            FilterChain chain = mock(FilterChain.class);
-
-            // 内部 Token 走标准分支，会调用 UserDetailsService；
-            // 这里抛 RuntimeException 让过滤器进入 401 异常分支即可；
-            // 关键是协作日志一定不能被写入。
-            when(userDetailsService.loadUserByUsername(any()))
-                    .thenThrow(new RuntimeException("simulated"));
+            boolean[] chainCalled = {false};
+            FilterChain chain = (req, res) -> chainCalled[0] = true;
 
             filter.doFilter(request, response, chain);
 
             assertThat(response.getStatus()).isEqualTo(HttpServletResponse.SC_UNAUTHORIZED);
-            verify(collabEntryMapper, never()).selectById(anyLong());
-            verify(collabAccessLogMapper, never()).insert(any(CollabAccessLog.class));
+            assertThat(chainCalled[0]).isFalse();
+            assertThat(userDetailsCalled).isTrue();
+            assertThat(accessLogs).isEmpty();
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T proxy(Class<T> mapperType) {
+        return (T) Proxy.newProxyInstance(
+                mapperType.getClassLoader(),
+                new Class[]{mapperType},
+                (proxy, method, args) -> switch (method.getName()) {
+                    case "selectById" -> collabEntries.get((Long) args[0]);
+                    case "insert" -> {
+                        accessLogs.add((CollabAccessLog) args[0]);
+                        yield 1;
+                    }
+                    default -> throw new UnsupportedOperationException("Unexpected mapper call: " + method.getName());
+                }
+        );
     }
 }
