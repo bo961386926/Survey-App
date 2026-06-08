@@ -87,6 +87,12 @@ public final class Permissions {
     public static final String MESSAGE_PUSH = "message:push";
 
     // ============================
+    // 公告管理 (announcement)
+    // ============================
+    /** 公告管理 */
+    public static final String SYSTEM_ANNOUNCEMENT = "system:announcement";
+
+    // ============================
     // 导出 (export)
     // ============================
     /** 导出项目数据 */
@@ -107,6 +113,7 @@ public final class Permissions {
                 AUDIT_VIEW, AUDIT_PASS, AUDIT_REJECT,
                 SYSTEM_USER, SYSTEM_ROLE, SYSTEM_DICT, SYSTEM_LOG,
                 MESSAGE_PUSH,
+                SYSTEM_ANNOUNCEMENT,
                 EXPORT_PROJECT, EXPORT_AUDIT
         };
     }

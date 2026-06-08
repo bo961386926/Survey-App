@@ -510,3 +510,21 @@ INSERT IGNORE INTO survey_result (point_id, version_no, form_data, images, resul
 (4, 1, '{"heavy_metals": {"lead": "25.3", "cadmium": "0.8", "chromium": "15.2"}, "organic_pollutants": {"pahs": "2.1", "pcbs": "0.5"}}', '["https://example.com/soil1.jpg"]', 2, 0, NULL, 2, '2024-03-03 10:00:00', NULL, NULL),
 (6, 1, '{"pm25": "35.2", "pm10": "68.4", "so2": "12.3", "no2": "28.7", "co": "1.2", "o3": "85.3"}', '["https://example.com/air1.jpg"]', 4, 2, 'PM2.5数值偏高，需要复测', 3, '2024-03-04 10:00:00', '2024-03-04 14:00:00', 5),
 (7, 1, '{"pm25": "42.1", "pm10": "75.8", "so2": "15.6", "no2": "32.1", "co": "1.8", "o3": "78.9"}', '["https://example.com/air2.jpg"]', 2, 0, NULL, 3, '2024-03-05 10:00:00', NULL, NULL);
+
+-- =============================================
+-- 20. 公告表
+-- =============================================
+CREATE TABLE IF NOT EXISTS announcement (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  title VARCHAR(200) NOT NULL COMMENT '公告标题',
+  type VARCHAR(50) NOT NULL COMMENT '公告类型：work_spec/maintenance_reminder/system_notification',
+  content TEXT COMMENT '公告内容',
+  publisher_id BIGINT COMMENT '发布人ID',
+  status TINYINT DEFAULT 0 COMMENT '0草稿 1定时发布 2已发布 3已撤回',
+  publish_time DATETIME COMMENT '定时发布时间',
+  target_scope VARCHAR(200) COMMENT '受众范围',
+  create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+  update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_status (status),
+  INDEX idx_type (type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='公告表';
