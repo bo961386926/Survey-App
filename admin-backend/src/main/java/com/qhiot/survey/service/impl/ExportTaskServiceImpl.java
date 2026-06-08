@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 导出任务服务实现类
@@ -84,5 +85,29 @@ public class ExportTaskServiceImpl extends ServiceImpl<ExportTaskMapper, ExportT
                                     Map<String, Object> surveyData,
                                     Map<String, Object> auditData) {
         return PdfGeneratorUtil.generateSurveyReportPdf(pointData, surveyData, auditData);
+    }
+
+    @Override
+    public Long createBatchPdfExportTask(Long projectId, List<Long> pointIds, Long creatorId) {
+        ExportTask task = new ExportTask();
+        task.setTaskName("批量点位报告PDF-" + (projectId != null ? "proj" + projectId : "custom"));
+        task.setTaskType("pdf_batch");
+        task.setProjectId(projectId);
+        task.setStatus(0);
+        task.setCreatorId(creatorId);
+        task.setCreateTime(LocalDateTime.now());
+        save(task);
+
+        exportTaskProcessor.executeBatchPdfExportTaskAsync(task.getId(), projectId, pointIds);
+        return task.getId();
+    }
+
+    @Override
+    public List<ExportTask> getProjectTasks(Long projectId) {
+        return lambdaQuery()
+                .eq(ExportTask::getProjectId, projectId)
+                .orderByDesc(ExportTask::getCreateTime)
+                .last("LIMIT 50")
+                .list();
     }
 }

@@ -12,6 +12,7 @@ import com.qhiot.survey.entity.SurveyResult;
 import com.qhiot.survey.mapper.SurveyAuditRecordMapper;
 import com.qhiot.survey.mapper.SurveyPointMapper;
 import com.qhiot.survey.mapper.SurveyResultMapper;
+import com.qhiot.survey.service.ExportTaskService;
 import com.qhiot.survey.service.SurveyAuditService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,9 @@ public class SurveyAuditServiceImpl implements SurveyAuditService {
 
     @Autowired
     private SurveyPointMapper surveyPointMapper;
+
+    @Autowired
+    private ExportTaskService exportTaskService;
 
     @Override
     public Page<SurveyResult> getPendingAuditList(Long auditorId, String keyword, Integer pageNum, Integer pageSize) {
@@ -88,6 +92,14 @@ public class SurveyAuditServiceImpl implements SurveyAuditService {
 
         // 记录审核日志
         saveAuditRecord(resultId, result.getPointId(), auditorId, "pass", comment, null);
+
+        // 审核通过后自动触发单点位PDF生成
+        try {
+            exportTaskService.createPdfExportTask(result.getPointId(), resultId, auditorId);
+            log.info("审核通过，已自动创建PDF导出任务: pointId={}, resultId={}", result.getPointId(), resultId);
+        } catch (Exception e) {
+            log.warn("审核通过后自动创建PDF导出任务失败（不影响审核结果）: {}", e.getMessage());
+        }
 
         log.info("审核通过: resultId={}, auditorId={}", resultId, auditorId);
     }

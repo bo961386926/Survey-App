@@ -52,4 +52,18 @@ public interface ExportTaskService extends IService<ExportTask> {
      * @return PDF字节数组
      */
     byte[] generatePdfBytes(Map<String, Object> pointData, Map<String, Object> surveyData, Map<String, Object> auditData);
+
+    /**
+     * 创建批量PDF导出任务（生成多个点位PDF并打包为ZIP）
+     * @param projectId 项目ID
+     * @param pointIds 要导出的点位ID列表（为空则导出项目下所有审核通过的点位）
+     * @param creatorId 创建人ID
+     * @return 任务ID
+     */
+    Long createBatchPdfExportTask(Long projectId, List<Long> pointIds, Long creatorId);
+
+    /**
+     * 获取项目的所有导出任务（管理员用）
+     */
+    List<ExportTask> getProjectTasks(Long projectId);
 }

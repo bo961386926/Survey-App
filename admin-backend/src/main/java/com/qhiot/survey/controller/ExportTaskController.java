@@ -2,6 +2,7 @@ package com.qhiot.survey.controller;
 
 import com.qhiot.survey.common.Result;
 import com.qhiot.survey.common.annotation.OperationLog;
+import com.qhiot.survey.common.constant.Permissions;
 import com.qhiot.survey.entity.ExportTask;
 import com.qhiot.survey.entity.SysUser;
 import com.qhiot.survey.service.ExportTaskProcessor;
@@ -17,6 +18,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,6 +49,7 @@ public class ExportTaskController {
 
     @Operation(summary = "创建导出任务", description = "创建异步导出任务，支持Excel和PDF格式")
     @PostMapping("/create")
+    @PreAuthorize("hasAnyAuthority('" + Permissions.EXPORT_PROJECT + "', '" + Permissions.EXPORT_AUDIT + "')")
     @OperationLog(module = "导出管理", action = "创建任务", description = "创建导出任务, 名称: #taskName, 类型: #taskType", riskLevel = 0)
     public Result<Long> createTask(@Parameter(description = "任务名称") @RequestParam String taskName,
                                    @Parameter(description = "任务类型：excel/pdf") @RequestParam String taskType,
@@ -58,6 +61,7 @@ public class ExportTaskController {
 
     @Operation(summary = "创建单点位PDF导出任务", description = "为单个勘察点位创建PDF导出任务")
     @PostMapping("/create-pdf")
+    @PreAuthorize("hasAnyAuthority('" + Permissions.EXPORT_PROJECT + "', '" + Permissions.EXPORT_AUDIT + "')")
     @OperationLog(module = "导出管理", action = "创建PDF任务", description = "创建单点位PDF导出任务, 点位ID: #pointId", riskLevel = 0)
     public Result<Long> createPdfTask(@Parameter(description = "勘察点位ID") @RequestParam Long pointId,
                                       @Parameter(description = "勘察结果ID（可选）") @RequestParam(required = false) Long resultId) {
@@ -66,8 +70,28 @@ public class ExportTaskController {
         return Result.success(taskId);
     }
 
+    @Operation(summary = "创建批量PDF导出任务", description = "创建批量点位PDF导出任务，指定点位ID列表或按项目导出全部审核通过点位，打包为ZIP")
+    @PostMapping("/create-batch-pdf")
+    @PreAuthorize("hasAnyAuthority('" + Permissions.EXPORT_PROJECT + "', '" + Permissions.EXPORT_AUDIT + "')")
+    @OperationLog(module = "导出管理", action = "创建批量PDF", description = "创建批量PDF导出任务, 项目ID: #projectId, 点位数量: #pointIds", riskLevel = 0)
+    public Result<Long> createBatchPdfTask(
+            @Parameter(description = "项目ID") @RequestParam(required = false) Long projectId,
+            @Parameter(description = "点位ID列表（可选，为空则导出项目下所有审核通过点位）") @RequestBody(required = false) List<Long> pointIds) {
+        Long creatorId = getCurrentUserId();
+        Long taskId = exportTaskService.createBatchPdfExportTask(projectId, pointIds, creatorId);
+        return Result.success(taskId);
+    }
+
+    @Operation(summary = "获取项目导出任务列表", description = "获取指定项目的所有导出任务（管理员用）")
+    @GetMapping("/project/{projectId}")
+    @PreAuthorize("hasAnyAuthority('" + Permissions.EXPORT_PROJECT + "', '" + Permissions.EXPORT_AUDIT + "')")
+    public Result<List<ExportTask>> getProjectTasks(@Parameter(description = "项目ID") @PathVariable Long projectId) {
+        return Result.success(exportTaskService.getProjectTasks(projectId));
+    }
+
     @Operation(summary = "获取我的导出任务列表", description = "获取当前用户创建的所有导出任务")
     @GetMapping("/list")
+    @PreAuthorize("hasAnyAuthority('" + Permissions.EXPORT_PROJECT + "', '" + Permissions.EXPORT_AUDIT + "')")
     public Result<List<ExportTask>> getTaskList() {
         Long userId = getCurrentUserId();
         return Result.success(exportTaskService.getUserTasks(userId));
@@ -75,12 +99,14 @@ public class ExportTaskController {
 
     @Operation(summary = "获取任务详情", description = "根据任务ID获取导出任务详情，可用于轮询导出进度")
     @GetMapping("/detail/{taskId}")
+    @PreAuthorize("hasAnyAuthority('" + Permissions.EXPORT_PROJECT + "', '" + Permissions.EXPORT_AUDIT + "')")
     public Result<ExportTask> getTaskDetail(@Parameter(description = "导出任务ID") @PathVariable Long taskId) {
         return Result.success(exportTaskService.getTaskDetail(taskId));
     }
 
     @Operation(summary = "下载导出文件", description = "下载已完成的导出文件，仅已完成(状态=2)且未过期的任务可下载，文件过期返回410")
     @GetMapping("/download/{taskId}")
+    @PreAuthorize("hasAnyAuthority('" + Permissions.EXPORT_PROJECT + "', '" + Permissions.EXPORT_AUDIT + "')")
     public ResponseEntity<Resource> downloadFile(@Parameter(description = "导出任务ID") @PathVariable Long taskId) throws IOException {
         ExportTask task = exportTaskService.getTaskDetail(taskId);
         if (task == null) {

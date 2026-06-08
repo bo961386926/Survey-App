@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 导出任务处理器
@@ -401,6 +402,69 @@ public class ExportTaskProcessor {
             data.put("auditComment", auditRecord.getAuditComment());
         }
         return data;
+    }
+
+    /**
+     * 批量PDF ZIP异步导出
+     */
+    @Async("exportTaskExecutor")
+    public void executeBatchPdfExportTaskAsync(Long taskId, Long projectId, List<Long> pointIds) {
+        log.info("[导出] 开始执行批量PDF导出任务: taskId={}", taskId);
+
+        if (!transitionStatus(taskId, 1, null)) {
+            return;
+        }
+
+        try {
+            // 确定要导出的点位列表
+            List<Long> targetPointIds = pointIds;
+            if (targetPointIds == null || targetPointIds.isEmpty()) {
+                targetPointIds = surveyPointMapper.selectList(
+                        new LambdaQueryWrapper<SurveyPoint>()
+                                .eq(SurveyPoint::getProjectId, projectId)
+                                .eq(SurveyPoint::getStatus, 3) // 审核通过
+                                .select(SurveyPoint::getId))
+                        .stream()
+                        .map(SurveyPoint::getId)
+                        .collect(Collectors.toList());
+            }
+
+            if (targetPointIds.isEmpty()) {
+                throw new IllegalArgumentException("没有可导出的点位");
+            }
+
+            // 逐点位生成PDF并写入ZIP
+            Path zipPath = Paths.get(exportDir, "batch_" + taskId + "_" + System.currentTimeMillis() + ".zip");
+            ensureExportDir();
+            try (var zipOut = new java.util.zip.ZipOutputStream(new FileOutputStream(zipPath.toFile()))) {
+                for (Long pid : targetPointIds) {
+                    try {
+                        byte[] pdfBytes = generateSinglePdfBytes(pid, null);
+                        var entry = new java.util.zip.ZipEntry("survey_report_" + pid + ".pdf");
+                        zipOut.putNextEntry(entry);
+                        zipOut.write(pdfBytes);
+                        zipOut.closeEntry();
+                    } catch (Exception e) {
+                        log.warn("[导出] 批量PDF中点位{}生成失败，跳过: {}", pid, e.getMessage());
+                    }
+                }
+            }
+
+            ExportTask update = new ExportTask();
+            update.setId(taskId);
+            update.setStatus(2);
+            update.setFileUrl("/api/v1/export/download/" + taskId);
+            update.setFileName(zipPath.getFileName().toString());
+            update.setFileSize(Files.size(zipPath));
+            update.setExpireTime(LocalDateTime.now().plusDays(retentionDays));
+            update.setUpdateTime(LocalDateTime.now());
+            exportTaskMapper.updateById(update);
+            log.info("[导出] 批量PDF导出完成: taskId={}, file={}, points={}个",
+                    taskId, zipPath, targetPointIds.size());
+        } catch (Exception e) {
+            log.error("[导出] 批量PDF导出失败: taskId=" + taskId, e);
+            markFailed(taskId, e.getMessage());
+        }
     }
 
     private String statusText(Integer status) {
