@@ -17,6 +17,16 @@ public interface SurveyPointService extends IService<SurveyPoint> {
     List<SurveyPoint> getPointsByProjectId(Long projectId);
 
     /**
+     * 获取当前用户可访问的点位列表，可按项目过滤
+     */
+    List<SurveyPoint> getAccessiblePoints(Long projectId);
+
+    /**
+     * 获取当前用户可访问的点位详情
+     */
+    SurveyPoint getAccessiblePointById(Long id);
+
+    /**
      * 创建点位
      */
     SurveyPoint createPoint(SurveyPoint point);
@@ -75,4 +85,21 @@ public interface SurveyPointService extends IService<SurveyPoint> {
      * 批量设置排口类型
      */
     void batchSetOutfallType(List<Long> pointIds, String outfallType);
+
+    // =========== 地图相关 API ===========
+
+    /**
+     * 获取地图点位数据（含经纬度+状态），支持项目/标段/状态筛选
+     */
+    List<SurveyPointDTO> getMapPoints(Long projectId, Long sectionId, Integer status);
+
+    /**
+     * 获取点位地图状态统计
+     */
+    Map<String, Long> getMapPointStatistics(Long projectId);
+
+    /**
+     * 获取异常点位列表
+     */
+    List<SurveyPointDTO> getAbnormalPoints(Long projectId);
 }
