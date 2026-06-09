@@ -4,6 +4,7 @@
 **Referenced Files in This Document**
 - [init.sql](file://init-sql/init.sql)
 - [add_task_table.sql](file://init-sql/add_task_table.sql)
+- [tenant.sql](file://init-sql/tenant.sql)
 - [01-init.sql](file://admin-backend/init-data/01-init.sql)
 - [02-role-tables.sql](file://admin-backend/init-data/02-role-tables.sql)
 - [03-offline-data-sync.sql](file://admin-backend/init-data/03-offline-data-sync.sql)
@@ -15,6 +16,12 @@
 - [V3__add_category_and_data.sql](file://admin-backend/src/main/resources/db/migration/V3__add_category_and_data.sql)
 - [dictionary_tables.sql](file://admin-backend/src/main/resources/db/dictionary_tables.sql)
 - [project_member.sql](file://admin-backend/src/main/resources/db/project_member.sql)
+- [SysTenant.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/SysTenant.java)
+- [SysTenantMapper.java](file://admin-backend/src/main/java/com/qhiot/survey/mapper/SysTenantMapper.java)
+- [SysTenantServiceImpl.java](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/SysTenantServiceImpl.java)
+- [TenantContext.java](file://admin-backend/src/main/java/com/qhiot/survey/common/util/TenantContext.java)
+- [JwtAuthenticationFilter.java](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java)
+- [MybatisPlusConfig.java](file://admin-backend/src/main/java/com/qhiot/survey/config/MybatisPlusConfig.java)
 - [SurveyPoint.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyPoint.java)
 - [SurveyResult.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyResult.java)
 - [SurveyAuditRecord.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyAuditRecord.java)
@@ -25,12 +32,12 @@
 
 ## Update Summary
 **Changes Made**
-- Added new SysTask table for task management functionality
-- Added owner_user_id column to sys_task table for ownership tracking
-- Added category field to sys_task table for task categorization
-- Enhanced database performance indexes for improved query efficiency
-- Updated entity relationship diagrams to include task management components
-- Expanded migration scripts coverage for task-related schema evolution
+- Added comprehensive tenant isolation infrastructure with sys_tenant table and tenant_id columns
+- Extended tenant_id to 15 business entities including project, survey_point, survey_template, and announcement tables
+- Implemented automatic tenant filtering through MyBatis Plus TenantLineInterceptor
+- Added TenantContext utility for request-scoped tenant management
+- Updated migration scripts to support tenant-aware database schema evolution
+- Enhanced security layer with tenant-aware authentication and authorization
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -45,231 +52,201 @@
 10. [Appendices](#appendices)
 
 ## Introduction
-This document provides comprehensive database design documentation for the Survey-App. It covers the entity relationship model, table schemas with primary keys, foreign keys, indexes, and constraints, spatial data handling for GPS coordinates, indexing strategy for performance, migration scripts for schema evolution, data validation and business constraints, referential integrity enforcement, and data lifecycle management including archiving and backup strategies.
+This document provides comprehensive database design documentation for the Survey-App, now featuring multi-tenant isolation capabilities. The database schema supports tenant-aware operations across 15 business entities while maintaining backward compatibility for single-tenant deployments. Key components include the sys_tenant management table, tenant_id columns across business entities, automatic tenant filtering through MyBatis Plus interceptors, and comprehensive migration scripts for tenant isolation.
 
 ## Project Structure
-The database schema is primarily defined in SQL initialization and migration scripts, with supporting entity classes in Java that map to the database tables. The key schema sources are:
-- Initial schema creation and baseline data
-- Task table creation and enhancement scripts
-- Index enhancement scripts
-- Architecture enhancement scripts adding soft delete, optimistic locking, and audit fields
-- Dictionary and project member tables for governance and access control
+The database schema now includes tenant management infrastructure alongside the existing survey application tables. The tenant isolation system is built on three pillars: database schema modifications, application-level tenant context management, and automatic query filtering.
 
 ```mermaid
 graph TB
-subgraph "Schema Sources"
-A["init-sql/init.sql"]
-B["init-sql/add_task_table.sql"]
-C["admin-backend/init-data/01-init.sql"]
-D["admin-backend/init-data/02-role-tables.sql"]
-E["admin-backend/init-data/03-offline-data-sync.sql"]
-F["admin-backend/init-data/04-export-task-columns.sql"]
-G["admin-backend/init-data/05-database-indexes.sql"]
-H["admin-backend/add-database-indexes.sql"]
-I["admin-backend/add-architecture-enhancements.sql"]
-J["admin-backend/src/main/resources/db/migration/V2__add_owner_user_id.sql"]
-K["admin-backend/src/main/resources/db/migration/V3__add_category_and_data.sql"]
-L["admin-backend/src/main/resources/db/dictionary_tables.sql"]
-M["admin-backend/src/main/resources/db/project_member.sql"]
+subgraph "Tenant Infrastructure"
+A["init-sql/tenant.sql"]
+B["SysTenant.java"]
+C["TenantContext.java"]
+D["MybatisPlusConfig.java"]
+E["JwtAuthenticationFilter.java"]
 end
-subgraph "Entity Mappings"
-N["SurveyPoint.java"]
-O["SurveyResult.java"]
-P["SurveyAuditRecord.java"]
-Q["Project.java"]
-R["SysUser.java"]
-S["SysTask.java"]
+subgraph "Business Entities with Tenant Support"
+F["Project.java"]
+G["SurveyPoint.java"]
+H["SurveyResult.java"]
+I["SurveyTemplate.java"]
+J["Announcement.java"]
+K["SysTask.java"]
+L["MessageCenter.java"]
+M["ExportTask.java"]
 end
-A --> N
-B --> S
-C --> O
-C --> P
-C --> Q
-C --> R
-D --> Q
-E --> R
-F --> S
-G --> N
-G --> O
-G --> P
-H --> N
-H --> O
-I --> N
-I --> O
-J --> S
-K --> S
-L --> N
-L --> O
-M --> N
+subgraph "System Tables"
+N["sys_user"]
+O["sys_tenant"]
+P["sys_role"]
+Q["sys_permission"]
+end
+A --> B
+A --> F
+A --> G
+A --> H
+A --> I
+A --> J
+A --> K
+A --> L
+A --> M
+C --> D
+E --> C
+D --> F
+D --> G
+D --> H
+D --> I
+D --> J
+D --> K
+D --> L
+D --> M
 ```
 
 **Diagram sources**
-- [init.sql:1-513](file://init-sql/init.sql#L1-L513)
-- [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
-- [01-init.sql:1-516](file://admin-backend/init-data/01-init.sql#L1-L516)
-- [02-role-tables.sql:1-200](file://admin-backend/init-data/02-role-tables.sql#L1-L200)
-- [03-offline-data-sync.sql:1-150](file://admin-backend/init-data/03-offline-data-sync.sql#L1-L150)
-- [04-export-task-columns.sql:1-80](file://admin-backend/init-data/04-export-task-columns.sql#L1-L80)
-- [05-database-indexes.sql:1-144](file://admin-backend/init-data/05-database-indexes.sql#L1-L144)
-- [add-database-indexes.sql:1-125](file://admin-backend/add-database-indexes.sql#L1-L125)
-- [add-architecture-enhancements.sql:1-132](file://admin-backend/add-architecture-enhancements.sql#L1-L132)
-- [V2__add_owner_user_id.sql:1-1](file://admin-backend/src/main/resources/db/migration/V2__add_owner_user_id.sql#L1-L1)
-- [V3__add_category_and_data.sql:1-1](file://admin-backend/src/main/resources/db/migration/V3__add_category_and_data.sql#L1-L1)
-- [dictionary_tables.sql:1-88](file://admin-backend/src/main/resources/db/dictionary_tables.sql#L1-L88)
-- [project_member.sql:1-16](file://admin-backend/src/main/resources/db/project_member.sql#L1-L16)
-- [SurveyPoint.java:1-84](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyPoint.java#L1-L84)
-- [SurveyResult.java:1-93](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyResult.java#L1-L93)
-- [SurveyAuditRecord.java:1-37](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyAuditRecord.java#L1-L37)
-- [Project.java:1-84](file://admin-backend/src/main/java/com/qhiot/survey/entity/Project.java#L1-L84)
-- [SysUser.java:1-95](file://admin-backend/src/main/java/com/qhiot/survey/entity/SysUser.java#L1-L95)
-- [SysTask.java:1-120](file://admin-backend/src/main/java/com/qhiot/survey/entity/SysTask.java#L1-L120)
+- [tenant.sql:1-98](file://init-sql/tenant.sql#L1-L98)
+- [SysTenant.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/SysTenant.java)
+- [TenantContext.java](file://admin-backend/src/main/java/com/qhiot/survey/common/util/TenantContext.java)
+- [MybatisPlusConfig.java](file://admin-backend/src/main/java/com/qhiot/survey/config/MybatisPlusConfig.java)
+- [JwtAuthenticationFilter.java](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java)
 
 **Section sources**
-- [init.sql:1-513](file://init-sql/init.sql#L1-L513)
-- [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
-- [01-init.sql:1-516](file://admin-backend/init-data/01-init.sql#L1-L516)
-- [02-role-tables.sql:1-200](file://admin-backend/init-data/02-role-tables.sql#L1-L200)
-- [03-offline-data-sync.sql:1-150](file://admin-backend/init-data/03-offline-data-sync.sql#L1-L150)
-- [04-export-task-columns.sql:1-80](file://admin-backend/init-data/04-export-task-columns.sql#L1-L80)
-- [05-database-indexes.sql:1-144](file://admin-backend/init-data/05-database-indexes.sql#L1-L144)
-- [add-database-indexes.sql:1-125](file://admin-backend/add-database-indexes.sql#L1-L125)
-- [add-architecture-enhancements.sql:1-132](file://admin-backend/add-architecture-enhancements.sql#L1-L132)
-- [V2__add_owner_user_id.sql:1-1](file://admin-backend/src/main/resources/db/migration/V2__add_owner_user_id.sql#L1-L1)
-- [V3__add_category_and_data.sql:1-1](file://admin-backend/src/main/resources/db/migration/V3__add_category_and_data.sql#L1-L1)
-- [dictionary_tables.sql:1-88](file://admin-backend/src/main/resources/db/dictionary_tables.sql#L1-L88)
-- [project_member.sql:1-16](file://admin-backend/src/main/resources/db/project_member.sql#L1-L16)
+- [tenant.sql:1-98](file://init-sql/tenant.sql#L1-L98)
+- [SysTenant.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/SysTenant.java)
+- [TenantContext.java](file://admin-backend/src/main/java/com/qhiot/survey/common/util/TenantContext.java)
+- [MybatisPlusConfig.java](file://admin-backend/src/main/java/com/qhiot/survey/config/MybatisPlusConfig.java)
+- [JwtAuthenticationFilter.java](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java)
 
 ## Core Components
-This section documents the core entities and their relationships, focusing on primary keys, foreign keys, indexes, constraints, and business rules.
+This section documents the core entities and their relationships, now enhanced with tenant isolation capabilities.
 
-- Project
-  - Purpose: Top-level initiative with status, dates, counts, and metadata.
+### Tenant Management System
+- **SysTenant** *(New)*
+  - Purpose: Central tenant management with configuration and limits
   - Primary key: id
-  - Unique constraints: project_code
-  - Indexes: idx_status, idx_manager
-  - Business constraints: status enumerated; counts maintained by application logic.
+  - Unique constraints: tenant_code
+  - Business constraints: status enumerated; max_user_count and max_project_count for resource management
+  - JSON configuration support for tenant-specific settings
 
-- ProjectSection
-  - Purpose: Subdivisions of a project with manager assignment.
-  - Primary key: id
-  - Foreign key: project_id → project(id)
-  - Indexes: idx_project, idx_manager
-  - Constraints: uk_user_role on (user_id, role_id) via join table.
+### Enhanced Business Entities with Tenant Isolation
+- **Project** *(Updated)*
+  - Added tenant_id column with default value 1 for backward compatibility
+  - Foreign key: tenant_id → sys_tenant(id)
+  - Index: idx_tenant for tenant filtering performance
 
-- SurveyTemplate and SurveyTemplateVersion
-  - Purpose: Dynamic survey templates and versions with JSON configurations.
-  - Primary key: id
-  - Foreign key: template_id → survey_template(id)
-  - Unique constraint: uk_template_version on (template_id, version_no)
-  - Indexes: idx_status
+- **ProjectSection** *(Updated)*
+  - Added tenant_id column with default value 1
+  - Foreign key: tenant_id → sys_tenant(id)
+  - Index: idx_tenant for tenant filtering
 
-- SurveyPointTemplateBinding
-  - Purpose: Bind outfall types to templates per project/section.
-  - Primary key: id
-  - Foreign keys: project_id → project(id), section_id → project_section(id), template_id → survey_template(id), template_version_id → survey_template_version(id)
-  - Unique constraint: uk_project_section_type on (project_id, section_id, outfall_type)
-  - Indexes: idx_template
+- **ProjectMember** *(Updated)*
+  - Added tenant_id column with default value 1
+  - Foreign key: tenant_id → sys_tenant(id)
+  - Index: idx_tenant for tenant filtering
 
-- SurveyPoint
-  - Purpose: Field sampling locations with spatial coordinates and status.
-  - Primary key: id
-  - Unique constraints: point_code
-  - Foreign keys: project_id → project(id), section_id → project_section(id), collector_id → sys_user(id)
-  - Spatial fields: longitude, latitude (DECIMAL(12,8))
-  - Indexes: idx_project, idx_status, idx_collector, idx_outfall_type
-  - Business constraints: status enumerated; soft-delete via is_deleted; audit fields via entity mapping.
+- **SurveyPoint** *(Updated)*
+  - Added tenant_id column with default value 1
+  - Foreign key: tenant_id → sys_tenant(id)
+  - Index: idx_tenant for tenant filtering
 
-- SurveyResult
-  - Purpose: Versioned survey outcomes with JSON form data and audit trail.
-  - Primary key: id
-  - Foreign key: point_id → survey_point(id)
-  - Unique constraint: uk_point_version on (point_id, version_no)
-  - Indexes: idx_result_status, idx_audit_status, idx_survey_user, idx_auditor
-  - Business constraints: result_status and audit_status enumerated; optimistic locking via version field.
+- **SurveyPointTemplateBinding** *(Updated)*
+  - Added tenant_id column with default value 1
+  - Foreign key: tenant_id → sys_tenant(id)
+  - Index: idx_tenant for tenant filtering
 
-- SurveyAuditRecord
-  - Purpose: Audit history for results.
-  - Primary key: id
-  - Foreign keys: result_id → survey_result(id), point_id → survey_point(id), auditor_id → sys_user(id)
-  - Indexes: idx_result, idx_point, idx_auditor, idx_action
+- **SurveyTemplate** *(Updated)*
+  - Added tenant_id column with default value 1
+  - Foreign key: tenant_id → sys_tenant(id)
+  - Index: idx_tenant for tenant filtering
 
-- SysUser
-  - Purpose: Application users with roles and credentials.
-  - Primary key: id
-  - Unique constraints: username
-  - Indexes: idx_username, idx_status
-  - Business constraints: status enumerated; soft-delete and optimistic lock via entity mapping.
+- **SurveyTemplateVersion** *(Updated)*
+  - Added tenant_id column with default value 1
+  - Foreign key: tenant_id → sys_tenant(id)
+  - Index: idx_tenant for tenant filtering
 
-- SysRole and SysUserRole
-  - Purpose: Role-based permissions and user-role assignments.
-  - Primary key: id
-  - Unique constraints: uk_user_role on (user_id, role_id)
-  - Indexes: idx_role, idx_perm
+- **SurveyResult** *(Updated)*
+  - Added tenant_id column with default value 1
+  - Foreign key: tenant_id → sys_tenant(id)
+  - Index: idx_tenant for tenant filtering
 
-- SysPermission and SysRolePermission
-  - Purpose: Permission catalog and role-permission mapping.
-  - Primary key: id
-  - Unique constraints: uk_role_perm on (role_id, perm_code)
-  - Indexes: idx_module, idx_status
+- **SurveyAuditRecord** *(Updated)*
+  - Added tenant_id column with default value 1
+  - Foreign key: tenant_id → sys_tenant(id)
+  - Index: idx_tenant for tenant filtering
 
-- SysDict and SysDictItem
-  - Purpose: Legacy dictionary tables for enumerations.
-  - Primary key: id
-  - Indexes: idx_dict
+- **ExportTask** *(Updated)*
+  - Added tenant_id column with default value 1
+  - Foreign key: tenant_id → sys_tenant(id)
+  - Index: idx_tenant for tenant filtering
 
-- SysDictionary and SysDictionaryData
-  - Purpose: Enhanced dictionary taxonomy and items.
-  - Primary key: id
-  - Indexes: idx_dict_code, idx_dict_id
+- **CollabEntry** *(Updated)*
+  - Added tenant_id column with default value 1
+  - Foreign key: tenant_id → sys_tenant(id)
+  - Index: idx_tenant for tenant filtering
 
-- ProjectMember
-  - Purpose: Project membership with roles and status.
-  - Primary key: id
-  - Unique constraints: uk_project_user on (project_id, user_id)
-  - Indexes: idx_project_id, idx_user_id, idx_role, idx_status
+- **SysTask** *(Updated)*
+  - Added tenant_id column with default value 1
+  - Foreign key: tenant_id → sys_tenant(id)
+  - Index: idx_tenant for tenant filtering
 
-- OfflineDataSync
-  - Purpose: Mobile offline data synchronization.
-  - Primary key: id
-  - Indexes: idx_device_id, idx_user_id, idx_sync_status, idx_data_type, idx_create_time
+- **MessageCenter** *(Updated)*
+  - Added tenant_id column with default value 1
+  - Foreign key: tenant_id → sys_tenant(id)
+  - Index: idx_tenant for tenant filtering
 
-- OperationLog and LoginLog
-  - Purpose: Operational and authentication audit trails.
-  - Indexes: various composite and single-column indexes
+- **Announcement** *(Updated)*
+  - Added tenant_id column with default value 1
+  - Foreign key: tenant_id → sys_tenant(id)
+  - Index: idx_tenant for tenant filtering
 
-- MessageCenter, CollabEntry, CollabAccessLog, SysFile, SysConfig
-  - Purpose: Messaging, collaboration, file storage, and configuration.
-  - Indexes: idx_user, idx_msg_type, idx_is_read, idx_token, idx_status, idx_biz, idx_creator
+### System User Enhancement
+- **SysUser** *(Updated)*
+  - Added tenant_id column with default value 1 for user-tenant association
+  - Foreign key: tenant_id → sys_tenant(id)
+  - Index: idx_tenant for user tenant filtering
 
-- **SysTask** *(New)*
-  - Purpose: Task management system for work allocation and tracking.
-  - Primary key: id
-  - Foreign key: owner_user_id → sys_user(id)
-  - Category field: category (VARCHAR(100)) for task type classification
-  - Indexes: idx_owner_user, idx_category, idx_status, idx_create_time
-  - Business constraints: status enumerated; soft-delete via is_deleted; audit fields via entity mapping.
+### Application-Level Tenant Management
+- **TenantContext** *(New)*
+  - ThreadLocal storage for tenant ID during request processing
+  - Methods: setTenantId(), getTenantId(), clear() for lifecycle management
+
+- **MybatisPlusConfig** *(Updated)*
+  - TenantLineInnerInterceptor for automatic tenant filtering
+  - Ignore tables list: sys_ tables, operation_log, login_log, location_correction_log
+  - Tenant filtering logic: excludes system tables and ignores tenant conditions for administrators
+
+- **JwtAuthenticationFilter** *(Updated)*
+  - Extracts tenant ID from JWT tokens
+  - Sets tenant context for request processing
+  - Supports both system administrators (null tenantId) and regular users
 
 **Section sources**
-- [init.sql:11-122](file://init-sql/init.sql#L11-L122)
-- [init.sql:127-150](file://init-sql/init.sql#L127-L150)
-- [init.sql:155-168](file://init-sql/init.sql#L155-L168)
-- [init.sql:326-348](file://init-sql/init.sql#L326-L348)
-- [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
-- [01-init.sql:11-122](file://admin-backend/init-data/01-init.sql#L11-L122)
-- [01-init.sql:127-150](file://admin-backend/init-data/01-init.sql#L127-L150)
-- [01-init.sql:155-168](file://admin-backend/init-data/01-init.sql#L155-L168)
-- [01-init.sql:329-351](file://admin-backend/init-data/01-init.sql#L329-L351)
-- [02-role-tables.sql:1-200](file://admin-backend/init-data/02-role-tables.sql#L1-L200)
-- [03-offline-data-sync.sql:1-150](file://admin-backend/init-data/03-offline-data-sync.sql#L1-L150)
-- [04-export-task-columns.sql:1-80](file://admin-backend/init-data/04-export-task-columns.sql#L1-L80)
-- [dictionary_tables.sql:2-32](file://admin-backend/src/main/resources/db/dictionary_tables.sql#L2-L32)
-- [project_member.sql:2-16](file://admin-backend/src/main/resources/db/project_member.sql#L2-L16)
+- [tenant.sql:10-25](file://init-sql/tenant.sql#L10-L25)
+- [tenant.sql:31-98](file://init-sql/tenant.sql#L31-L98)
+- [SysTenant.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/SysTenant.java)
+- [TenantContext.java](file://admin-backend/src/main/java/com/qhiot/survey/common/util/TenantContext.java)
+- [MybatisPlusConfig.java](file://admin-backend/src/main/java/com/qhiot/survey/config/MybatisPlusConfig.java)
+- [JwtAuthenticationFilter.java](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java)
 
 ## Architecture Overview
-The database supports a survey lifecycle from project definition to field data capture, versioned results, auditing, and reporting. Entities are organized around Projects and Sections, with SurveyPoints representing geographic locations and SurveyResults capturing versioned data. **Enhanced with Task Management capabilities** for work allocation and tracking.
+The database now supports multi-tenant isolation through automatic tenant filtering, centralized tenant management, and tenant-aware user authentication. The architecture maintains backward compatibility while enabling tenant separation across 15 business entities.
 
 ```mermaid
 erDiagram
+SYS_TENANT {
+bigint id PK
+varchar tenant_code UK
+varchar tenant_name
+varchar contact_name
+varchar contact_phone
+tinyint status
+datetime expire_time
+int max_user_count
+int max_project_count
+json config_json
+datetime create_time
+datetime update_time
+}
 PROJECT {
 bigint id PK
 varchar project_name
@@ -287,49 +264,7 @@ int completed_count
 int pending_audit_count
 datetime create_time
 datetime update_time
-}
-PROJECT_SECTION {
-bigint id PK
-bigint project_id FK
-varchar section_name
-varchar section_code
-bigint manager_id
-text description
-tinyint status
-datetime create_time
-datetime update_time
-}
-SURVEY_TEMPLATE {
-bigint id PK
-varchar template_name
-varchar template_code UK
-text description
-tinyint status
-bigint current_version_id
-bigint creator_id
-datetime create_time
-datetime update_time
-}
-SURVEY_TEMPLATE_VERSION {
-bigint id PK
-bigint template_id FK
-int version_no
-json fields_json
-json rules_json
-json linkage_rules_json
-tinyint status
-datetime publish_time
-bigint creator_id
-datetime create_time
-}
-SURVEY_POINT_TEMPLATE_BINDING {
-bigint id PK
-bigint project_id FK
-bigint section_id FK
-varchar outfall_type
-bigint template_id FK
-bigint template_version_id FK
-datetime create_time
+bigint tenant_id FK
 }
 SURVEY_POINT {
 bigint id PK
@@ -348,6 +283,7 @@ varchar abnormal_tag
 tinyint is_deleted
 datetime create_time
 datetime update_time
+bigint tenant_id FK
 }
 SURVEY_RESULT {
 bigint id PK
@@ -367,16 +303,19 @@ bigint auditor_id
 tinyint is_deleted
 datetime create_time
 datetime update_time
+bigint tenant_id FK
 }
-SURVEY_AUDIT_RECORD {
+ANNOUNCEMENT {
 bigint id PK
-bigint result_id FK
-bigint point_id FK
-bigint auditor_id FK
-varchar action
-text audit_comment
-bigint reject_template_id
+varchar title
+text content
+varchar publish_range
+datetime publish_time
+datetime expire_time
+tinyint status
 datetime create_time
+datetime update_time
+bigint tenant_id FK
 }
 SYS_USER {
 bigint id PK
@@ -398,244 +337,65 @@ varchar create_by
 varchar update_by
 datetime deleted_time
 varchar deleted_by
+bigint tenant_id FK
 }
-SYS_ROLE {
-bigint id PK
-varchar role_code UK
-varchar role_name
-json permissions
-tinyint status
-int sort
-datetime create_time
-datetime update_time
-}
-SYS_USER_ROLE {
-bigint id PK
-bigint user_id FK
-bigint role_id FK
-datetime create_time
-}
-SYS_PERMISSION {
-bigint id PK
-varchar perm_code UK
-varchar perm_name
-varchar module
-varchar description
-tinyint status
-int sort
-datetime create_time
-datetime update_time
-}
-SYS_ROLE_PERMISSION {
-bigint id PK
-bigint role_id FK
-varchar perm_code FK
-datetime create_time
-}
-SYS_DICT {
-bigint id PK
-varchar dict_code UK
-varchar dict_name
-tinyint status
-datetime create_time
-}
-SYS_DICT_ITEM {
-bigint id PK
-bigint dict_id FK
-varchar item_label
-varchar item_value
-int sort_order
-tinyint status
-datetime create_time
-}
-SYS_DICTIONARY {
-bigint id PK
-varchar dict_code UK
-varchar dict_name
-varchar description
-tinyint is_system
-tinyint status
-int sort_order
-datetime create_time
-datetime update_time
-}
-SYS_DICTIONARY_DATA {
-bigint id PK
-bigint dict_id FK
-varchar dict_code
-varchar data_name
-varchar data_value
-int data_order
-tinyint status
-tinyint is_readonly
-varchar remark
-datetime create_time
-datetime update_time
-}
-PROJECT_MEMBER {
-bigint id PK
-bigint project_id FK
-bigint user_id FK
-varchar role
-tinyint status
-datetime create_time
-datetime update_time
-}
-OFFLINE_DATA_SYNC {
-bigint id PK
-varchar device_id
-bigint user_id FK
-varchar data_type
-varchar data_id
-json data_content
-tinyint sync_status
-int retry_count
-int max_retry_count
-text error_message
-datetime client_create_time
-datetime server_receive_time
-datetime sync_complete_time
-int version_no
-varchar conflict_resolution
-datetime create_time
-datetime update_time
-}
-OPERATION_LOG {
-bigint id PK
-bigint user_id
-varchar username
-varchar module
-varchar action
-varchar target_type
-bigint target_id
-text detail
-varchar ip
-varchar user_agent
-tinyint risk_level
-datetime create_time
-}
-LOGIN_LOG {
-bigint id PK
-bigint user_id
-varchar username
-varchar login_type
-tinyint status
-varchar fail_reason
-varchar ip
-varchar user_agent
-datetime create_time
-}
-MESSAGE_CENTER {
-bigint id PK
-bigint user_id FK
-varchar msg_type
-varchar msg_title
-text msg_content
-varchar target_type
-bigint target_id
-tinyint is_read
-datetime read_time
-tinyint push_status
-datetime create_time
-}
-COLLAB_ENTRY {
-bigint id PK
-varchar entry_name
-varchar token UK
-text project_ids
-text point_ids
-json permissions
-datetime expire_time
-tinyint status
-bigint creator_id
-int access_count
-datetime last_access_time
-datetime create_time
-datetime update_time
-}
-COLLAB_ACCESS_LOG {
-bigint id PK
-bigint entry_id FK
-varchar token
-varchar ip
-varchar user_agent
-varchar request_path
-int response_code
-datetime create_time
-}
-SYS_FILE {
-bigint id PK
-varchar file_name
-varchar file_path
-bigint file_size
-varchar file_type
-varchar biz_type
-bigint biz_id
-bigint creator_id FK
-datetime create_time
-}
-SYS_CONFIG {
-bigint id PK
-varchar config_key UK
-text config_value
-varchar config_type
-varchar description
-datetime update_time
-}
-SYS_TASK {
-bigint id PK
-varchar task_name
-varchar task_code UK
-varchar description
-bigint owner_user_id FK
-varchar category
-tinyint status
-datetime create_time
-datetime update_time
-tinyint is_deleted
-int version
-varchar create_by
-varchar update_by
-datetime deleted_time
-varchar deleted_by
-}
-PROJECT ||--o{ PROJECT_SECTION : "has"
-PROJECT ||--o{ SURVEY_POINT : "contains"
-PROJECT_SECTION ||--o{ SURVEY_POINT : "contains"
-SURVEY_TEMPLATE ||--o{ SURVEY_TEMPLATE_VERSION : "versions"
-SURVEY_POINT ||--o{ SURVEY_RESULT : "produces"
-SURVEY_RESULT ||--o{ SURVEY_AUDIT_RECORD : "audits"
-SYS_USER ||--o{ SURVEY_POINT : "collects"
-SYS_USER ||--o{ SURVEY_RESULT : "submits"
-SYS_USER ||--o{ SURVEY_AUDIT_RECORD : "audits"
-SYS_USER ||--o{ SYS_USER_ROLE : "has"
-SYS_ROLE ||--o{ SYS_USER_ROLE : "grants"
-SYS_ROLE ||--o{ SYS_ROLE_PERMISSION : "has"
-SYS_PERMISSION ||--o{ SYS_ROLE_PERMISSION : "permitted_by"
-SYS_DICT ||--o{ SYS_DICT_ITEM : "items"
-SYS_DICTIONARY ||--o{ SYS_DICTIONARY_DATA : "data"
-PROJECT ||--o{ PROJECT_MEMBER : "members"
-SYS_USER ||--o{ PROJECT_MEMBER : "belongs_to"
-SYS_USER ||--o{ OFFLINE_DATA_SYNC : "syncs"
-SYS_USER ||--o{ OPERATION_LOG : "logs"
-SYS_USER ||--o{ LOGIN_LOG : "logs_in"
-SYS_USER ||--o{ MESSAGE_CENTER : "receives"
-SYS_USER ||--o{ SYS_TASK : "owns"
-COLLAB_ENTRY ||--o{ COLLAB_ACCESS_LOG : "accesses"
-SYS_USER ||--o{ SYS_FILE : "uploads"
-SYS_TASK ||--o{ SURVEY_RESULT : "tracks"
+SYS_TENANT ||--o{ PROJECT : "manages"
+SYS_TENANT ||--o{ SURVEY_POINT : "manages"
+SYS_TENANT ||--o{ SURVEY_RESULT : "manages"
+SYS_TENANT ||--o{ ANNOUNCEMENT : "manages"
+SYS_TENANT ||--o{ SYS_USER : "contains"
+SYS_USER ||--o{ PROJECT : "works_on"
 ```
 
 **Diagram sources**
-- [init.sql:11-122](file://init-sql/init.sql#L11-L122)
-- [init.sql:127-150](file://init-sql/init.sql#L127-L150)
-- [init.sql:155-168](file://init-sql/init.sql#L155-L168)
-- [init.sql:326-348](file://init-sql/init.sql#L326-L348)
-- [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
-- [dictionary_tables.sql:2-32](file://admin-backend/src/main/resources/db/dictionary_tables.sql#L2-L32)
-- [project_member.sql:2-16](file://admin-backend/src/main/resources/db/project_member.sql#L2-L16)
+- [tenant.sql:10-25](file://init-sql/tenant.sql#L10-L25)
+- [tenant.sql:38-98](file://init-sql/tenant.sql#L38-L98)
 
 ## Detailed Component Analysis
+
+### Tenant Isolation Implementation
+- **Automatic Filtering**
+  - MyBatis Plus TenantLineInnerInterceptor automatically appends tenant_id conditions to queries
+  - Tenant filtering is bypassed for system tables (sys_), audit logs, and location correction logs
+  - System administrators (tenantId = null) receive no tenant filtering
+
+- **Request Lifecycle Management**
+  - JwtAuthenticationFilter extracts tenant ID from JWT tokens
+  - TenantContext stores tenant ID in ThreadLocal for request duration
+  - Tenant filtering applied before query execution, after request processing
+
+- **Backward Compatibility**
+  - Default tenant_id values set to 1 for existing data migration
+  - Single-tenant deployments continue working without tenant awareness
+  - Tenant filtering only active when tenantId is present
+
+### Tenant Management Features
+- **Resource Limits**
+  - max_user_count and max_project_count for tenant capacity management
+  - Status tracking for tenant activation/deactivation
+  - Expiration date support for tenant subscription management
+
+- **Configuration Support**
+  - JSON config_json field for tenant-specific settings
+  - Contact information for tenant administrators
+  - Flexible configuration for different tenant requirements
+
+### Tenant-Aware Business Logic
+- **Data Segregation**
+  - All 15 business entities include tenant_id for automatic isolation
+  - Foreign key relationships maintain referential integrity within tenants
+  - Indexes on tenant_id enable efficient tenant-based queries
+
+- **Cross-Tenant Considerations**
+  - System tables remain globally accessible
+  - Audit logs maintain cross-tenant visibility for compliance
+  - Location correction data supports spatial queries across tenants
+
+**Section sources**
+- [MybatisPlusConfig.java:22-43](file://admin-backend/src/main/java/com/qhiot/survey/config/MybatisPlusConfig.java#L22-L43)
+- [JwtAuthenticationFilter.java:49-56](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java#L49-L56)
+- [tenant.sql:27-28](file://init-sql/tenant.sql#L27-L28)
+- [tenant.sql:82-98](file://init-sql/tenant.sql#L82-L98)
 
 ### Spatial Data Handling and Geographic Queries
 - Coordinate Storage
@@ -655,15 +415,17 @@ SYS_TASK ||--o{ SURVEY_RESULT : "tracks"
 - Idempotent Index Creation
   - The index enhancement script defines a stored procedure to conditionally create indexes only if they do not exist, ensuring safe repeated execution across environments.
 - Targeted Indexes
-  - Project: idx_project_status, idx_project_manager, idx_project_create_time
-  - SurveyPoint: idx_sp_project_status, idx_sp_assignee, idx_sp_outfall_type, idx_sp_create_time
-  - SurveyResult: idx_sr_point_version, idx_sr_survey_user, idx_sr_result_status, idx_sr_audit_status, idx_sr_create_time
-  - SurveyAuditRecord: idx_sar_result, idx_sar_point, idx_sar_auditor, idx_sar_create_time
+  - Project: idx_project_status, idx_project_manager, idx_project_create_time, **idx_tenant** *(New)*
+  - SurveyPoint: idx_sp_project_status, idx_sp_assignee, idx_sp_outfall_type, idx_sp_create_time, **idx_tenant** *(New)*
+  - SurveyResult: idx_sr_point_version, idx_sr_survey_user, idx_sr_result_status, idx_sr_audit_status, idx_sr_create_time, **idx_tenant** *(New)*
+  - SurveyAuditRecord: idx_sar_result, idx_sar_point, idx_sar_auditor, idx_sar_create_time, **idx_tenant** *(New)*
   - **SysTask**: idx_owner_user, idx_category, idx_status, idx_create_time *(New)*
+  - **SysTenant**: idx_status, idx_code *(New)*
   - OperationLog: idx_oplog_user_id, idx_oplog_module, idx_oplog_create_time, idx_oplog_risk_level
   - OfflineDataSync: idx_ods_status_retry, idx_ods_user_id, idx_ods_data_type
-  - ExportTask: idx_export_creator, idx_export_status, idx_export_create_time
-  - MessageCenter: idx_msg_user_read, idx_msg_create_time
+  - ExportTask: idx_export_creator, idx_export_status, idx_export_create_time, **idx_tenant** *(New)*
+  - MessageCenter: idx_msg_user_read, idx_msg_create_time, **idx_tenant** *(New)*
+  - Announcement: **idx_tenant** *(New)*
 - Composite Indexes
   - Composite indexes on (project_id, status) for SurveyPoint and SurveyResult improve list pagination and filtering.
 - Verification
@@ -690,29 +452,35 @@ Skip --> Done
 
 ### Data Validation Rules and Business Constraints
 - Enumerations
-  - Status fields across Project, ProjectSection, SurveyPoint, SurveyResult, SurveyAuditRecord, SysUser, SysRole, SysPermission, SysDict, SysDictionaryData, and **SysTask** use small integer or string codes with associated dictionary entries for consistent interpretation.
+  - Status fields across Project, ProjectSection, SurveyPoint, SurveyResult, SurveyAuditRecord, SysUser, SysRole, SysPermission, SysDict, SysDictionaryData, SysTenant, and **SysTask** use small integer or string codes with associated dictionary entries for consistent interpretation.
 - Uniqueness
-  - Unique constraints enforce business uniqueness: project_code, username, template_code, **task_code**, and composite keys such as uk_template_version and uk_project_section_type.
+  - Unique constraints enforce business uniqueness: project_code, username, template_code, **task_code**, **tenant_code**, and composite keys such as uk_template_version and uk_project_section_type.
 - JSON Fields
-  - survey_template_version.rules_json and linkage_rules_json, survey_result.form_data, and collab_entry.permissions store structured data; validation occurs at application level.
+  - survey_template_version.rules_json and linkage_rules_json, survey_result.form_data, collab_entry.permissions, and **sys_tenant.config_json** store structured data; validation occurs at application level.
 - Soft Delete and Optimistic Lock
   - Architecture enhancements add is_deleted, deleted_time, deleted_by, version fields to core entities, enabling soft deletion and optimistic concurrency control.
 - Audit Fields
   - create_by and update_by fields added to track who created or modified records.
-- **Category Classification** *(New)*
-  - SysTask.category field provides standardized task type classification for better organization and filtering.
+- **Tenant Isolation** *(New)*
+  - tenant_id foreign key relationships ensure data segregation between tenants
+  - Default tenant_id values maintain backward compatibility
+  - Tenant-aware validation ensures proper tenant assignment
 
 **Section sources**
 - [add-architecture-enhancements.sql:14-106](file://admin-backend/add-architecture-enhancements.sql#L14-L106)
 - [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
 - [V3__add_category_and_data.sql:1-1](file://admin-backend/src/main/resources/db/migration/V3__add_category_and_data.sql#L1-L1)
 - [dictionary_tables.sql:35-88](file://admin-backend/src/main/resources/db/dictionary_tables.sql#L35-L88)
+- [tenant.sql:10-25](file://init-sql/tenant.sql#L10-L25)
 
 ### Referential Integrity Enforcement
 - Foreign Keys
-  - Defined in schema: project_id → project, section_id → project_section, collector_id → sys_user, point_id → survey_point, result_id → survey_result, auditor_id → sys_user, template_id → survey_template, template_version_id → survey_template_version, user_id → sys_user, role_id → sys_role, dict_id → sys_dict, dict_id → sys_dictionary, **owner_user_id → sys_user**.
+  - Defined in schema: project_id → project, section_id → project_section, collector_id → sys_user, point_id → survey_point, result_id → survey_result, auditor_id → sys_user, template_id → survey_template, template_version_id → survey_template_version, user_id → sys_user, role_id → sys_role, dict_id → sys_dict, dict_id → sys_dictionary, **tenant_id → sys_tenant**.
 - Application-Level Enforcement
   - Additional relationships (e.g., project_member) rely on unique and index constraints to maintain integrity at the application boundary.
+- **Tenant Isolation** *(New)*
+  - tenant_id foreign keys ensure tenant-aware referential integrity
+  - Automatic filtering prevents cross-tenant data access
 
 **Section sources**
 - [init.sql:37-46](file://init-sql/init.sql#L37-L46)
@@ -722,11 +490,17 @@ Skip --> Done
 - [init.sql:158-168](file://init-sql/init.sql#L158-L168)
 - [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
 - [project_member.sql:4-11](file://admin-backend/src/main/resources/db/project_member.sql#L4-L11)
+- [tenant.sql:38-98](file://init-sql/tenant.sql#L38-L98)
 
 ### Schema Evolution and Migration Scripts
 - Baseline Initialization
   - The initial schema is defined in both init-sql/init.sql and admin-backend/init-data/01-init.sql, covering all core tables, indexes, and seed data.
-- **Task Management Enhancement** *(New)*
+- **Tenant Isolation Enhancement** *(New)*
+  - init-sql/tenant.sql creates sys_tenant table and adds tenant_id columns to 15 business entities
+  - Adds idx_tenant indexes to all tenant-aware tables for performance
+  - Migrates existing data to default tenant (tenant_id = 1)
+  - Maintains backward compatibility for single-tenant deployments
+- Task Management Enhancement
   - init-sql/add_task_table.sql creates the SysTask table with comprehensive task management capabilities including owner assignment and category classification.
   - admin-backend/src/main/resources/db/migration/V2__add_owner_user_id.sql adds owner_user_id column to existing task records.
   - admin-backend/src/main/resources/db/migration/V3__add_category_and_data.sql adds category field for task categorization.
@@ -740,8 +514,15 @@ Skip --> Done
 ```mermaid
 sequenceDiagram
 participant DB as "Database"
+participant TenantScript as "Tenant Migration"
 participant Proc as "Stored Procedure"
 participant Script as "Index Script"
+TenantScript->>DB : ALTER TABLE sys_tenant ADD COLUMN
+DB-->>TenantScript : Success
+TenantScript->>DB : ALTER TABLE business_tables ADD tenant_id
+DB-->>TenantScript : Success
+TenantScript->>DB : UPDATE existing_data SET tenant_id=1
+DB-->>TenantScript : Success
 Script->>Proc : CALL add_index_if_not_exists(table, index, columns)
 Proc->>DB : Check info_schema for table existence
 DB-->>Proc : Exists/Not Found
@@ -752,11 +533,13 @@ DB-->>Script : Result (Created/Exists)
 ```
 
 **Diagram sources**
+- [tenant.sql:1-98](file://init-sql/tenant.sql#L1-L98)
 - [05-database-indexes.sql:21-64](file://admin-backend/init-data/05-database-indexes.sql#L21-L64)
 
 **Section sources**
 - [init.sql:1-513](file://init-sql/init.sql#L1-L513)
 - [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
+- [tenant.sql:1-98](file://init-sql/tenant.sql#L1-L98)
 - [01-init.sql:1-516](file://admin-backend/init-data/01-init.sql#L1-L516)
 - [02-role-tables.sql:1-200](file://admin-backend/init-data/02-role-tables.sql#L1-L200)
 - [03-offline-data-sync.sql:1-150](file://admin-backend/init-data/03-offline-data-sync.sql#L1-L150)
@@ -774,6 +557,10 @@ DB-->>Script : Result (Created/Exists)
   - Optimistic locking via version fields prevents concurrent modification conflicts during updates.
 - Archive Strategy
   - Historical data can be archived by moving completed SurveyResult rows to an archive schema while retaining referential integrity via foreign keys.
+- **Tenant-Aware Lifecycle Management** *(New)*
+  - Tenant isolation enables per-tenant data lifecycle management
+  - Archive strategies can be implemented per tenant for compliance requirements
+  - Backup strategies should consider tenant data segregation for granular recovery
 - **Task Lifecycle Management** *(New)*
   - SysTask supports soft deletion and version control similar to other core entities, enabling audit trails for task modifications and potential recovery.
 - Backup Strategy
@@ -785,49 +572,59 @@ DB-->>Script : Result (Created/Exists)
 - [add-architecture-enhancements.sql:14-106](file://admin-backend/add-architecture-enhancements.sql#L14-L106)
 - [init.sql:142-149](file://init-sql/init.sql#L142-L149)
 - [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
+- [tenant.sql:10-25](file://init-sql/tenant.sql#L10-L25)
 
 ## Dependency Analysis
-This section maps dependencies among core entities and highlights coupling and cohesion.
+This section maps dependencies among core entities and highlights coupling and cohesion, now including tenant management dependencies.
 
 ```mermaid
 graph LR
-Project["Project"] --> ProjectSection["ProjectSection"]
-Project --> SurveyPoint["SurveyPoint"]
+SysTenant["SysTenant"] --> Project["Project"]
+SysTenant --> SurveyPoint["SurveyPoint"]
+SysTenant --> SurveyResult["SurveyResult"]
+SysTenant --> Announcement["Announcement"]
+SysTenant --> SysUser["SysUser"]
+SysTenant --> ExportTask["ExportTask"]
+SysTenant --> SysTask["SysTask"]
+SysTenant --> MessageCenter["MessageCenter"]
+Project --> ProjectSection["ProjectSection"]
+Project --> SurveyPoint
 ProjectSection --> SurveyPoint
-SurveyTemplate["SurveyTemplate"] --> SurveyTemplateVersion["SurveyTemplateVersion"]
-SurveyPoint --> SurveyResult["SurveyResult"]
+SurveyTemplate --> SurveyTemplateVersion
+SurveyPoint --> SurveyResult
 SurveyResult --> SurveyAuditRecord["SurveyAuditRecord"]
-SysUser["SysUser"] --> SurveyPoint
+SysUser --> SurveyPoint
 SysUser --> SurveyResult
 SysUser --> SurveyAuditRecord
 SysUser --> SysUserRole["SysUserRole"]
-SysRole["SysRole"] --> SysUserRole
+SysRole --> SysUserRole
 SysRole --> SysRolePermission["SysRolePermission"]
-SysPermission["SysPermission"] --> SysRolePermission
-SysDict["SysDict"] --> SysDictItem["SysDictItem"]
-SysDictionary["SysDictionary"] --> SysDictionaryData["SysDictionaryData"]
+SysPermission --> SysRolePermission
+SysDict --> SysDictItem["SysDictItem"]
+SysDictionary --> SysDictionaryData["SysDictionaryData"]
 Project --> ProjectMember["ProjectMember"]
 SysUser --> ProjectMember
 SysUser --> OfflineDataSync["OfflineDataSync"]
 SysUser --> OperationLog["OperationLog"]
 SysUser --> LoginLog["LoginLog"]
-SysUser --> MessageCenter["MessageCenter"]
-SysUser --> SysTask["SysTask"]
-CollabEntry["CollabEntry"] --> CollabAccessLog["CollabAccessLog"]
+SysUser --> MessageCenter
+SysUser --> SysTask
+CollabEntry --> CollabAccessLog["CollabAccessLog"]
 SysUser --> SysFile["SysFile"]
-SysTask --> SurveyResult["SurveyResult"]
+SysTask --> SurveyResult
 ```
 
 **Diagram sources**
-- [init.sql:11-122](file://init-sql/init.sql#L11-L122)
-- [init.sql:127-150](file://init-sql/init.sql#L127-L150)
-- [init.sql:155-168](file://init-sql/init.sql#L155-L168)
-- [init.sql:326-348](file://init-sql/init.sql#L326-L348)
+- [tenant.sql:10-25](file://init-sql/tenant.sql#L10-L25)
+- [tenant.sql:38-98](file://init-sql/tenant.sql#L38-L98)
+- [init.sql:11-168](file://init-sql/init.sql#L11-L168)
 - [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
 - [dictionary_tables.sql:2-32](file://admin-backend/src/main/resources/db/dictionary_tables.sql#L2-L32)
 - [project_member.sql:2-16](file://admin-backend/src/main/resources/db/project_member.sql#L2-L16)
 
 **Section sources**
+- [tenant.sql:10-25](file://init-sql/tenant.sql#L10-L25)
+- [tenant.sql:38-98](file://init-sql/tenant.sql#L38-L98)
 - [init.sql:11-168](file://init-sql/init.sql#L11-L168)
 - [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
 - [dictionary_tables.sql:2-32](file://admin-backend/src/main/resources/db/dictionary_tables.sql#L2-L32)
@@ -835,13 +632,17 @@ SysTask --> SurveyResult["SurveyResult"]
 
 ## Performance Considerations
 - Index Coverage
-  - Ensure frequently filtered/sorted columns are indexed (status, user_id, timestamps, **category**).
+  - Ensure frequently filtered/sorted columns are indexed (status, user_id, timestamps, **category**, **tenant_id**).
 - Composite Indexes
   - Use composite indexes for common query predicates like (project_id, status) to avoid table scans.
 - JSON Columns
   - Avoid indexing JSON fields directly; denormalize or derive computed columns if needed for performance-sensitive queries.
 - Partitioning
   - For very large tables (e.g., survey_result), consider partitioning by date or point_id to improve maintenance and query performance.
+- **Tenant Query Optimization** *(New)*
+  - Tenant-aware indexes on tenant_id enable efficient tenant-based filtering
+  - Consider composite indexes combining tenant_id with frequently queried columns
+  - Monitor tenant isolation performance impact on query execution plans
 - **Task Query Optimization** *(New)*
   - Indexes on owner_user_id, category, and status in SysTask table optimize task assignment and filtering queries.
 - Monitoring
@@ -856,6 +657,11 @@ SysTask --> SurveyResult["SurveyResult"]
   - Ensure application logic respects is_deleted and applies appropriate filters.
 - Concurrency Conflicts
   - Handle optimistic lock failures by retrying with refreshed data.
+- **Tenant Isolation Issues** *(New)*
+  - Verify tenant_id values are properly set in JWT tokens
+  - Check TenantContext thread safety and cleanup in request lifecycle
+  - Ensure MyBatis Plus TenantLineInterceptor is properly configured
+  - Validate tenant filtering logic for system administrators vs regular users
 - **Task Management Issues** *(New)*
   - Verify owner_user_id foreign key constraints; ensure category values conform to expected enumeration.
 
@@ -863,9 +669,11 @@ SysTask --> SurveyResult["SurveyResult"]
 - [05-database-indexes.sql:21-64](file://admin-backend/init-data/05-database-indexes.sql#L21-L64)
 - [add-database-indexes.sql:104-125](file://admin-backend/add-database-indexes.sql#L104-L125)
 - [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
+- [MybatisPlusConfig.java:34-43](file://admin-backend/src/main/java/com/qhiot/survey/config/MybatisPlusConfig.java#L34-L43)
+- [TenantContext.java:13-26](file://admin-backend/src/main/java/com/qhiot/survey/common/util/TenantContext.java#L13-L26)
 
 ## Conclusion
-The Survey-App database schema is designed around a clear lifecycle from project and section management to field data capture, versioned results, and auditability. The schema leverages ENUM-like dictionaries, JSON fields for flexibility, and robust indexing for query performance. Architecture enhancements introduce soft deletion, optimistic locking, and audit fields to support enterprise-grade operations. **Recent additions include comprehensive task management capabilities with owner assignment, category classification, and optimized indexing strategies.** Migration scripts provide idempotent mechanisms for evolving the schema safely across environments.
+The Survey-App database schema now provides comprehensive multi-tenant isolation capabilities while maintaining backward compatibility. The tenant management system includes centralized tenant administration, automatic tenant filtering through MyBatis Plus interceptors, and tenant-aware user authentication. The schema leverages ENUM-like dictionaries, JSON fields for flexibility, and robust indexing for query performance. Architecture enhancements introduce soft deletion, optimistic locking, and audit fields to support enterprise-grade operations. Recent additions include comprehensive task management capabilities with owner assignment, category classification, and optimized indexing strategies. The tenant isolation infrastructure supports 15 business entities with automatic tenant filtering, enabling secure multi-tenant deployment while preserving single-tenant compatibility.
 
 ## Appendices
 
@@ -876,6 +684,13 @@ The Survey-App database schema is designed around a clear lifecycle from project
 - Project.java → project
 - SysUser.java → sys_user
 - **SysTask.java → sys_task** *(New)*
+- **SysTenant.java → sys_tenant** *(New)*
+
+### Tenant-Aware Entity List
+- **Business Entities with Tenant Support**:
+  - project, project_section, project_member, survey_point, survey_point_template_binding
+  - survey_template, survey_template_version, survey_result, survey_audit_record
+  - export_task, collab_entry, sys_task, message_center, announcement
 
 **Section sources**
 - [SurveyPoint.java:17-84](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyPoint.java#L17-L84)
@@ -884,3 +699,4 @@ The Survey-App database schema is designed around a clear lifecycle from project
 - [Project.java:16-84](file://admin-backend/src/main/java/com/qhiot/survey/entity/Project.java#L16-L84)
 - [SysUser.java:19-95](file://admin-backend/src/main/java/com/qhiot/survey/entity/SysUser.java#L19-L95)
 - [SysTask.java:1-120](file://admin-backend/src/main/java/com/qhiot/survey/entity/SysTask.java#L1-L120)
+- [SysTenant.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/SysTenant.java)

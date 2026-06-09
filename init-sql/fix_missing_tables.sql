@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS project_section (
   section_code VARCHAR(50) COMMENT '标段编号',
   manager_id BIGINT COMMENT '标段负责人ID',
   description TEXT COMMENT '描述',
+  is_key_area TINYINT DEFAULT 0 COMMENT '是否重点区域 0-否 1-是',
   status TINYINT DEFAULT 1 COMMENT '1正常 0禁用',
   create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
   update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,

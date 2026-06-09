@@ -18,7 +18,6 @@ const customRoutes: CustomRoute[] = [
       i18nKey: 'route.point_map',
       icon: 'material-symbols:map-outline-rounded',
       permissions: ['point:view'],
-      hideInMenu: true,
       order: 2
     }
   },
@@ -224,7 +223,54 @@ const customRoutes: CustomRoute[] = [
       }
     ]
   },
-  { name: 'point', path: '/point', meta: { hideInMenu: true, permissions: ['point:view'] } },
+  {
+    name: 'point',
+    path: '/point',
+    component: 'layout.base',
+    redirect: '/point/list',
+    meta: {
+      title: 'point',
+      i18nKey: 'route.point',
+      hideInMenu: true,
+      permissions: ['point:view']
+    },
+    children: [
+      {
+        name: 'point_list',
+        path: '/point/list',
+        component: 'view.point_list',
+        meta: {
+          title: 'point_management',
+          i18nKey: 'route.point_management',
+          icon: 'material-symbols:assignment-outline-rounded',
+          permissions: ['point:view'],
+          order: 3
+        }
+      },
+      {
+        name: 'point_management',
+        path: '/point/management',
+        component: 'view.point_management',
+        meta: {
+          title: 'point_management',
+          i18nKey: 'route.point_management',
+          permissions: ['point:view']
+        },
+        children: [
+          {
+            name: 'point_management_old',
+            path: '/point/management/old',
+            component: 'view.point_management_old',
+            meta: {
+              title: 'point_management_old',
+              i18nKey: 'route.point_management_old',
+              permissions: ['point:view']
+            }
+          }
+        ]
+      }
+    ]
+  },
   {
     name: 'task',
     path: '/task',
@@ -235,7 +281,6 @@ const customRoutes: CustomRoute[] = [
       i18nKey: 'route.task_center',
       icon: 'carbon:task',
       permissions: ['task:view'],
-      hideInMenu: true,
       order: 3
     },
     children: [
@@ -243,13 +288,7 @@ const customRoutes: CustomRoute[] = [
         name: 'task_center_list',
         path: '/task/list',
         component: 'view.task_center_list',
-        meta: { title: 'task_center_list', i18nKey: 'route.task_center_list', permissions: ['task:view'], hideInMenu: true }
-      },
-      {
-        name: 'task_center_map',
-        path: '/task/map',
-        component: 'view.task_center_map',
-        meta: { title: 'task_center_map', i18nKey: 'route.task_center_map', permissions: ['task:view'], hideInMenu: true }
+        meta: { title: 'task_center_list', i18nKey: 'route.task_center_list', permissions: ['task:view'] }
       },
       {
         name: 'task_center_detail',

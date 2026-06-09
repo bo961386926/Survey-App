@@ -22,6 +22,7 @@ services:
       - ./init-sql/init.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
       - ./init-sql/offline_data_sync.sql:/docker-entrypoint-initdb.d/01-offline-data-sync.sql:ro
       - ./admin-backend/src/main/resources/db/project_member.sql:/docker-entrypoint-initdb.d/02-project-member.sql:ro
+      - ./init-sql/tenant.sql:/docker-entrypoint-initdb.d/03-tenant.sql:ro
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci

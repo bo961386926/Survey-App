@@ -306,7 +306,7 @@ onMounted(() => { loadTemplate(); });
           </div>
 
           <div class="min-h-500px rd-12px border-2 border-dashed border-[var(--color-divider)] p-6 bg-[var(--bg-card)] shadow-inner relative">
-            <VueDraggable v-model="canvasFields" group="fields" handle=".drag-handle" :animation="150" class="space-y-4 min-h-400px">
+            <VueDraggable v-model="canvasFields" group="fields" handle=".drag-handle" :animation="150" ghostClass="opacity-30" :fallbackOnBody="true" :swapThreshold="0.65" class="space-y-4 min-h-400px">
               <div
                 v-for="element in canvasFields"
                 :key="element.id"
@@ -330,9 +330,9 @@ onMounted(() => { loadTemplate(); });
                 </div>
                 <div :class="element.type === 'grid' ? '' : 'pointer-events-none'">
                   <template v-if="element.type === 'grid'">
-                    <div class="flex gap-4 mt-2">
-                      <div v-for="(col, cIdx) in element.columns" :key="cIdx" :style="{ flexGrow: col.span, flexShrink: 1, flexBasis: '0%', minWidth: 0 }" class="border border-dashed border-[var(--color-divider)] min-h-60px p-2 rd-4px bg-[var(--bg-page)]">
-                        <VueDraggable v-model="col.fields" group="fields" handle=".drag-handle" :animation="150" class="h-full min-h-50px space-y-2">
+                    <div class="flex gap-4 mt-2 items-stretch">
+                      <div v-for="(col, cIdx) in element.columns" :key="cIdx" :style="{ flexGrow: col.span, flexShrink: 1, flexBasis: '0%', minWidth: 0 }" class="border border-dashed border-[var(--color-divider)] min-h-60px rd-4px bg-[var(--bg-page)] flex flex-col">
+                        <VueDraggable v-model="col.fields" group="fields" handle=".drag-handle" :animation="150" ghostClass="opacity-30" :fallbackOnBody="true" :swapThreshold="0.65" :emptyInsertThreshold="50" class="flex-1 h-full min-h-50px p-2 space-y-2">
                           <div v-for="sub in col.fields" :key="sub.id" class="relative p-3 rd-6px border transition-all cursor-pointer group bg-[var(--bg-card)]" :class="activeFieldId === sub.id ? 'border-primary ring-1 ring-primary/20' : 'border-transparent hover:border-[var(--color-border)] hover:shadow-sm'" @click.stop="selectField(sub.id)">
                             <div class="flex justify-between items-center mb-2">
                               <div class="flex items-center gap-1">

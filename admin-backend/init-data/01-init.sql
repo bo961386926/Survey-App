@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS project_section (
   section_code VARCHAR(50) COMMENT '标段编号',
   manager_id BIGINT COMMENT '标段负责人ID',
   description TEXT COMMENT '描述',
+  is_key_area TINYINT DEFAULT 0 COMMENT '是否重点区域 0-否 1-是',
   status TINYINT DEFAULT 1 COMMENT '1正常 0禁用',
   create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
   update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -338,6 +339,7 @@ CREATE TABLE IF NOT EXISTS sys_user (
   login_fail_count INT DEFAULT 0 COMMENT '登录失败次数',
   lock_time DATETIME COMMENT '锁定时间',
   last_login_time DATETIME COMMENT '最后登录时间',
+  tenant_id BIGINT DEFAULT 1 COMMENT '租户ID',
   create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
   update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   is_deleted TINYINT DEFAULT 0 COMMENT '1已删除 0未删除',
@@ -347,7 +349,8 @@ CREATE TABLE IF NOT EXISTS sys_user (
   deleted_time DATETIME COMMENT '删除时间',
   deleted_by VARCHAR(50) COMMENT '删除者',
   INDEX idx_username (username),
-  INDEX idx_status (status)
+  INDEX idx_status (status),
+  INDEX idx_tenant (tenant_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
 -- =============================================
@@ -531,3 +534,22 @@ CREATE TABLE IF NOT EXISTS announcement (
   INDEX idx_status (status),
   INDEX idx_type (type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='公告表';
+
+-- =============================================
+-- 24. 项目成员关联表
+-- =============================================
+CREATE TABLE IF NOT EXISTS project_member (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    project_id BIGINT NOT NULL COMMENT '项目ID',
+    user_id BIGINT NOT NULL COMMENT '用户ID',
+    role VARCHAR(50) NOT NULL COMMENT '角色: admin-管理员, collector-采集员, auditor-审核员, viewer-查看者',
+    status TINYINT NOT NULL DEFAULT 1 COMMENT '状态: 0-禁用 1-启用',
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_project_user (project_id, user_id),
+    INDEX idx_project_id (project_id),
+    INDEX idx_user_id (user_id),
+    INDEX idx_role (role),
+    INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='项目成员关联表';

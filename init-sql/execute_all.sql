@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS project_section (
   section_code VARCHAR(50) COMMENT '标段编号',
   manager_id BIGINT COMMENT '标段负责人ID',
   description TEXT COMMENT '描述',
+  is_key_area TINYINT DEFAULT 0 COMMENT '是否重点区域 0-否 1-是',
   status TINYINT DEFAULT 1 COMMENT '1正常 0禁用',
   create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
   update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -306,6 +307,7 @@ CREATE TABLE IF NOT EXISTS sys_user (
   login_fail_count INT DEFAULT 0 COMMENT '登录失败次数',
   lock_time DATETIME COMMENT '锁定时间',
   last_login_time DATETIME COMMENT '最后登录时间',
+  tenant_id BIGINT DEFAULT 1 COMMENT '租户ID',
   create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
   update_time DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   is_deleted TINYINT DEFAULT 0 COMMENT '1已删除 0未删除',
@@ -315,7 +317,8 @@ CREATE TABLE IF NOT EXISTS sys_user (
   deleted_time DATETIME COMMENT '删除时间',
   deleted_by VARCHAR(50) COMMENT '删除者',
   INDEX idx_username (username),
-  INDEX idx_status (status)
+  INDEX idx_status (status),
+  INDEX idx_tenant (tenant_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户表';
 
 -- =============================================

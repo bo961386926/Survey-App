@@ -25,6 +25,7 @@
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/common/util/PdfGeneratorUtil.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/common/util/PermissionRegistry.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/common/util/SecurityUtils.java
+/Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/common/util/TenantContext.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/AsyncConfig.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/AutoFillHandler.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/CacheConfig.java
@@ -36,6 +37,7 @@
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/SnowflakeIdGeneratorConfig.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/TaskDatabaseInitializer.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/WebMvcConfig.java
+/Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/controller/AnnouncementController.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/controller/AuthController.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/controller/ExportTaskController.java
@@ -75,6 +77,7 @@
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/dto/UpdateUserRequest.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/dto/UserInfoResponse.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/dto/UserResponse.java
+/Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/entity/Announcement.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/entity/CollabAccessLog.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/entity/CollabEntry.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/entity/ExportTask.java
@@ -102,8 +105,10 @@
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/entity/SysRole.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/entity/SysRolePermission.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/entity/SysTask.java
+/Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/entity/SysTenant.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/entity/SysUser.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/entity/SysUserRole.java
+/Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/mapper/AnnouncementMapper.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/mapper/CollabAccessLogMapper.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/mapper/CollabEntryMapper.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/mapper/ExportTaskMapper.java
@@ -131,6 +136,7 @@
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/mapper/SysRoleMapper.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/mapper/SysRolePermissionMapper.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/mapper/SysTaskMapper.java
+/Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/mapper/SysTenantMapper.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/mapper/SysUserMapper.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/mapper/SysUserRoleMapper.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java
@@ -138,6 +144,7 @@
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/security/LoginUser.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/security/SecurityConfig.java
+/Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/AnnouncementService.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/CollabEntryService.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/DataScopeService.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/EmailService.java
@@ -168,8 +175,10 @@
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/SysPermissionService.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/SysRoleService.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/SysTaskService.java
+/Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/SysTenantService.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/SysUserService.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/impl/AliyunSmsCodeServiceImpl.java
+/Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/impl/AnnouncementServiceImpl.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/impl/DataScopeServiceImpl.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/impl/EmailServiceImpl.java
@@ -196,4 +205,5 @@
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/impl/SysPermissionServiceImpl.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/impl/SysRoleServiceImpl.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/impl/SysTaskServiceImpl.java
+/Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/impl/SysTenantServiceImpl.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/service/impl/SysUserServiceImpl.java
