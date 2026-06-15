@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { VueDraggable } from 'vue-draggable-plus';
 import { message } from 'ant-design-vue';
 import { useAuth } from '@/hooks/common/auth';
-import { fetchGetTemplateDetail, fetchSaveTemplateDraft, fetchPublishTemplate, fetchGetTemplateVersions, type FieldSchema, type FieldOption, type TemplateSaveDraft } from '@/service/api/template';
+import { fetchGetTemplateDetail, fetchSaveTemplateDraft, fetchPublishTemplate, fetchGetTemplateVersions, type FieldSchema, type FieldOption, type OptionSubField, type InlineItem, type TemplateSaveDraft } from '@/service/api/template';
 
 defineOptions({ name: 'TemplateDesign' });
 
@@ -34,6 +34,7 @@ const fieldPalette = [
   { type: 'checkbox', label: '多选框', icon: 'i-material-symbols:check-box-outline-rounded', category: '基础字段' },
   { type: 'switch', label: '开关', icon: 'i-material-symbols:toggle-on-outline-rounded', category: '基础字段' },
   { type: 'grid', label: '栅格布局', icon: 'i-material-symbols:grid-view-outline-rounded', category: '布局组件' },
+  { type: 'inline_group', label: '内联文本组', icon: 'i-material-symbols:wrap-text-rounded', category: '布局组件' },
   { type: 'date', label: '日期选择', icon: 'i-material-symbols:calendar-today-outline-rounded', category: '高级字段' },
   { type: 'image', label: '图片上传', icon: 'i-material-symbols:image-outline', category: '高级字段' },
   { type: 'location', label: '位置定位', icon: 'i-material-symbols:location-on-outline-rounded', category: '高级字段' },
@@ -89,6 +90,13 @@ const createField = (type: string, label: string): FieldSchema => ({
   } : {}),
   ...(type === 'grid' ? {
     columns: [{ span: 1, fields: [] as FieldSchema[] }, { span: 1, fields: [] as FieldSchema[] }]
+  } : {}),
+  ...(type === 'inline_group' ? {
+    inlineItems: [
+      { type: 'text' as const, content: '标签文本：' },
+      { type: 'input' as const, id: generateId(), label: '请输入', width: '80px' },
+      { type: 'text' as const, content: ' 单位' }
+    ] as InlineItem[]
   } : {})
 });
 
@@ -175,6 +183,39 @@ const removeOption = (field: FieldSchema, index: number) => {
   markDirty();
 };
 
+// --- Option Sub-Fields ---
+const expandedOptions = ref<Set<number>>(new Set());
+const toggleOptionExpand = (idx: number) => {
+  if (expandedOptions.value.has(idx)) expandedOptions.value.delete(idx);
+  else expandedOptions.value.add(idx);
+};
+const addSubField = (option: FieldOption) => {
+  if (!option.subFields) option.subFields = [];
+  const idx = option.subFields.length + 1;
+  option.subFields.push({ id: generateId(), label: `字段${idx}`, type: 'input', placeholder: '请输入', suffix: '' });
+  markDirty();
+};
+const removeSubField = (option: FieldOption, index: number) => {
+  option.subFields?.splice(index, 1);
+  markDirty();
+};
+
+// --- Inline Group Helpers ---
+const addInlineItem = (field: FieldSchema) => {
+  if (!field.inlineItems) field.inlineItems = [];
+  field.inlineItems.push({ type: 'text', content: '文本' });
+  markDirty();
+};
+const addInlineInput = (field: FieldSchema) => {
+  if (!field.inlineItems) field.inlineItems = [];
+  field.inlineItems.push({ type: 'input', id: generateId(), label: '请输入', width: '80px' });
+  markDirty();
+};
+const removeInlineItem = (field: FieldSchema, index: number) => {
+  field.inlineItems?.splice(index, 1);
+  markDirty();
+};
+
 // --- Linkage Rules ---
 const addLinkageRule = (field: FieldSchema) => {
   if (!field.linkageRules) field.linkageRules = [];
@@ -208,9 +249,10 @@ const loadTemplate = async () => {
       versions.value = versionsData as any[];
       const latest = versionsData[0];
       if (latest) {
-        currentVersion.value = `v${latest.versionNo}`;
-        if (latest.fieldsJson) {
-          try { const parsed = JSON.parse(latest.fieldsJson); if (Array.isArray(parsed)) canvasFields.value = parsed; } catch {}
+        currentVersion.value = `v${latest.version}`;
+        const fieldsJson = (latest as any).fieldsJson;
+        if (fieldsJson) {
+          try { const parsed = JSON.parse(fieldsJson); if (Array.isArray(parsed)) canvasFields.value = parsed; } catch {}
         }
       }
     }
@@ -241,7 +283,7 @@ const handlePublish = async () => {
     if (!error) {
       hasUnsavedChanges.value = false; message.success('模板发布成功');
       const { data: vd } = await fetchGetTemplateVersions(Number(templateId));
-      if (vd) { versions.value = vd as any[]; currentVersion.value = `v${vd[0]?.versionNo}`; }
+      if (vd) { versions.value = vd as any[]; currentVersion.value = `v${vd[0]?.version}`; }
     }
   } catch { message.error('发布失败'); }
   finally { saving.value = false; }
@@ -372,8 +414,34 @@ onMounted(() => { loadTemplate(); });
                     </div>
                   </template>
                   <template v-else-if="element.type === 'select'"><a-select :placeholder="element.placeholder" class="w-full" /></template>
-                  <template v-else-if="element.type === 'radio'"><a-radio-group><a-radio>选项一</a-radio><a-radio>选项二</a-radio></a-radio-group></template>
-                  <template v-else-if="element.type === 'checkbox'"><a-checkbox-group><a-checkbox>选项一</a-checkbox><a-checkbox>选项二</a-checkbox></a-checkbox-group></template>
+                  <template v-else-if="element.type === 'radio'">
+                    <div class="space-y-2">
+                      <div v-for="opt in element.options" :key="opt.value" class="flex items-center gap-2">
+                        <a-radio>{{ opt.label }}</a-radio>
+                        <div v-if="opt.subFields && opt.subFields.length > 0" class="ml-4 flex items-center gap-2">
+                          <template v-for="sf in opt.subFields" :key="sf.id">
+                            <span class="text-12px text-[var(--color-text-secondary)]">{{ sf.label }}</span>
+                            <a-input :placeholder="sf.placeholder || '请输入'" size="small" style="width:80px" />
+                            <span v-if="sf.suffix" class="text-12px text-[var(--color-text-secondary)]">{{ sf.suffix }}</span>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                  <template v-else-if="element.type === 'checkbox'">
+                    <div class="space-y-2">
+                      <div v-for="opt in element.options" :key="opt.value" class="flex items-center gap-2">
+                        <a-checkbox>{{ opt.label }}</a-checkbox>
+                        <div v-if="opt.subFields && opt.subFields.length > 0" class="ml-4 flex items-center gap-2">
+                          <template v-for="sf in opt.subFields" :key="sf.id">
+                            <span class="text-12px text-[var(--color-text-secondary)]">{{ sf.label }}</span>
+                            <a-input :placeholder="sf.placeholder || '请输入'" size="small" style="width:80px" />
+                            <span v-if="sf.suffix" class="text-12px text-[var(--color-text-secondary)]">{{ sf.suffix }}</span>
+                          </template>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
                   <template v-else-if="element.type === 'switch'"><a-switch /></template>
                   <template v-else-if="element.type === 'date'"><a-date-picker class="w-full" /></template>
                   <template v-else-if="element.type === 'image'">
@@ -384,6 +452,17 @@ onMounted(() => { loadTemplate(); });
                   <template v-else-if="element.type === 'location'">
                     <div class="h-10 bg-[var(--bg-page)] rd-4px border border-[var(--color-border)] flex items-center px-3 text-12px text-[var(--color-text-secondary)]">
                       <div class="i-material-symbols:location-on-outline-rounded text-16px mr-2"></div>点击选择位置
+                    </div>
+                  </template>
+                  <template v-else-if="element.type === 'inline_group'">
+                    <div class="flex flex-wrap items-center gap-1">
+                      <template v-for="(item, iIdx) in element.inlineItems" :key="iIdx">
+                        <span v-if="item.type === 'text'" class="text-13px text-[var(--color-text-primary)]">{{ item.content }}</span>
+                        <template v-else>
+                          <a-input :placeholder="item.label || '请输入'" size="small" :style="{ width: item.width || '80px' }" />
+                          <span v-if="item.suffix" class="text-12px text-[var(--color-text-secondary)]">{{ item.suffix }}</span>
+                        </template>
+                      </template>
                     </div>
                   </template>
                   <template v-else-if="element.type === 'divider'"><div class="h-1px bg-[var(--color-divider)] w-full my-2"></div></template>
@@ -436,13 +515,13 @@ onMounted(() => { loadTemplate(); });
                 <div class="my-4 border-t border-[var(--color-divider)]"></div>
                 <div class="text-13px font-500 mb-3 flex justify-between items-center">
                   <span>分栏配置 (最多4栏)</span>
-                  <a-button type="link" size="small" class="!p-0" @click="addColumn(activeField!)" :disabled="activeField.columns?.length >= 4">+ 添加栏</a-button>
+                  <a-button type="link" size="small" class="!p-0" @click="addColumn(activeField!)" :disabled="(activeField.columns?.length ?? 0) >= 4">+ 添加栏</a-button>
                 </div>
                 <div class="space-y-2">
                   <div v-for="(col, cIdx) in activeField.columns" :key="cIdx" class="flex items-center gap-2">
                     <span class="text-12px">第 {{ cIdx + 1 }} 栏 占比宽度</span>
                     <a-input-number v-model:value="col.span" :min="1" :max="24" size="small" class="flex-1" @change="markDirty" />
-                    <a-button type="text" danger size="small" class="!p-0" @click="removeColumn(activeField!, cIdx)" :disabled="activeField.columns?.length <= 1">
+                    <a-button type="text" danger size="small" class="!p-0" @click="removeColumn(activeField!, cIdx)" :disabled="(activeField.columns?.length ?? 0) <= 1">
                       <div class="i-material-symbols:close-rounded text-16px"></div>
                     </a-button>
                   </div>
@@ -535,12 +614,73 @@ onMounted(() => { loadTemplate(); });
                   <a-input placeholder="字典编码" v-model:value="activeField.optionSource.dictCode" @input="markDirty" />
                   <div class="text-11px text-[var(--color-text-placeholder)] mt-1">运行时自动从系统字典加载选项</div>
                 </div>
-                <div v-if="activeField.optionSource?.type === 'static'" class="space-y-2">
-                  <div v-for="(opt, idx) in activeField.options" :key="idx" class="flex items-center gap-2">
-                    <a-input v-model:value="opt.label" placeholder="显示值" size="small" style="width:100px" @input="markDirty" />
-                    <a-input v-model:value="opt.value" placeholder="实际值" size="small" style="width:100px" @input="markDirty" />
-                    <a-button type="text" danger size="small" class="!p-0" @click="removeOption(activeField!, idx)"><div class="i-material-symbols:close-rounded text-16px"></div></a-button>
+                <div v-if="activeField.optionSource?.type === 'static'" class="space-y-3">
+                  <div v-for="(opt, idx) in activeField.options" :key="idx" class="p-2 bg-[var(--bg-page)] rd-6px border border-[var(--color-border)]">
+                    <div class="flex items-center gap-2">
+                      <a-input v-model:value="opt.label" placeholder="显示值" size="small" style="width:100px" @input="markDirty" />
+                      <a-input v-model:value="opt.value" placeholder="实际值" size="small" style="width:80px" @input="markDirty" />
+                      <a-button
+                        v-if="activeField.type === 'radio' || activeField.type === 'checkbox'"
+                        type="text" size="small" class="!p-0 !text-[var(--color-text-secondary)]"
+                        :class="{ '!text-primary': opt.subFields && opt.subFields.length > 0 }"
+                        @click="toggleOptionExpand(idx)"
+                        title="配置子字段"
+                      >
+                        <div class="i-material-symbols:subdirectory-arrow-right-rounded text-16px"></div>
+                      </a-button>
+                      <a-button type="text" danger size="small" class="!p-0" @click="removeOption(activeField!, idx)"><div class="i-material-symbols:close-rounded text-16px"></div></a-button>
+                    </div>
+                    <!-- Sub-fields config for this option -->
+                    <div v-if="(activeField.type === 'radio' || activeField.type === 'checkbox') && expandedOptions.has(idx)" class="mt-2 pt-2 border-t border-[var(--color-divider)]">
+                      <div class="flex items-center justify-between mb-2">
+                        <span class="text-11px font-500 text-[var(--color-text-secondary)]">选中此项时显示：</span>
+                        <a-button type="link" size="small" class="!p-0 !text-11px" @click="addSubField(opt)">+ 添加字段</a-button>
+                      </div>
+                      <div v-if="!opt.subFields || opt.subFields.length === 0" class="text-11px text-[var(--color-text-placeholder)] pl-2">暂无子字段</div>
+                      <div v-for="(sf, sfIdx) in opt.subFields" :key="sf.id" class="flex items-center gap-1 mb-1.5">
+                        <a-input v-model:value="sf.label" placeholder="标签" size="small" style="width:70px" @input="markDirty" />
+                        <a-select v-model:value="sf.type" size="small" style="width:70px" @change="markDirty">
+                          <a-select-option value="input">文本</a-select-option>
+                          <a-select-option value="number">数字</a-select-option>
+                        </a-select>
+                        <a-input v-model:value="sf.suffix" placeholder="后缀" size="small" style="width:50px" @input="markDirty" />
+                        <a-button type="text" danger size="small" class="!p-0" @click="removeSubField(opt, sfIdx)"><div class="i-material-symbols:close-rounded text-14px"></div></a-button>
+                      </div>
+                    </div>
                   </div>
+                </div>
+              </template>
+
+              <!-- Inline Group Config -->
+              <template v-if="activeField.type === 'inline_group'">
+                <div class="my-4 border-t border-[var(--color-divider)]"></div>
+                <div class="text-13px font-500 mb-3 flex justify-between items-center">
+                  <span>内联元素</span>
+                  <div class="flex gap-2">
+                    <a-button type="link" size="small" class="!p-0 !text-11px" @click="addInlineItem(activeField!)">+ 文本</a-button>
+                    <a-button type="link" size="small" class="!p-0 !text-11px" @click="addInlineInput(activeField!)">+ 输入框</a-button>
+                  </div>
+                </div>
+                <div v-if="!activeField.inlineItems || activeField.inlineItems.length === 0" class="text-12px text-[var(--color-text-placeholder)] mb-2">添加文本或输入框组合成一行</div>
+                <div v-for="(item, iIdx) in activeField.inlineItems" :key="iIdx" class="mb-2 p-2 bg-[var(--bg-page)] rd-6px border border-[var(--color-border)]">
+                  <div class="flex items-center gap-1 mb-1">
+                    <a-select v-model:value="item.type" size="small" style="width:70px" @change="markDirty">
+                      <a-select-option value="text">文本</a-select-option>
+                      <a-select-option value="input">文本框</a-select-option>
+                      <a-select-option value="number">数字框</a-select-option>
+                    </a-select>
+                    <a-button type="text" danger size="small" class="!p-0 ml-auto" @click="removeInlineItem(activeField!, iIdx)"><div class="i-material-symbols:close-rounded text-14px"></div></a-button>
+                  </div>
+                  <template v-if="item.type === 'text'">
+                    <a-input v-model:value="item.content" placeholder="静态文本内容" size="small" @input="markDirty" />
+                  </template>
+                  <template v-else>
+                    <div class="flex gap-1">
+                      <a-input v-model:value="item.label" placeholder="占位提示" size="small" style="width:80px" @input="markDirty" />
+                      <a-input v-model:value="item.suffix" placeholder="后缀" size="small" style="width:50px" @input="markDirty" />
+                      <a-input v-model:value="item.width" placeholder="宽度" size="small" style="width:55px" @input="markDirty" />
+                    </div>
+                  </template>
                 </div>
               </template>
 
@@ -658,8 +798,34 @@ onMounted(() => { loadTemplate(); });
                     <a-select-option v-for="opt in field.options || []" :key="opt.value" :value="opt.value">{{ opt.label }}</a-select-option>
                   </a-select>
                 </template>
-                <template v-else-if="field.type === 'radio'"><a-radio-group><a-radio v-for="opt in field.options || []" :key="opt.value" :value="opt.value">{{ opt.label }}</a-radio></a-radio-group></template>
-                <template v-else-if="field.type === 'checkbox'"><a-checkbox-group><a-checkbox v-for="opt in field.options || []" :key="opt.value" :value="opt.value">{{ opt.label }}</a-checkbox></a-checkbox-group></template>
+                <template v-else-if="field.type === 'radio'">
+                  <div class="space-y-1.5">
+                    <div v-for="opt in field.options || []" :key="opt.value">
+                      <a-radio :value="opt.value">{{ opt.label }}</a-radio>
+                      <div v-if="opt.subFields && opt.subFields.length > 0" class="ml-6 mt-1 flex flex-wrap items-center gap-2">
+                        <template v-for="sf in opt.subFields" :key="sf.id">
+                          <span class="text-12px text-gray-500">{{ sf.label }}</span>
+                          <a-input size="small" :placeholder="sf.placeholder || '请输入'" style="width:80px" />
+                          <span v-if="sf.suffix" class="text-12px text-gray-500">{{ sf.suffix }}</span>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+                <template v-else-if="field.type === 'checkbox'">
+                  <div class="space-y-1.5">
+                    <div v-for="opt in field.options || []" :key="opt.value">
+                      <a-checkbox :value="opt.value">{{ opt.label }}</a-checkbox>
+                      <div v-if="opt.subFields && opt.subFields.length > 0" class="ml-6 mt-1 flex flex-wrap items-center gap-2">
+                        <template v-for="sf in opt.subFields" :key="sf.id">
+                          <span class="text-12px text-gray-500">{{ sf.label }}</span>
+                          <a-input size="small" :placeholder="sf.placeholder || '请输入'" style="width:80px" />
+                          <span v-if="sf.suffix" class="text-12px text-gray-500">{{ sf.suffix }}</span>
+                        </template>
+                      </div>
+                    </div>
+                  </div>
+                </template>
                 <template v-else-if="field.type === 'switch'"><a-switch size="small" /></template>
                 <template v-else-if="field.type === 'date'"><a-date-picker size="small" class="w-full" /></template>
                 <template v-else-if="field.type === 'image'">
@@ -671,6 +837,17 @@ onMounted(() => { loadTemplate(); });
                 <template v-else-if="field.type === 'location'">
                   <div class="h-36px rd-4px border border-gray-200 flex items-center px-3 text-12px text-gray-400">
                     <div class="i-material-symbols:location-on-outline-rounded text-16px mr-1"></div>点击选择位置
+                  </div>
+                </template>
+                <template v-else-if="field.type === 'inline_group'">
+                  <div class="flex flex-wrap items-center gap-1">
+                    <template v-for="(item, iIdx) in field.inlineItems" :key="iIdx">
+                      <span v-if="item.type === 'text'" class="text-13px text-gray-700">{{ item.content }}</span>
+                      <template v-else>
+                        <a-input size="small" :placeholder="item.label || '请输入'" :style="{ width: item.width || '80px' }" />
+                        <span v-if="item.suffix" class="text-12px text-gray-500">{{ item.suffix }}</span>
+                      </template>
+                    </template>
                   </div>
                 </template>
                 <template v-else-if="field.type === 'divider'"><div class="h-1px bg-gray-200 w-full my-2"></div></template>

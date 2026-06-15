@@ -130,7 +130,7 @@ export const request = createFlatRequest<App.Service.Response, RequestInstanceSt
         backendErrorCode = String(responseData?.code) || '';
         
         // 优先使用后端返回的 message（如"验证码错误"），再尝试友好映射
-        const backendMsg = responseData?.message || responseData?.msg || '';
+        const backendMsg = responseData?.message || (responseData as any)?.msg || '';
         if (backendMsg) {
           message = backendMsg;
         } else {

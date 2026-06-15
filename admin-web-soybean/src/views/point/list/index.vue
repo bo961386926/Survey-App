@@ -70,7 +70,6 @@
     <div class="flex-shrink-0 bg-[var(--bg-card)] rd-8px p-16px shadow-[var(--shadow-card)] mb-16px flex items-center gap-16px flex-wrap">
       <div class="w-180px">
         <a-select v-model:value="filters.projectId" placeholder="全部项目" class="w-full h-32px" @change="handleFilterChange">
-          <template #prefix><FolderOutlined class="text-14px text-[var(--color-text-secondary)]" /></template>
           <a-select-option :value="undefined">全部项目</a-select-option>
           <a-select-option v-for="project in projectOptions" :key="project.id" :value="project.id">{{ project.projectName }}</a-select-option>
         </a-select>
@@ -254,10 +253,41 @@
     </div>
 
     <!-- Modals -->
-    <a-modal v-model:visible="importModalVisible" title="导入点位" @ok="handleImportExcel" :confirm-loading="importLoading">
-      <div class="p-20px text-center">
-        <InboxOutlined class="text-48px text-[var(--color-text-disabled)] mb-16px" />
-        <p>此功能正在开发中...</p>
+    <!-- Import Modal -->
+    <a-modal v-model:open="importModalVisible" title="导入点位" @ok="handleImportExcel" :confirm-loading="importLoading">
+      <div class="py-16px">
+        <a-form layout="vertical">
+          <a-form-item label="所属项目">
+            <a-select v-model:value="importProjectId" placeholder="请选择项目" allow-clear>
+              <a-select-option v-for="p in projectOptions" :key="p.id" :value="p.id">{{ p.projectName }}</a-select-option>
+            </a-select>
+          </a-form-item>
+          <a-form-item label="选择文件">
+            <a-upload
+              :before-upload="() => false"
+              :max-count="1"
+              accept=".xlsx,.xls,.csv"
+              @change="handleImportFileChange"
+            >
+              <a-button>
+                <template #icon><InboxOutlined /></template>
+                选择Excel/CSV文件
+              </a-button>
+            </a-upload>
+          </a-form-item>
+          <div class="text-12px text-[var(--color-text-secondary)]">
+            <p>支持 .xlsx / .xls / .csv 格式</p>
+            <a @click="handleDownloadTemplate" class="text-[var(--color-primary)] cursor-pointer">下载导入模板</a>
+          </div>
+        </a-form>
+      </div>
+    </a-modal>
+
+    <!-- Batch Assign Modal -->
+    <a-modal v-model:open="batchAssignModalVisible" title="批量分配点位" @ok="handleBatchAssignSubmit" :confirm-loading="batchAssignLoading">
+      <div class="py-16px">
+        <p class="mb-12px text-[var(--color-text-secondary)]">已选择 {{ selectedRowKeys.length }} 个点位，请输入分配人：</p>
+        <a-input v-model:value="batchAssignee" placeholder="请输入分配人ID" />
       </div>
     </a-modal>
   </div>
@@ -266,7 +296,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
-import { message } from 'ant-design-vue';
+import { message, Modal } from 'ant-design-vue';
 import { 
   UnorderedListOutlined, 
   EnvironmentOutlined, 
@@ -281,7 +311,7 @@ import {
   MinusOutlined,
   InboxOutlined
 } from '@ant-design/icons-vue';
-import { fetchGetPointList } from '@/service/api';
+import { fetchGetPointList, fetchImportPoints, fetchBatchAssignPoints, fetchDeletePoint } from '@/service/api';
 import { fetchGetProjectList } from '@/service/api/project';
 import AMapComponent from '@/components/custom/amap-component.vue';
 
@@ -293,7 +323,7 @@ const route = useRoute();
 // 从 URL query 读取 projectId 过滤参数
 const urlProjectId = computed(() => route.query.projectId as string | undefined);
 const viewMode = ref<'list' | 'map'>('list');
-const activePointId = ref<number | null>(null);
+const activePointId = ref<string | number | null>(null);
 
 // Loading & Data
 const loading = ref(false);
@@ -439,24 +469,103 @@ const handleMarkerClick = (point: any) => {
 };
 
 // Batch
-const handleBatchAssign = () => message.info('功能开发中');
-const handleBatchDelete = () => message.info('功能开发中');
+const batchAssignModalVisible = ref(false);
+const batchAssignLoading = ref(false);
+const batchAssignee = ref<string>('');
+
+const handleBatchAssign = () => {
+  batchAssignee.value = '';
+  batchAssignModalVisible.value = true;
+};
+
+const handleBatchAssignSubmit = async () => {
+  if (!batchAssignee.value) {
+    message.warning('请输入分配人ID');
+    return;
+  }
+  batchAssignLoading.value = true;
+  try {
+    await fetchBatchAssignPoints({ pointIds: selectedRowKeys.value.map(Number), assigneeId: Number(batchAssignee.value) });
+    message.success(`成功分配 ${selectedRowKeys.value.length} 个点位`);
+    batchAssignModalVisible.value = false;
+    selectedRowKeys.value = [];
+    loadData();
+  } catch (e) {
+    message.error('批量分配失败');
+  } finally {
+    batchAssignLoading.value = false;
+  }
+};
+
+const handleBatchDelete = () => {
+  Modal.confirm({
+    title: `确认删除 ${selectedRowKeys.value.length} 个点位？`,
+    content: '删除后不可恢复，请谨慎操作。',
+    okType: 'danger',
+    onOk: async () => {
+      try {
+        const promises = selectedRowKeys.value.map(id => fetchDeletePoint(id));
+        await Promise.allSettled(promises);
+        message.success(`成功删除 ${selectedRowKeys.value.length} 个点位`);
+        selectedRowKeys.value = [];
+        loadData();
+      } catch (e) {
+        message.error('批量删除失败');
+      }
+    }
+  });
+};
 
 // Import
 const importModalVisible = ref(false);
 const importLoading = ref(false);
-const handleShowImportModal = () => importModalVisible.value = true;
-const handleImportExcel = () => {
+const importFile = ref<File | null>(null);
+const importProjectId = ref<number | undefined>(undefined);
+const handleShowImportModal = () => {
+  importFile.value = null;
+  importProjectId.value = filters.value.projectId;
+  importModalVisible.value = true;
+};
+
+const handleImportFileChange = (info: any) => {
+  const file = info.fileList?.[0]?.originFileObj || info.file;
+  if (file) importFile.value = file;
+};
+
+const handleImportExcel = async () => {
+  if (!importFile.value) {
+    message.warning('请选择Excel文件');
+    return;
+  }
   importLoading.value = true;
-  setTimeout(() => {
+  try {
+    const res = await fetchImportPoints(importFile.value);
+    if ((res as any)?.error) {
+      message.error('导入失败：' + ((res as any).message || '未知错误'));
+    } else {
+      message.success('导入成功');
+      importModalVisible.value = false;
+      loadData();
+    }
+  } catch (e) {
+    message.error('导入失败');
+  } finally {
     importLoading.value = false;
-    importModalVisible.value = false;
-    message.success('导入成功');
-  }, 1000);
+  }
 };
 
 const handleDownloadTemplate = () => {
-  message.info('导出功能开发中');
+  // Create a simple CSV template for download
+  const header = '点位名称,经度,纬度,所属项目,备注\n';
+  const sample = '示例点位001,116.397128,39.916527,项目名称,备注信息\n';
+  const blob = new Blob(['\uFEFF' + header + sample], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = '点位导入模板.csv';
+  link.click();
+  URL.revokeObjectURL(url);
+  message.success('模板已下载');
 };
 
 watch(() => route.query.projectId, () => {

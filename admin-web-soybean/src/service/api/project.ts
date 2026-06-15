@@ -7,7 +7,7 @@ export function fetchGetProjectList(params?: Api.Project.ProjectSearchParams) {
     pageNum: params?.current || 1,
     pageSize: params?.size || 10,
     projectName: params?.keyword || undefined,
-    status: params?.status ? parseInt(params.status) : undefined
+    status: params?.status ? parseInt(String(params.status)) : undefined
   };
   
   return request<Api.Project.ProjectList>({

@@ -8,7 +8,7 @@ import { transformElegantRoutesToVueRoutes } from '../elegant/transform';
  *
  * @link https://github.com/soybeanjs/elegant-router?tab=readme-ov-file#custom-route
  */
-const customRoutes: CustomRoute[] = [
+const customRoutes = [
   {
     name: 'map',
     path: '/point/map',
@@ -143,6 +143,30 @@ const customRoutes: CustomRoute[] = [
           permissions: ['system:dict'],
           hideInMenu: true,
           order: 6
+        }
+      },
+      {
+        name: 'system_announcement',
+        path: '/system/announcement',
+        component: 'view.system_announcement',
+        meta: {
+          title: 'system_announcement',
+          i18nKey: 'route.system_announcement',
+          icon: 'material-symbols:campaign-outline-rounded',
+          permissions: ['system:announcement'],
+          order: 7
+        }
+      },
+      {
+        name: 'system_collab',
+        path: '/system/collab',
+        component: 'view.system_collab',
+        meta: {
+          title: 'system_collab',
+          i18nKey: 'route.system_collab',
+          icon: 'material-symbols:handshake-outline-rounded',
+          permissions: ['system:user'],
+          order: 8
         }
       }
     ]
@@ -322,7 +346,7 @@ export function createStaticRoutes() {
   const customRouteNames = customRoutes.map(r => r.name);
   const filteredGeneratedRoutes = generatedRoutes.filter(r => !customRouteNames.includes(r.name));
 
-  [...customRoutes, ...filteredGeneratedRoutes].forEach(item => {
+  [...(customRoutes as any[]), ...filteredGeneratedRoutes].forEach(item => {
     if (item.meta?.constant) {
       constantRoutes.push(item);
     } else {

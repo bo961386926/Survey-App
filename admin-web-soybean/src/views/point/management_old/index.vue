@@ -204,7 +204,7 @@ const columns = [
   { title: '采集人', dataIndex: 'assignee', key: 'assignee', width: 150 },
   { title: '状态', dataIndex: 'status', key: 'status', width: 120 },
   { title: '版本', dataIndex: 'version', key: 'version', width: 100 },
-  { title: '操作', key: 'action', width: 100, fixed: 'right' }
+  { title: '操作', key: 'action', width: 100, fixed: 'right' as const }
 ];
 
 const tableData = ref([

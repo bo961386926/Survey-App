@@ -329,17 +329,17 @@ const handleCreate = async () => {
     } as any);
     
     if (!response.error && response.data) {
-      const templateId = response.data.id || response.data.templateId;
+      const templateId = response.data.id || (response.data as any).templateId;
       message.success('模板创建成功，进入设计器');
       // 跳转到新创建的模板设计器
       router.push(`/template/design/${templateId}`);
     } else {
-      message.error(response.message || '创建模板失败');
+      message.error((response as any).message || '创建模板失败');
       loading.value = false;
     }
   } catch (error) {
     console.error('Create template failed:', error);
-    message.error('创建模板失败：' + (error.message || '未知错误'));
+    message.error('创建模板失败：' + ((error as any).message || '未知错误'));
     loading.value = false;
   }
 };

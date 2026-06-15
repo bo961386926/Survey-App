@@ -6,3 +6,7 @@ export * from './point';
 export * from './audit';
 export * from './template';
 export * from './export';
+export * from './announcement';
+export * from './collab';
+export * from './statistics';
+export * from './task';

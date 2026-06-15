@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { message } from 'ant-design-vue';
+import { ref, reactive, onMounted } from 'vue';
+import { message, Modal } from 'ant-design-vue';
 import {
   fetchGetExportList,
   fetchCreateExport,
@@ -72,12 +72,55 @@ const handleReset = () => {
   handleSearch();
 };
 
-const handleCreateExport = () => {
-  message.info('打开创建导出任务对话框');
-  // TODO: Implement create export modal
+// Create Export Modal
+const showCreateModal = ref(false);
+const createLoading = ref(false);
+const createForm = reactive({
+  taskName: '',
+  taskType: 'point_list' as string,
+  projectId: undefined as number | undefined
+});
+
+const projectOptions = ref<any[]>([]);
+
+const loadProjectOptions = async () => {
+  try {
+    const { data } = await (await import('@/service/api/project')).fetchGetProjectList({ current: 1, size: 1000 });
+    if (data?.records) projectOptions.value = data.records;
+  } catch (e) { /* ignore */ }
 };
 
-const handleDownload = async (record: Api.Export.ExportTask) => {
+const handleCreateExport = () => {
+  createForm.taskName = '';
+  createForm.taskType = 'point_list';
+  createForm.projectId = undefined;
+  showCreateModal.value = true;
+  if (projectOptions.value.length === 0) loadProjectOptions();
+};
+
+const handleCreateSubmit = async () => {
+  if (!createForm.taskName) {
+    message.warning('请输入任务名称');
+    return;
+  }
+  createLoading.value = true;
+  try {
+    await fetchCreateExport({
+      taskName: createForm.taskName,
+      taskType: createForm.taskType as any,
+      params: { projectId: createForm.projectId }
+    });
+    message.success('导出任务创建成功');
+    showCreateModal.value = false;
+    loadData();
+  } catch (e) {
+    message.error('创建导出任务失败');
+  } finally {
+    createLoading.value = false;
+  }
+};
+
+const handleDownload = async (record: any) => {
   try {
     const response = await fetchDownloadExport(record.id);
     // Create download link
@@ -97,7 +140,7 @@ const handleDownload = async (record: Api.Export.ExportTask) => {
   }
 };
 
-const handleDelete = async (record: Api.Export.ExportTask) => {
+const handleDelete = async (record: any) => {
   try {
     await fetchDeleteExport(record.id);
     message.success('删除成功');
@@ -108,9 +151,18 @@ const handleDelete = async (record: Api.Export.ExportTask) => {
   }
 };
 
-const handleRetry = (record: Api.Export.ExportTask) => {
-  message.info('重试导出任务');
-  // TODO: Implement retry logic
+const handleRetry = async (record: any) => {
+  try {
+    await fetchCreateExport({
+      taskName: record.taskName + ' (重试)',
+      taskType: record.taskType,
+      params: record.params
+    });
+    message.success('重试任务已创建');
+    loadData();
+  } catch (e) {
+    message.error('重试失败');
+  }
 };
 
 const getStatusText = (status: string) => {
@@ -143,7 +195,7 @@ const getTaskTypeColor = (type: string) => {
   return colorMap[type] || 'default';
 };
 
-const getFileSize = (record: Api.Export.ExportTask) => {
+const getFileSize = (record: any) => {
   if (record.fileSize) {
     const bytes = record.fileSize;
     if (bytes < 1024) return bytes + ' B';
@@ -153,7 +205,7 @@ const getFileSize = (record: Api.Export.ExportTask) => {
   return '--';
 };
 
-const getProgress = (record: Api.Export.ExportTask) => {
+const getProgress = (record: any) => {
   if (record.status === 'completed') return 100;
   if (record.status === 'failed') return 0;
   if (record.status === 'processing') return 45; // Mock progress
@@ -267,6 +319,27 @@ onMounted(() => {
         </template>
       </a-table>
     </div>
+
+    <!-- Create Export Modal -->
+    <a-modal v-model:open="showCreateModal" title="新建导出任务" @ok="handleCreateSubmit" :confirm-loading="createLoading">
+      <a-form layout="vertical" class="mt-16px">
+        <a-form-item label="任务名称" required>
+          <a-input v-model:value="createForm.taskName" placeholder="请输入导出任务名称" />
+        </a-form-item>
+        <a-form-item label="导出类型">
+          <a-select v-model:value="createForm.taskType">
+            <a-select-option value="point_list">点位清单</a-select-option>
+            <a-select-option value="audit_result">审核结果</a-select-option>
+            <a-select-option value="pdf_report">PDF报告</a-select-option>
+          </a-select>
+        </a-form-item>
+        <a-form-item label="所属项目">
+          <a-select v-model:value="createForm.projectId" placeholder="可选，限定项目范围" allow-clear>
+            <a-select-option v-for="p in projectOptions" :key="p.id" :value="p.id">{{ p.projectName }}</a-select-option>
+          </a-select>
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 

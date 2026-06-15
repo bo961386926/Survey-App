@@ -102,7 +102,7 @@ const handleAdd = () => {
 };
 
 // 打开编辑弹窗
-const handleEdit = (record: DictItemData) => {
+const handleEdit = (record: any) => {
   editTitle.value = '编辑字典项';
   editingItem.value = record;
   Object.assign(editFormData, {
@@ -139,7 +139,7 @@ const handleEditSubmit = async () => {
 };
 
 // 删除字典项
-const handleDelete = (record: DictItemData) => {
+const handleDelete = (record: any) => {
   Modal.confirm({
     title: '确认删除？',
     content: `确定要删除字典项「${record.itemLabel}」吗？`,

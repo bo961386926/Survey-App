@@ -184,6 +184,8 @@ const routeMap: RouteMap = {
   "project_detail": "/project/detail/:id",
   "project_list": "/project/list",
   "system": "/system",
+  "system_announcement": "/system/announcement",
+  "system_collab": "/system/collab",
   "system_dict": "/system/dict",
   "system_help": "/system/help",
   "system_log": "/system/log",

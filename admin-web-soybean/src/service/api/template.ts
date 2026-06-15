@@ -3,10 +3,36 @@ import { request } from '../request';
 /** Base URL prefix */
 const TEMPLATE_BASE = '/template';
 
+/** Inline item for inline_group field: static text or editable input */
+export interface InlineItem {
+  type: 'text' | 'input' | 'number';
+  /** Static text content when type='text' */
+  content?: string;
+  /** Field ID for formData binding when type='input'|'number' */
+  id?: string;
+  /** Placeholder hint for input */
+  label?: string;
+  /** Unit text shown after input (e.g. "米") */
+  suffix?: string;
+  /** Input width, default 80px */
+  width?: string;
+}
+
+/** Sub-field attached to a radio/checkbox option */
+export interface OptionSubField {
+  id: string;
+  label: string;
+  type: 'input' | 'number';
+  placeholder?: string;
+  suffix?: string;
+}
+
 /** Field JSON schema type for design */
 export interface FieldOption {
   label: string;
   value: string;
+  /** Sub-fields shown when this option is selected (radio/checkbox only) */
+  subFields?: OptionSubField[];
 }
 
 export interface LinkageCondition {
@@ -41,7 +67,7 @@ export interface ImageConfig {
 
 export interface FieldSchema {
   id: string;
-  type: 'input' | 'textarea' | 'number' | 'select' | 'radio' | 'checkbox' | 'switch' | 'date' | 'image' | 'location' | 'divider' | 'grid';
+  type: 'input' | 'textarea' | 'number' | 'select' | 'radio' | 'checkbox' | 'switch' | 'date' | 'image' | 'location' | 'divider' | 'grid' | 'inline_group';
   label: string;
   placeholder?: string;
   required: boolean;
@@ -65,6 +91,8 @@ export interface FieldSchema {
   prefix?: string;
   /** Inline Input: suffix text */
   suffix?: string;
+  /** Inline group: mixed text + input items */
+  inlineItems?: InlineItem[];
 }
 
 export interface TemplateSaveDraft {

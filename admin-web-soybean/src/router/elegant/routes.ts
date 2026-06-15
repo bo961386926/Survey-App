@@ -228,6 +228,22 @@ export const generatedRoutes: GeneratedRoute[] = [
     },
     children: [
       {
+        name: 'system_announcement',
+        path: '/system/announcement',
+        component: 'view.system_announcement',
+        meta: {
+          title: 'system_announcement'
+        }
+      },
+      {
+        name: 'system_collab',
+        path: '/system/collab',
+        component: 'view.system_collab',
+        meta: {
+          title: 'system_collab'
+        }
+      },
+      {
         name: 'system_dict',
         path: '/system/dict',
         component: 'view.system_dict',

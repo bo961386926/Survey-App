@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { fetchGetOperationLogList } from '@/service/api/system-manage';
 
 defineOptions({
   name: 'ProjectNews'
@@ -17,40 +18,56 @@ interface ActivityItem {
   dotColor: string;
 }
 
-const activities = computed<ActivityItem[]>(() => [
-  {
-    id: 1,
-    type: 'create',
-    title: '新建',
-    description: '张管理 在project「A1标段排污口勘查项目」进行了新建',
-    time: '6天前',
-    dotColor: 'var(--color-primary)'
-  },
-  {
-    id: 2,
-    type: 'submit',
-    title: '提交',
-    description: '刘晨 在survey「西闸口 001」进行了提交',
-    time: '6天前',
-    dotColor: 'var(--color-primary)'
-  },
-  {
-    id: 3,
-    type: 'update',
-    title: '更新',
-    description: '王审核 在survey「东排口 003」进行了更新',
-    time: '6天前',
-    dotColor: 'var(--color-success)'
-  },
-  {
-    id: 4,
-    type: 'update',
-    title: '更新',
-    description: '张管理 在template「排污口标准模板 v2」进行了更新',
-    time: '6天前',
-    dotColor: 'var(--color-success)'
+const loading = ref(false);
+const activities = ref<ActivityItem[]>([]);
+
+const actionTypeMap: Record<string, { type: string; title: string; dotColor: string }> = {
+  '创建': { type: 'create', title: '新建', dotColor: 'var(--color-primary)' },
+  '提交': { type: 'submit', title: '提交', dotColor: 'var(--color-primary)' },
+  '更新': { type: 'update', title: '更新', dotColor: 'var(--color-success)' },
+  '删除': { type: 'delete', title: '删除', dotColor: 'var(--color-danger)' },
+  '审核': { type: 'audit', title: '审核', dotColor: 'var(--color-warning)' }
+};
+
+const formatTimeAgo = (dateStr: string) => {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 60) return `${minutes}分钟前`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}小时前`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}天前`;
+  return `${Math.floor(days / 30)}月前`;
+};
+
+const loadActivities = async () => {
+  loading.value = true;
+  try {
+    const { data } = await fetchGetOperationLogList({ current: 1, size: 6 });
+    if (data?.records) {
+      activities.value = data.records.map((item: any) => {
+        const actionInfo = actionTypeMap[item.action] || { type: 'update', title: item.action || '操作', dotColor: 'var(--color-primary)' };
+        return {
+          id: item.id,
+          type: actionInfo.type,
+          title: actionInfo.title,
+          description: `${item.username || '未知'} 在${item.module || '系统'}进行了${item.action || '操作'}`,
+          time: formatTimeAgo(item.createTime),
+          dotColor: actionInfo.dotColor
+        };
+      });
+    }
+  } catch (e) {
+    console.error('Failed to load activities', e);
+  } finally {
+    loading.value = false;
   }
-]);
+};
+
+onMounted(() => {
+  loadActivities();
+});
 
 const quickActions = [
   {

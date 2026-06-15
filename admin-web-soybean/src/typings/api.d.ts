@@ -154,7 +154,7 @@ declare namespace Api {
 
     /** user search params */
     type UserSearchParams = Partial<
-      Pick<Api.SystemManage.User, 'userName' | 'userGender' | 'nickName' | 'userPhone' | 'userEmail' | 'status'> &
+      Pick<Api.SystemManage.User, 'username' | 'userGender' | 'nickName' | 'userPhone' | 'userEmail' | 'status'> &
         Common.CommonSearchParams
     >;
 
@@ -325,6 +325,9 @@ declare namespace Api {
       assigneeName: string;
       latestVersion: number;
       abnormalTags: string[];
+      // Joined fields from project (optional)
+      projectName?: string;
+      projectCode?: string;
       // Client-side fields for UI (optional mapping)
       type?: string;
     }
@@ -540,6 +543,84 @@ declare namespace Api {
         pointIds?: number[];
         status?: string;
       };
+    }
+  }
+
+  /**
+   * namespace Announcement
+   */
+  namespace Announcement {
+    interface AnnouncementInfo {
+      id: number;
+      title: string;
+      type: string;
+      content: string;
+      publisherId: number;
+      status: number;
+      publishTime?: string;
+      targetScope?: string;
+      createTime: string;
+      updateTime?: string;
+    }
+
+    type AnnouncementSearchParams = Partial<Common.PaginatingCommonParams> & {
+      keyword?: string;
+      type?: string;
+      status?: number;
+    };
+
+    type AnnouncementList = Common.PaginatingQueryRecord<AnnouncementInfo>;
+  }
+
+  /**
+   * namespace Collab
+   */
+  namespace Collab {
+    interface CollabEntryInfo {
+      id: number;
+      entryName: string;
+      token: string;
+      projectIds?: string;
+      pointIds?: string;
+      permissions?: string;
+      expireTime?: string;
+      status: number;
+      creatorId?: number;
+      accessCount?: number;
+      lastAccessTime?: string;
+      createTime: string;
+      updateTime?: string;
+    }
+
+    type CollabSearchParams = Partial<Common.PaginatingCommonParams> & {
+      keyword?: string;
+    };
+
+    type CollabList = Common.PaginatingQueryRecord<CollabEntryInfo>;
+  }
+
+  /**
+   * namespace Statistics
+   */
+  namespace Statistics {
+    interface SystemOverview {
+      totalUsers: number;
+      totalProjects: number;
+      totalPoints: number;
+      auditRate: number;
+      [key: string]: any;
+    }
+
+    interface UserStats {
+      activeUsers: number;
+      roleDistribution: Record<string, number>;
+      [key: string]: any;
+    }
+
+    interface ProjectStats {
+      statusDistribution: Record<string, number>;
+      progressStats: Record<string, number>;
+      [key: string]: any;
     }
   }
 }

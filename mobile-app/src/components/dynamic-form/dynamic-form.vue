@@ -132,6 +132,24 @@
         @change="(val: any) => onLocationChange(val, field)"
       />
 
+      <!-- Inline Group: mixed text + inputs on one line -->
+      <view v-else-if="field.type === 'inline_group'" class="inline-group">
+        <template v-for="(item, iIdx) in field.inlineItems" :key="iIdx">
+          <text v-if="item.type === 'text'" class="inline-group-text">{{ item.content }}</text>
+          <view v-else class="inline-group-input">
+            <input
+              class="inline-group-field"
+              v-model="formData[item.id]"
+              :type="item.type === 'number' ? 'digit' : 'text'"
+              :placeholder="item.label || '请输入'"
+              :style="{ width: item.width || '80px' }"
+              :disabled="field.disabled || readonly"
+            />
+            <text v-if="item.suffix" class="inline-group-suffix">{{ item.suffix }}</text>
+          </view>
+        </template>
+      </view>
+
       <!-- Divider -->
       <view v-else-if="field.type === 'divider'" class="form-divider"></view>
 
@@ -480,6 +498,11 @@ defineExpose({ validate, getFormData })
 .sub-field-input { flex: 1; padding: 6px 10px; border: 1px solid #DCDFE6; border-radius: 4px; font-size: 14px; min-width: 60px; max-width: 150px; background-color: #fff; }
 .sub-field-suffix { font-size: 14px; color: #333; white-space: nowrap; }
 .form-divider { height: 1px; background: #eee; margin: 12px 0; }
+.inline-group { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.inline-group-text { font-size: 14px; color: #333; white-space: nowrap; }
+.inline-group-input { display: flex; align-items: center; gap: 4px; }
+.inline-group-field { padding: 4px 8px; border: 1px solid #DCDFE6; border-radius: 4px; font-size: 14px; background: #fff; }
+.inline-group-suffix { font-size: 14px; color: #333; white-space: nowrap; }
 .error-tip { margin-top: 4px; }
 .error-tip text { font-size: 12px; color: #F56C6C; }
 </style>

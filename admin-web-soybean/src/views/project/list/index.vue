@@ -130,7 +130,7 @@ const handleUpdateStatus = async (record: Api.Project.ProjectInfo, status: numbe
   }
 };
 
-const getProgressPercent = (record: Api.Project.ProjectInfo) => {
+const getProgressPercent = (record: any) => {
   return Math.round((record.completedCount / (record.pointCount || 1)) * 100);
 };
 

@@ -114,3 +114,26 @@ export function fetchGetMenuTree() {
     method: 'get'
   });
 }
+
+/** get operation log list */
+export function fetchGetOperationLogList(params?: { current?: number; size?: number; module?: string; keyword?: string }) {
+  return request<any>({
+    url: '/log/operation/page',
+    method: 'get',
+    params: {
+      pageNum: params?.current || 1,
+      pageSize: params?.size || 10,
+      module: params?.module,
+      keyword: params?.keyword
+    }
+  });
+}
+
+/** get operation log trend */
+export function fetchGetOperationLogTrend(params?: { startDate?: string; endDate?: string }) {
+  return request<Record<string, number>>({
+    url: '/log/operation/statistics/trend',
+    method: 'get',
+    params
+  });
+}

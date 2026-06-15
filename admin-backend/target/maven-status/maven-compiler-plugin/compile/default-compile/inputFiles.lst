@@ -30,6 +30,7 @@
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/AutoFillHandler.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/CacheConfig.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/DataSourceConfig.java
+/Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/JacksonConfig.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/Knife4jConfig.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/MybatisPlusConfig.java
 /Users/wuxb/Desktop/QH-Dev/AIProgects/Survey-App/admin-backend/src/main/java/com/qhiot/survey/config/OssConfig.java

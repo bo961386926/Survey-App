@@ -38,6 +38,8 @@ declare module "@elegant-router/types" {
     "project_detail": "/project/detail/:id";
     "project_list": "/project/list";
     "system": "/system";
+    "system_announcement": "/system/announcement";
+    "system_collab": "/system/collab";
     "system_dict": "/system/dict";
     "system_help": "/system/help";
     "system_log": "/system/log";
@@ -128,6 +130,8 @@ declare module "@elegant-router/types" {
     | "point_map"
     | "project_detail"
     | "project_list"
+    | "system_announcement"
+    | "system_collab"
     | "system_dict"
     | "system_help"
     | "system_log"

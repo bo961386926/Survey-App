@@ -111,3 +111,18 @@ declare namespace Env {
 interface ImportMeta {
   readonly env: Env.ImportMeta;
 }
+
+declare module '*.vue' {
+  import type { DefineComponent } from 'vue';
+  const component: DefineComponent<Record<string, unknown>, Record<string, unknown>, unknown>;
+  export default component;
+}
+
+// Legacy JS API modules (not yet migrated to TypeScript)
+declare module '@/api/user';
+declare module '@/api/role';
+declare module '@/api/point';
+declare module '@/api/project';
+declare module '@/api/request';
+declare module '@/api/result';
+declare module '@/api/template';

@@ -4,6 +4,8 @@
  */
 
 const AMAP_JSAPI_VERSION = '1.4.15';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const win = window as any;
 const AMAP_SECURITY_CONFIG = {
   key: '6b6697c339d48f245660d0e79ecc0945',
   securityJsCode: '' // 如果需要安全密钥，请在这里添加
@@ -41,7 +43,7 @@ export function loadAMap(): Promise<void> {
     isLoading = true;
 
     // Set security configuration
-    window._AMapSecurityConfig = AMAP_SECURITY_CONFIG;
+    win._AMapSecurityConfig = AMAP_SECURITY_CONFIG;
 
     console.log('[AMap] Starting to load AMap API...');
     console.log('[AMap] API Key:', AMAP_SECURITY_CONFIG.key);
@@ -54,7 +56,7 @@ export function loadAMap(): Promise<void> {
 
     script.onload = () => {
       console.log('[AMap] AMap API loaded successfully');
-      console.log('[AMap] window.AMap available:', typeof window.AMap !== 'undefined');
+      console.log('[AMap] window.AMap available:', typeof win.AMap !== 'undefined');
       isLoaded = true;
       isLoading = false;
       resolve();
@@ -78,7 +80,7 @@ export function loadAMap(): Promise<void> {
  * Check if AMap is loaded
  */
 export function isAMapLoaded(): boolean {
-  return isLoaded && typeof window.AMap !== 'undefined';
+  return isLoaded && typeof win.AMap !== 'undefined';
 }
 
 /**
@@ -90,13 +92,3 @@ export function resetAMapState() {
   loadPromise = null;
 }
 
-// Type declarations for window
-declare global {
-  interface Window {
-    _AMapSecurityConfig: {
-      key: string;
-      securityJsCode?: string;
-    };
-    AMap: any;
-  }
-}

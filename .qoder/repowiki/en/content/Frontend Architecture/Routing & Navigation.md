@@ -20,7 +20,20 @@
 - [utils/storage.ts](file://admin-web-soybean/src/utils/storage.ts)
 - [views/home/index.vue](file://admin-web-soybean/src/views/home/index.vue)
 - [views/_builtin/login/index.vue](file://admin-web-soybean/src/views/_builtin/login/index.vue)
+- [views/point/list/index.vue](file://admin-web-soybean/src/views/point/list/index.vue)
+- [views/point/management_old/index.vue](file://admin-web-soybean/src/views/point/management_old/index.vue)
+- [views/task_center/detail/index.vue](file://admin-web-soybean/src/views/task_center/detail/index.vue)
+- [views/task_center/list/index.vue](file://admin-web-soybean/src/views/task_center/list/index.vue)
+- [views/task_center/map/index.vue](file://admin-web-soybean/src/views/task_center/map/index.vue)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Updated point management routing with new nested hierarchy under `/point/management`
+- Simplified task center routing with streamlined navigation structure
+- Enhanced navigation organization with improved route categorization
+- Added new point management views and task center components
+- Restructured route definitions for better maintainability
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -72,6 +85,11 @@ end
 subgraph "Views"
 VHome["src/views/home/index.vue"]
 VLogin["src/views/_builtin/login/index.vue"]
+VPointList["src/views/point/list/index.vue"]
+VPointOld["src/views/point/management_old/index.vue"]
+VTaskDetail["src/views/task_center/detail/index.vue"]
+VTaskList["src/views/task_center/list/index.vue"]
+VTaskMap["src/views/task_center/map/index.vue"]
 end
 RIndex --> RBuiltin
 RIndex --> RElegantRoutes
@@ -87,6 +105,11 @@ SRoute --> RIndex
 SAuth --> RIndex
 RElegantImports --> BL
 RElegantImports --> BaseL
+RElegantImports --> VPointList
+RElegantImports --> VPointOld
+RElegantImports --> VTaskDetail
+RElegantImports --> VTaskList
+RElegantImports --> VTaskMap
 RIndex --> VHome
 RIndex --> VLogin
 ```
@@ -107,6 +130,11 @@ RIndex --> VLogin
 - [layouts/base-layout/index.vue:1-149](file://admin-web-soybean/src/layouts/base-layout/index.vue#L1-L149)
 - [views/home/index.vue:1-152](file://admin-web-soybean/src/views/home/index.vue#L1-L152)
 - [views/_builtin/login/index.vue:1-152](file://admin-web-soybean/src/views/_builtin/login/index.vue#L1-L152)
+- [views/point/list/index.vue](file://admin-web-soybean/src/views/point/list/index.vue)
+- [views/point/management_old/index.vue](file://admin-web-soybean/src/views/point/management_old/index.vue)
+- [views/task_center/detail/index.vue](file://admin-web-soybean/src/views/task_center/detail/index.vue)
+- [views/task_center/list/index.vue](file://admin-web-soybean/src/views/task_center/list/index.vue)
+- [views/task_center/map/index.vue](file://admin-web-soybean/src/views/task_center/map/index.vue)
 
 **Section sources**
 - [index.ts:1-92](file://admin-web-soybean/src/router/index.ts#L1-L92)
@@ -203,6 +231,39 @@ end
 - [elegant/routes.ts:8-313](file://admin-web-soybean/src/router/elegant/routes.ts#L8-L313)
 - [elegant/imports.ts:9-40](file://admin-web-soybean/src/router/elegant/imports.ts#L9-L40)
 - [elegant/transform.ts:16-158](file://admin-web-soybean/src/router/elegant/transform.ts#L16-L158)
+
+### Restructured Point Management Routing
+**Updated** The point management routing has been restructured with a new nested hierarchy under `/point/management` for improved organization and maintainability.
+
+- New point management route hierarchy:
+  - Parent route: `/point/management` with dedicated point management view
+  - Child routes for different point management functions
+  - Legacy point management route preserved for backward compatibility
+- Enhanced navigation organization with clearer separation between old and new point management interfaces
+- Improved route categorization for better developer experience
+
+**Section sources**
+- [elegant/routes.ts:151-168](file://admin-web-soybean/src/router/elegant/routes.ts#L151-L168)
+- [elegant/imports.ts:28-28](file://admin-web-soybean/src/router/elegant/imports.ts#L28-L28)
+- [views/point/list/index.vue](file://admin-web-soybean/src/views/point/list/index.vue)
+- [views/point/management_old/index.vue](file://admin-web-soybean/src/views/point/management_old/index.vue)
+
+### Simplified Task Center Routing
+**Updated** The task center routing has been streamlined with a simplified navigation structure for improved user experience and reduced complexity.
+
+- Streamlined task center route structure:
+  - Task list route: `/task_center/list` for task overview
+  - Task detail route: `/task_center/detail` for individual task information
+  - Task map route: `/task_center/map` for geographic task visualization
+- Removed redundant nested routes and consolidated similar functionality
+- Improved navigation flow with logical grouping of task-related operations
+
+**Section sources**
+- [elegant/routes.ts:167-173](file://admin-web-soybean/src/router/elegant/routes.ts#L167-L173)
+- [elegant/imports.ts:38-40](file://admin-web-soybean/src/router/elegant/imports.ts#L38-L40)
+- [views/task_center/detail/index.vue](file://admin-web-soybean/src/views/task_center/detail/index.vue)
+- [views/task_center/list/index.vue](file://admin-web-soybean/src/views/task_center/list/index.vue)
+- [views/task_center/map/index.vue](file://admin-web-soybean/src/views/task_center/map/index.vue)
 
 ### Route Guards Implementation
 - Progress guard starts a progress indicator on navigation and completes after the route changes.
@@ -335,7 +396,8 @@ StoreAuth --> Router
 Router --> ElegantTransform["Transform (elegant/transform.ts)"]
 ElegantTransform --> ElegantImports["Imports (elegant/imports.ts)"]
 ElegantImports --> Layouts["Layouts (base/blank)"]
-Router --> Views["Views (home/login)"]
+ElegantImports --> Views["Views (home/login/point/task_center)"]
+Router --> Views
 ```
 
 **Diagram sources**
@@ -352,6 +414,11 @@ Router --> Views["Views (home/login)"]
 - [layouts/blank-layout/index.vue:9-11](file://admin-web-soybean/src/layouts/blank-layout/index.vue#L9-L11)
 - [views/home/index.vue:1-152](file://admin-web-soybean/src/views/home/index.vue#L1-L152)
 - [views/_builtin/login/index.vue:1-152](file://admin-web-soybean/src/views/_builtin/login/index.vue#L1-L152)
+- [views/point/list/index.vue](file://admin-web-soybean/src/views/point/list/index.vue)
+- [views/point/management_old/index.vue](file://admin-web-soybean/src/views/point/management_old/index.vue)
+- [views/task_center/detail/index.vue](file://admin-web-soybean/src/views/task_center/detail/index.vue)
+- [views/task_center/list/index.vue](file://admin-web-soybean/src/views/task_center/list/index.vue)
+- [views/task_center/map/index.vue](file://admin-web-soybean/src/views/task_center/map/index.vue)
 
 **Section sources**
 - [index.ts:54-65](file://admin-web-soybean/src/router/index.ts#L54-L65)
@@ -363,8 +430,6 @@ Router --> Views["Views (home/login)"]
 - Use keepAlive and cache route names for frequently accessed pages.
 - Minimize deep nested routes; leverage flat hierarchy with redirects where appropriate.
 - Avoid unnecessary guards work; short-circuit when constant routes are ready.
-
-[No sources needed since this section provides general guidance]
 
 ## Troubleshooting Guide
 - Navigation stuck on not-found: Ensure constant and auth routes are initialized; guards will re-navigate to the intended route after initialization.
@@ -379,9 +444,7 @@ Router --> Views["Views (home/login)"]
 - [utils/storage.ts:5-9](file://admin-web-soybean/src/utils/storage.ts#L5-L9)
 
 ## Conclusion
-The routing system leverages elegant-router to provide a clean separation between route definitions and Vue Router configuration. Guards enforce robust navigation policies, while stores manage initialization, caching, and dynamic updates. The layout system and lazy-loaded views contribute to a responsive and maintainable SPA.
-
-[No sources needed since this section summarizes without analyzing specific files]
+The routing system leverages elegant-router to provide a clean separation between route definitions and Vue Router configuration. Guards enforce robust navigation policies, while stores manage initialization, caching, and dynamic updates. The layout system and lazy-loaded views contribute to a responsive and maintainable SPA. Recent restructuring improvements enhance navigation organization and maintainability through improved route hierarchies and simplified routing patterns.
 
 ## Appendices
 
@@ -397,3 +460,7 @@ The routing system leverages elegant-router to provide a clean separation betwee
 ### Environment and Storage
 - History mode and base URL: [router bootstrap:13-19](file://admin-web-soybean/src/router/index.ts#L13-L19).
 - Token storage: [local storage utility:5-9](file://admin-web-soybean/src/utils/storage.ts#L5-L9).
+
+### Restructured Routing Examples
+- Point management nested hierarchy: see [point management routes:151-168](file://admin-web-soybean/src/router/elegant/routes.ts#L151-L168).
+- Task center simplified structure: see [task center routes:167-173](file://admin-web-soybean/src/router/elegant/routes.ts#L167-L173).

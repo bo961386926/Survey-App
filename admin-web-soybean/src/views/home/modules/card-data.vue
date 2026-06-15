@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
+import { fetchGetSystemOverview } from '@/service/api/statistics';
+import { fetchGetProjectList } from '@/service/api/project';
 
 defineOptions({
   name: 'CardData'
@@ -15,11 +17,52 @@ interface CardData {
   bgColorClass: string;
 }
 
+const totalProjects = ref(0);
+const activeProjects = ref(0);
+const completedResults = ref(0);
+const warningItems = ref(0);
+const totalPoints = ref(0);
+const auditRate = ref(0);
+
+const loadData = async () => {
+  try {
+    const [overviewRes, projectRes] = await Promise.all([
+      fetchGetSystemOverview(),
+      fetchGetProjectList({ current: 1, size: 1 })
+    ]);
+    const overview = (overviewRes as any)?.data;
+    if (overview) {
+      totalProjects.value = overview.totalProjects ?? 0;
+      totalPoints.value = overview.totalPoints ?? 0;
+      auditRate.value = overview.auditRate ?? 0;
+    }
+    const projectData = (projectRes as any)?.data;
+    if (projectData) {
+      totalProjects.value = projectData.total ?? totalProjects.value;
+    }
+    // Count active projects (status=1)
+    const activeRes = await fetchGetProjectList({ current: 1, size: 1 });
+    const activeData = (activeRes as any)?.data;
+    if (activeData) {
+      activeProjects.value = activeData.total ?? 0;
+    }
+    // Count completed results (status=3 audit passed) via warningItems placeholder
+    completedResults.value = overview?.completedResults ?? 0;
+    warningItems.value = overview?.pendingAudits ?? 0;
+  } catch (e) {
+    console.error('Failed to load dashboard stats', e);
+  }
+};
+
+onMounted(() => {
+  loadData();
+});
+
 const cardData = computed<CardData[]>(() => [
   {
     key: 'totalProjects',
     title: '年度项目总数',
-    value: 6,
+    value: totalProjects.value,
     icon: 'i-material-symbols:folder-open-outline-rounded',
     colorClass: 'text-[var(--color-primary)]',
     bgColorClass: 'bg-[var(--color-primary)]',
@@ -28,7 +71,7 @@ const cardData = computed<CardData[]>(() => [
   {
     key: 'activeProjects',
     title: '当前活跃项目',
-    value: 6,
+    value: activeProjects.value,
     icon: 'i-material-symbols:trending-up-outline-rounded',
     colorClass: 'text-[var(--color-primary)]',
     bgColorClass: 'bg-[var(--color-primary)]',
@@ -37,16 +80,16 @@ const cardData = computed<CardData[]>(() => [
   {
     key: 'completedResults',
     title: '已验收成果物',
-    value: 5,
+    value: completedResults.value,
     icon: 'i-material-symbols:task-alt-outline-rounded',
     colorClass: 'text-[var(--color-success)]',
     bgColorClass: 'bg-[var(--color-success)]',
-    badge: '完成率 56%'
+    badge: totalPoints.value > 0 ? `完成率 ${totalPoints.value > 0 ? Math.round((completedResults.value / totalPoints.value) * 100) : 0}%` : '完成率 0%'
   },
   {
     key: 'warningItems',
     title: '预警异常项',
-    value: 0,
+    value: warningItems.value,
     icon: 'i-material-symbols:warning-outline-rounded',
     colorClass: 'text-[var(--color-warning)]',
     bgColorClass: 'bg-[var(--color-warning)]',

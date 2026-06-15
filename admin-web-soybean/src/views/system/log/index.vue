@@ -169,6 +169,7 @@ interface BackendLogItem {
   id: number;
   userId: number;
   username: string;
+  role?: string;
   module: string;
   action: string;
   detail: string;
@@ -324,6 +325,7 @@ const formatLogItem = (item: BackendLogItem): LogItem => {
     operator: item.username || '未知',
     operatorInitial,
     operatorColor,
+    role: item.role || '普通用户',
     module: item.module || '未知',
     moduleIcon,
     moduleColor: 'var(--color-primary)',

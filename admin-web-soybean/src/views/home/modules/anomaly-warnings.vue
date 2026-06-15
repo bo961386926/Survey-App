@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, onMounted } from 'vue';
+import { fetchGetAuditList } from '@/service/api/audit';
 
 defineOptions({
   name: 'AnomalyWarnings'
@@ -13,13 +14,32 @@ interface Warning {
   delayDays: number;
 }
 
-const warnings = computed<Warning[]>(() => [
-  { id: 1, name: '建安路北排口', project: '亳州市城区入河排污口排查项目', status: '待审核', delayDays: 6 },
-  { id: 2, name: '涡河上游A1排口', project: '涡河流域排污口专项勘查', status: '待审核', delayDays: 6 },
-  { id: 3, name: '涡河中游B1排口', project: '涡河流域排污口专项勘查', status: '待审核', delayDays: 6 },
-  { id: 4, name: '小涧镇排口', project: '蒙城县农村排污口普查', status: '待审核', delayDays: 6 },
-  { id: 5, name: '阚疃镇排口', project: '利辛县河道排污口整治勘查', status: '待审核', delayDays: 6 }
-]);
+const loading = ref(false);
+const warnings = ref<Warning[]>([]);
+
+const loadWarnings = async () => {
+  loading.value = true;
+  try {
+    const { data } = await fetchGetAuditList({ current: 1, size: 5 });
+    if (data?.records) {
+      warnings.value = data.records.map((item: any) => ({
+        id: item.id,
+        name: item.pointName || item.name || '未知点位',
+        project: item.projectName || '未知项目',
+        status: '待审核',
+        delayDays: item.createTime ? Math.floor((Date.now() - new Date(item.createTime).getTime()) / (1000 * 60 * 60 * 24)) : 0
+      }));
+    }
+  } catch (e) {
+    console.error('Failed to load warnings', e);
+  } finally {
+    loading.value = false;
+  }
+};
+
+onMounted(() => {
+  loadWarnings();
+});
 </script>
 
 <template>

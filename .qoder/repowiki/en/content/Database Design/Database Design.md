@@ -33,11 +33,12 @@
 ## Update Summary
 **Changes Made**
 - Added comprehensive tenant isolation infrastructure with sys_tenant table and tenant_id columns
-- Extended tenant_id to 15 business entities including project, survey_point, survey_template, and announcement tables
+- Extended tenant_id to 13 core business tables including project, survey_point, survey_template, and announcement tables
 - Implemented automatic tenant filtering through MyBatis Plus TenantLineInterceptor
 - Added TenantContext utility for request-scoped tenant management
 - Updated migration scripts to support tenant-aware database schema evolution
 - Enhanced security layer with tenant-aware authentication and authorization
+- **Updated**: Expanded tenant.sql migration script with 196 lines including 142 lines of stored procedures for safe column/index additions and comprehensive data backfill mechanisms
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -539,7 +540,7 @@ DB-->>Script : Result (Created/Exists)
 **Section sources**
 - [init.sql:1-513](file://init-sql/init.sql#L1-L513)
 - [add_task_table.sql:1-100](file://init-sql/add_task_table.sql#L1-L100)
-- [tenant.sql:1-98](file://init-sql/tenant.sql#L1-L98)
+- [tenant.sql:1-196](file://init-sql/tenant.sql#L1-L196)
 - [01-init.sql:1-516](file://admin-backend/init-data/01-init.sql#L1-L516)
 - [02-role-tables.sql:1-200](file://admin-backend/init-data/02-role-tables.sql#L1-L200)
 - [03-offline-data-sync.sql:1-150](file://admin-backend/init-data/03-offline-data-sync.sql#L1-L150)

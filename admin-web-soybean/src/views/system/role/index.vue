@@ -41,7 +41,7 @@ const columns = [
   { title: '角色描述', dataIndex: 'description', key: 'description' },
   { title: '状态', dataIndex: 'status', key: 'status', width: 100 },
   { title: '创建时间', dataIndex: 'createTime', key: 'createTime', width: 180 },
-  { title: '操作', key: 'action', width: 200, fixed: 'right' }
+  { title: '操作', key: 'action', width: 200, fixed: 'right' as const }
 ];
 
 // 获取角色列表
@@ -307,7 +307,7 @@ onMounted(() => {
         </a-form-item>
 
         <a-form-item label="状态">
-          <a-switch :checked="newRoleForm.status === 1" @change="(checked: boolean) => newRoleForm.status = checked ? 1 : 0" />
+          <a-switch :checked="newRoleForm.status === 1" @change="(checked: any) => newRoleForm.status = checked ? 1 : 0" />
           <span class="ml-2">{{ newRoleForm.status === 1 ? '启用' : '禁用' }}</span>
         </a-form-item>
       </a-form>
@@ -341,7 +341,7 @@ onMounted(() => {
         <a-form-item label="状态">
           <a-switch
             :checked="editRoleForm.status === 1"
-            @change="(checked: boolean) => editRoleForm.status = checked ? 1 : 0"
+            @change="(checked: any) => editRoleForm.status = checked ? 1 : 0"
           />
           <span class="ml-2">{{ editRoleForm.status === 1 ? '启用' : '禁用' }}</span>
         </a-form-item>

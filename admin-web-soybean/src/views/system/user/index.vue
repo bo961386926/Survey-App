@@ -476,7 +476,7 @@ const handleCreateUser = async () => {
 };
 
 // 编辑用户
-const handleEdit = async (record: UserItem) => {
+const handleEdit = async (record: any) => {
   showEditUserModal.value = true;
 
   editUserForm.id = String(record.id);
@@ -521,7 +521,7 @@ const handleUpdateUser = async () => {
 };
 
 // 重置密码
-const handleResetPassword = (record: UserItem) => {
+const handleResetPassword = (record: any) => {
   resetPwdTarget.value = record;
   resetPwdForm.newPassword = '';
   resetPwdForm.confirmPassword = '';
@@ -558,7 +558,7 @@ const handleConfirmResetPwd = async () => {
 };
 
 // 启用/停用用户
-const handleDisable = (record: UserItem) => {
+const handleDisable = (record: any) => {
   const newStatus = Number(record.status) === 1 ? 0 : 1;
   const actionText = newStatus === 1 ? '启用' : '停用';
 

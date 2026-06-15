@@ -30,10 +30,10 @@ const router = useRouter();
 const route = useRoute();
 const loading = ref(true);
 const editModalVisible = ref(false);
-const projectInfo = ref<Record<string, any> | null>(null);
+const projectInfo = ref<Api.Project.ProjectInfo | null>(null);
 const pointList = ref<any[]>([]);
 const pointLoading = ref(false);
-const pointStatusFilter = ref<number | undefined>(undefined);
+const pointStatusFilter = ref<string | undefined>(undefined);
 const activeTab = ref('points');
 
 const tabs = [
@@ -77,7 +77,7 @@ const statusTagInfo = computed(() => {
     3: { label: '已完成', color: 'var(--color-success)', bg: 'rgba(0,180,42,0.1)' },
     4: { label: '已归档', color: 'var(--color-text-secondary)', bg: 'rgba(134,144,156,0.1)' }
   };
-  return map[s] || { label: '未知', color: 'var(--color-text-secondary)', bg: 'rgba(134,144,156,0.1)' };
+  return map[s as number] || { label: '未知', color: 'var(--color-text-secondary)', bg: 'rgba(134,144,156,0.1)' };
 });
 
 const totalCount = computed(() => pointList.value.length);
@@ -142,7 +142,7 @@ async function loadPoints() {
   pointLoading.value = true;
   const fid = ++fetchPointsId;
   try {
-    const resp = await fetchGetPointList({ current: 1, size: 100, projectId: id, status: pointStatusFilter.value });
+    const resp = await fetchGetPointList({ current: 1, size: 100, projectId: id, status: pointStatusFilter.value as any });
     if (fid !== fetchPointsId) return;
     const data = (resp as any)?.data;
     const error = (resp as any)?.error;
@@ -266,7 +266,7 @@ async function removeBinding(outfallType: string) {
   });
 }
 
-function filterPoints(val: number | undefined) {
+function filterPoints(val: any) {
   pointStatusFilter.value = val;
   loadPoints();
 }
@@ -805,7 +805,7 @@ onMounted(() => {
                     :value="mbr.role"
                     size="small"
                     class="w-140px"
-                    @change="(val: string) => handleRoleChange(mbr.userId, val)"
+                    @change="(val: any) => handleRoleChange(mbr.userId, val)"
                   >
                     <a-select-option value="admin">项目管理员</a-select-option>
                     <a-select-option value="collector">采集员</a-select-option>

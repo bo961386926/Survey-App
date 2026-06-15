@@ -2,6 +2,7 @@
 import { onMounted, ref, watch } from 'vue';
 import { useThemeStore } from '@/store/modules/theme';
 import { useEcharts } from '@/hooks/common/echarts';
+import { fetchGetOperationLogTrend } from '@/service/api/system-manage';
 
 defineOptions({
   name: 'LineChart'
@@ -86,7 +87,25 @@ const { domRef, updateOptions } = useEcharts(() => ({
 }));
 
 async function fetchData() {
-  await new Promise((resolve) => { setTimeout(resolve, 500); });
+  try {
+    const endDate = new Date().toISOString().split('T')[0];
+    const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const { data } = await fetchGetOperationLogTrend({ startDate, endDate });
+    if (data && typeof data === 'object') {
+      const dates = Object.keys(data).sort();
+      const values = dates.map(d => data[d]);
+      const maxVal = Math.max(...values, 1);
+      updateOptions(opts => {
+        opts.xAxis.data = dates.map(d => d.slice(5));
+        opts.series[0].data = values;
+        opts.yAxis.max = Math.ceil(maxVal * 1.2);
+        opts.yAxis.interval = Math.max(1, Math.ceil(maxVal / 4));
+        return opts;
+      });
+    }
+  } catch (e) {
+    console.error('Failed to load chart data', e);
+  }
 }
 
 watch(

@@ -10,13 +10,13 @@ defineOptions({ name: 'TaskDetail' });
 
 const route = useRoute();
 const router = useRouter();
-const taskId = Number(route.params.id);
+const taskId = route.params.id as string;
 
 const task = ref<any>(null);
 const loading = ref(false);
 const subtasks = ref<any[]>([]);
 
-const currentUser = localStg.get('userInfo') as any || {};
+const currentUser = (localStg as any).get('userInfo') as any || {};
 
 // 权限控制
 const isCreator = computed(() => task.value && task.value.ownerUserId === currentUser.id);
@@ -76,7 +76,7 @@ const loadTask = async () => {
 };
 
 onMounted(() => {
-  if (!isNaN(taskId)) loadTask();
+  if (taskId) loadTask();
 });
 
 const handleBack = () => {
