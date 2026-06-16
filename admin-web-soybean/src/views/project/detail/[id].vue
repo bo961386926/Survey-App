@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, h } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { message, Modal } from 'ant-design-vue';
 import {
@@ -13,7 +13,10 @@ import {
   fetchAddProjectMember,
   fetchRemoveProjectMember,
   fetchUpdateProjectMemberRole,
-  fetchGetAllUsers
+  fetchGetAllUsers,
+  fetchUpdateProjectStatus,
+  fetchArchiveProject,
+  fetchRestoreProject
 } from '@/service/api';
 import {
   fetchGetBindings,
@@ -82,7 +85,238 @@ const statusTagInfo = computed(() => {
 
 const totalCount = computed(() => pointList.value.length);
 const approvedCount = computed(() => pointList.value.filter(p => p.status === 3).length);
+const pendingCount = computed(() => pointList.value.filter(p => [0, 1, 2].includes(p.status)).length);
+const errorCount = computed(() => pointList.value.filter(p => p.status === 4).length);
 const progressPercent = computed(() => totalCount.value === 0 ? 0 : Math.round((approvedCount.value / totalCount.value) * 100));
+
+const currentStage = computed(() => {
+  const s = projectInfo.value?.status;
+  const map: Record<number, string> = { 0: '草稿', 1: '进行中', 2: '已暂停', 3: '已完成', 4: '已归档' };
+  return map[s as number] || '未启动';
+});
+
+// --- 状态操作 ---
+const statusTransitioning = ref(false);
+
+// 启动检查清单
+const startupChecklist = computed(() => {
+  const checks = [
+    { label: '已创建标段', pass: sectionList.value.length > 0 },
+    { label: '已导入点位', pass: pointList.value.length > 0 },
+    { label: '已分配采集员', pass: memberList.value.length > 0 },
+    { label: '已配置模板', pass: bindings.value.length > 0 || (projectInfo.value as any)?.templateCount > 0 }
+  ];
+  return checks;
+});
+const startupReady = computed(() => startupChecklist.value.every(c => c.pass));
+
+// 根据当前状态计算可用操作
+const statusActions = computed(() => {
+  const s = projectInfo.value?.status as number;
+  const actions: { key: string; label: string; icon: string; type: 'primary' | 'default' | 'warning' | 'success' | 'danger' }[] = [];
+  switch (s) {
+    case 0: // 草稿 → 可启动
+      actions.push({ key: 'start', label: '启动项目', icon: 'i-material-symbols:play-arrow-rounded', type: 'primary' });
+      break;
+    case 1: // 进行中 → 可暂停/完成
+      actions.push({ key: 'pause', label: '暂停项目', icon: 'i-material-symbols:pause-rounded', type: 'warning' });
+      actions.push({ key: 'complete', label: '完成项目', icon: 'i-material-symbols:check-rounded', type: 'success' });
+      break;
+    case 2: // 已暂停 → 可恢复
+      actions.push({ key: 'resume', label: '恢复项目', icon: 'i-material-symbols:play-arrow-rounded', type: 'primary' });
+      break;
+    case 3: // 已完成 → 可归档
+      actions.push({ key: 'archive', label: '归档项目', icon: 'i-material-symbols:archive-outline-rounded', type: 'default' });
+      break;
+    case 4: // 已归档 → 可恢复
+      actions.push({ key: 'restore', label: '取消归档', icon: 'i-material-symbols:unarchive-rounded', type: 'warning' });
+      break;
+  }
+  return actions;
+});
+
+function handleStatusAction(action: string) {
+  switch (action) {
+    case 'start':
+      if (!startupReady.value) {
+        const passCount = startupChecklist.value.filter(c => c.pass).length;
+        const totalCount2 = startupChecklist.value.length;
+        Modal.confirm({
+          title: '启动检查',
+          width: 420,
+          content: () => h('div', { style: 'padding: 8px 0' }, [
+            ...startupChecklist.value.map(c =>
+              h('div', {
+                style: `display:flex;align-items:center;gap:10px;padding:10px 14px;margin:6px 0;border-radius:8px;background:${c.pass ? 'rgba(0,180,42,0.06)' : 'rgba(245,63,63,0.06)'};border:1px solid ${c.pass ? 'rgba(0,180,42,0.15)' : 'rgba(245,63,63,0.15)'}`
+              }, [
+                h('span', {
+                  style: `width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;color:white;background:${c.pass ? '#00B42A' : '#F53F3F'};flex-shrink:0`
+                }, c.pass ? '✓' : '✗'),
+                h('span', {
+                  style: `font-size:14px;font-weight:500;color:${c.pass ? '#00B42A' : '#F53F3F'}`
+                }, c.label),
+                h('span', {
+                  style: `margin-left:auto;font-size:12px;color:${c.pass ? '#00B42A' : '#86909C'}`
+                }, c.pass ? '就绪' : '未就绪')
+              ])
+            ),
+            h('div', {
+              style: 'display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding:10px 14px;background:rgba(255,125,0,0.06);border-radius:8px;border:1px solid rgba(255,125,0,0.15)'
+            }, [
+              h('span', { style: 'font-size:13px;color:#FA8C16;font-weight:500' }, `${passCount}/${totalCount2} 项就绪`),
+              h('span', { style: 'font-size:12px;color:#86909C' }, '部分条件未满足，仍可强制启动')
+            ])
+          ]),
+          okText: '仍然启动',
+          okType: 'primary',
+          cancelText: '取消',
+          onOk: () => doStatusTransition(1, '启动项目')
+        });
+      } else {
+        doStatusTransition(1, '启动项目');
+      }
+      break;
+    case 'pause':
+      Modal.confirm({
+        title: '暂停项目',
+        content: `确定要暂停「${projectInfo.value?.projectName}」吗？暂停后采集员将收到通知。`,
+        okText: '确认暂停',
+        cancelText: '取消',
+        onOk: () => doStatusTransition(2, '暂停项目')
+      });
+      break;
+    case 'resume':
+      doStatusTransition(1, '恢复项目');
+      break;
+    case 'complete':
+      Modal.confirm({
+        title: '完成项目',
+        width: 400,
+        content: () => h('div', { style: 'padding: 8px 0' }, [
+          h('div', { style: 'text-align:center;margin-bottom:16px' }, [
+            h('div', { style: 'font-size:36px;font-weight:700;color:var(--color-text-primary)' }, `${progressPercent.value}%`),
+            h('div', { style: 'font-size:13px;color:var(--color-text-secondary);margin-top:4px' }, '当前完成率')
+          ]),
+          h('div', { style: 'display:flex;gap:12px;margin-bottom:16px' }, [
+            h('div', { style: 'flex:1;text-align:center;padding:10px;background:rgba(0,180,42,0.06);border-radius:8px' }, [
+              h('div', { style: 'font-size:20px;font-weight:700;color:#00B42A' }, String(approvedCount.value)),
+              h('div', { style: 'font-size:12px;color:#86909C' }, '已完成')
+            ]),
+            h('div', { style: 'flex:1;text-align:center;padding:10px;background:rgba(255,125,0,0.06);border-radius:8px' }, [
+              h('div', { style: 'font-size:20px;font-weight:700;color:#FA8C16' }, String(totalCount.value - approvedCount.value)),
+              h('div', { style: 'font-size:12px;color:#86909C' }, '待处理')
+            ])
+          ]),
+          progressPercent.value < 100
+            ? h('div', { style: 'padding:10px 14px;background:rgba(245,63,63,0.06);border-radius:8px;border:1px solid rgba(245,63,63,0.15)' }, [
+                h('span', { style: 'font-size:13px;color:#F53F3F;font-weight:500' }, `仍有 ${totalCount.value - approvedCount.value} 个点位未完成，确认强制完成？`)
+              ])
+            : h('div', { style: 'padding:10px 14px;background:rgba(0,180,42,0.06);border-radius:8px;border:1px solid rgba(0,180,42,0.15)' }, [
+                h('span', { style: 'font-size:13px;color:#00B42A;font-weight:500' }, '所有点位已完成，确认标记为已完成？')
+              ])
+        ]),
+        okText: progressPercent.value < 100 ? '强制完成' : '确认完成',
+        okType: progressPercent.value < 100 ? 'danger' : 'primary',
+        cancelText: '取消',
+        onOk: () => doStatusTransition(3, '完成项目')
+      });
+      break;
+    case 'archive':
+      Modal.confirm({
+        title: '归档项目',
+        width: 400,
+        content: () => h('div', { style: 'padding: 8px 0' }, [
+          h('div', { style: 'display:flex;align-items:center;gap:10px;padding:14px;background:rgba(255,125,0,0.06);border-radius:8px;border:1px solid rgba(255,125,0,0.15);margin-bottom:14px' }, [
+            h('span', { style: 'font-size:24px' }, '🔒'),
+            h('div', {}, [
+              h('div', { style: 'font-size:14px;font-weight:600;color:var(--color-text-primary)' }, '项目将变为只读'),
+              h('div', { style: 'font-size:12px;color:#86909C;margin-top:2px' }, '所有人无法修改数据，仅可查看和导出')
+            ])
+          ]),
+          h('div', { style: 'font-size:13px;color:var(--color-text-secondary)' }, `确定归档「${projectInfo.value?.projectName}」？`)
+        ]),
+        okText: '确认归档',
+        cancelText: '取消',
+        onOk: async () => {
+          statusTransitioning.value = true;
+          try {
+            await fetchArchiveProject(route.params.id as string);
+            message.success('项目已归档');
+            loadDetail();
+          } catch (e: any) {
+            message.error(e?.message || '归档失败');
+          } finally {
+            statusTransitioning.value = false;
+          }
+        }
+      });
+      break;
+    case 'restore':
+      Modal.confirm({
+        title: '取消归档',
+        width: 400,
+        content: () => h('div', { style: 'padding: 8px 0' }, [
+          h('div', { style: 'display:flex;align-items:center;gap:10px;padding:14px;background:rgba(22,119,255,0.06);border-radius:8px;border:1px solid rgba(22,119,255,0.15);margin-bottom:14px' }, [
+            h('span', { style: 'font-size:24px' }, '📂'),
+            h('div', {}, [
+              h('div', { style: 'font-size:14px;font-weight:600;color:var(--color-text-primary)' }, '恢复为已完成状态'),
+              h('div', { style: 'font-size:12px;color:#86909C;margin-top:2px' }, '项目将重新可编辑，操作会记录审计日志')
+            ])
+          ]),
+          h('div', { style: 'font-size:13px;color:var(--color-text-secondary)' }, `确定取消归档「${projectInfo.value?.projectName}」？`)
+        ]),
+        okText: '确认恢复',
+        cancelText: '取消',
+        onOk: async () => {
+          statusTransitioning.value = true;
+          try {
+            await fetchRestoreProject(route.params.id as string);
+            message.success('项目已恢复');
+            loadDetail();
+          } catch (e: any) {
+            message.error(e?.message || '恢复失败');
+          } finally {
+            statusTransitioning.value = false;
+          }
+        }
+      });
+      break;
+  }
+}
+
+async function doStatusTransition(targetStatus: number, actionLabel: string) {
+  statusTransitioning.value = true;
+  try {
+    const resp = await fetchUpdateProjectStatus(route.params.id as string, targetStatus);
+    if ((resp as any)?.error) {
+      message.error((resp as any).error?.message || `${actionLabel}失败`);
+    } else {
+      message.success(`${actionLabel}成功`);
+      loadDetail();
+    }
+  } catch (e: any) {
+    message.error(e?.message || `${actionLabel}失败`);
+  } finally {
+    statusTransitioning.value = false;
+  }
+}
+
+const formattedUpdateTime = computed(() => {
+  const t = (projectInfo.value as any)?.updateTime;
+  if (!t) return '--';
+  try {
+    const d = new Date(t);
+    return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  } catch { return t; }
+});
+
+// Mock recent activities (will be replaced by real API later)
+const recentActivities = ref([
+  { icon: 'i-material-symbols:upload-rounded', color: '#1677FF', desc: 'Sarah Chen 上传了 12 个点位', time: '今天 10:45' },
+  { icon: 'i-material-symbols:check-circle-outline-rounded', color: '#00B42A', desc: '#ST-092 数据审核通过', time: '昨天 16:20' },
+  { icon: 'i-material-symbols:warning-outline-rounded', color: '#F53F3F', desc: '检测到水质数据异常 - 地点 #W-12', time: '2024-05-19 09:15' },
+  { icon: 'i-material-symbols:person-add-outline-rounded', color: '#86909C', desc: 'Marcus Holloway 加入项目组', time: '2024-05-18 14:00' }
+]);
 
 // 点位状态映射
 const pointStatusMap: Record<number | string, { label: string; color: string; bg: string }> = {
@@ -501,117 +735,188 @@ onMounted(() => {
 
 <template>
   <div class="h-full flex-col overflow-y-auto custom-scrollbar project-detail-page">
-    <!-- 毛玻璃背景层 -->
-    <div class="glass-bg-layer"></div>
-
-    <div class="p-24px relative z-1">
-      <!-- Page Header with Title -->
-      <div class="mb-24px transition-all duration-300 page-header">
-        <div class="flex items-center gap-12px">
-          <div class="w-36px h-36px rounded-8px flex items-center justify-center header-icon-wrapper">
-            <span class="i-material-symbols:folder-open-outline-rounded text-18px text-[var(--color-primary)]"></span>
-          </div>
+    <div class="p-24px">
+      <!-- Page Header -->
+      <div class="mb-24px">
+        <div class="flex items-center justify-between flex-wrap gap-12px">
           <div>
-            <div class="flex items-center gap-10px">
-              <ASkeleton v-if="loading" active :paragraph="false" style="width:200px;height:24px" />
-              <h1 v-else class="text-20px font-700 m-0 header-title">{{ projectInfo?.projectName || '未知项目' }}</h1>
-              <div
-                v-if="!loading && projectInfo"
-                class="px-10px py-3px rounded-4px text-12px font-500"
-                :style="{ background: statusTagInfo.bg, color: statusTagInfo.color }"
-              >
-                {{ statusTagInfo.label }}
+            <div class="flex items-center gap-10px mb-6px">
+              <span v-if="!loading && projectInfo" class="project-code-pill">{{ projectInfo.projectCode || '--' }}</span>
+            </div>
+            <div class="flex items-center gap-12px">
+              <ASkeleton v-if="loading" active :paragraph="false" style="width:300px;height:28px" />
+              <h1 v-else class="text-22px font-700 m-0 text-[var(--color-text-primary)]">{{ projectInfo?.projectName || '未知项目' }}</h1>
+              <div v-if="!loading && projectInfo" class="flex items-center gap-6px">
+                <span class="status-dot" :style="{ background: statusTagInfo.color }"></span>
+                <span class="text-13px text-[var(--color-text-secondary)]">{{ statusTagInfo.label }}</span>
               </div>
             </div>
-            <p v-if="!loading && projectInfo" class="text-13px text-[var(--color-text-secondary)] m-0 mt-4px">
-              {{ projectInfo.projectCode || '--' }} · {{ projectInfo.manager || '未指派' }} · {{ projectInfo.clientName || '--' }}
+            <p v-if="!loading && projectInfo" class="text-12px text-[var(--color-text-placeholder)] m-0 mt-6px">
+              最后更新: {{ formattedUpdateTime }}
             </p>
           </div>
+          <div class="flex items-center gap-8px flex-shrink-0 flex-wrap">
+            <!-- 状态操作按钮 -->
+            <template v-if="!loading && projectInfo">
+              <AButton
+                v-for="action in statusActions"
+                :key="action.key"
+                :loading="statusTransitioning"
+                :class="['status-action-btn', `status-action-btn--${action.type}`]"
+                @click="handleStatusAction(action.key)"
+              >
+                <span :class="[action.icon, 'text-14px mr-4px']"></span>
+                {{ action.label }}
+              </AButton>
+            </template>
+            <!-- 编辑按钮 -->
+            <AButton
+              v-if="!loading && projectInfo && projectInfo.status !== 4"
+              class="btn-outline"
+              @click="editModalVisible = true"
+            >
+              <span class="i-material-symbols:edit-outline-rounded text-14px mr-6px"></span>
+              编辑
+            </AButton>
+            <!-- 返回按钮 -->
+            <AButton class="btn-ghost" @click="router.push('/project/list')">
+              <span class="i-material-symbols:arrow-back-rounded text-14px mr-4px"></span>
+              返回
+            </AButton>
+          </div>
         </div>
       </div>
 
-      <!-- Core Metrics Cards -->
+      <!-- Info Cards Row -->
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-16px mb-24px">
+        <!-- 项目经理 -->
+        <div class="info-card">
+          <div class="flex items-center gap-10px mb-10px">
+            <div class="info-icon" style="background: #E6F0FF">
+              <span class="i-material-symbols:person-outline-rounded text-16px" style="color: #1677FF"></span>
+            </div>
+            <span class="text-12px text-[var(--color-text-secondary)]">项目经理</span>
+          </div>
+          <ASkeleton v-if="loading" active :paragraph="false" style="width:100px;height:18px" />
+          <div v-else class="text-14px font-600 text-[var(--color-text-primary)]">{{ projectInfo?.manager || '未指派' }}</div>
+        </div>
+        <!-- 客户单位 -->
+        <div class="info-card">
+          <div class="flex items-center gap-10px mb-10px">
+            <div class="info-icon" style="background: #EDE6FF">
+              <span class="i-material-symbols:business-outline-rounded text-16px" style="color: #7B61FF"></span>
+            </div>
+            <span class="text-12px text-[var(--color-text-secondary)]">客户单位</span>
+          </div>
+          <ASkeleton v-if="loading" active :paragraph="false" style="width:120px;height:18px" />
+          <div v-else class="text-14px font-600 text-[var(--color-text-primary)]">{{ projectInfo?.clientName || '--' }}</div>
+        </div>
+        <!-- 项目周期 -->
+        <div class="info-card">
+          <div class="flex items-center gap-10px mb-10px">
+            <div class="info-icon" style="background: #F0F2F5">
+              <span class="i-material-symbols:calendar-month-outline-rounded text-16px" style="color: #666"></span>
+            </div>
+            <span class="text-12px text-[var(--color-text-secondary)]">项目周期</span>
+          </div>
+          <ASkeleton v-if="loading" active :paragraph="false" style="width:160px;height:18px" />
+          <div v-else class="text-13px font-500 text-[var(--color-text-primary)]">
+            <div>{{ projectInfo?.startDate || '--' }}</div>
+            <div class="text-[var(--color-text-secondary)]">至 {{ projectInfo?.endDate || '--' }}</div>
+          </div>
+        </div>
+        <!-- 当前阶段 -->
+        <div class="info-card">
+          <div class="flex items-center gap-10px mb-10px">
+            <div class="info-icon" style="background: #FFF5E6">
+              <span class="i-material-symbols:approval-delegation-outline-rounded text-16px" style="color: #FA8C16"></span>
+            </div>
+            <span class="text-12px text-[var(--color-text-secondary)]">当前阶段</span>
+          </div>
+          <ASkeleton v-if="loading" active :paragraph="false" style="width:100px;height:18px" />
+          <div v-else class="text-14px font-600 text-[var(--color-text-primary)]">{{ currentStage }}</div>
+        </div>
+        <!-- 完成率 -->
+        <div class="info-card">
+          <div class="flex items-center gap-10px mb-10px">
+            <div class="info-icon" style="background: #E6FFE6">
+              <span class="i-material-symbols:check-circle-outline-rounded text-16px" style="color: #00B42A"></span>
+            </div>
+            <span class="text-12px text-[var(--color-text-secondary)]">完成率</span>
+          </div>
+          <ASkeleton v-if="loading" active :paragraph="false" style="width:50px;height:18px" />
+          <div v-else class="text-22px font-700 text-[var(--color-success)]">{{ progressPercent }}%</div>
+        </div>
+      </div>
+
+      <!-- Progress + Recent Activity Dual Column -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-16px mb-24px">
-        <!-- Project Info Card -->
-        <div class="glass-card rounded-8px p-20px" v-mouse-glow="{ color: '22,119,255', size: 250, intensity: 0.06 }">
-          <div class="flex items-center gap-10px mb-12px">
-            <div class="w-28px h-28px rounded-6px flex items-center justify-center" style="background: rgba(22,119,255,0.1)">
-              <span class="i-material-symbols:calendar-month-outline-rounded text-16px text-[var(--color-primary)]"></span>
-            </div>
-            <span class="text-13px text-[var(--color-text-secondary)]">项目周期</span>
+        <!-- Left: Progress Details (2/3 width) -->
+        <div class="md:col-span-2 info-card">
+          <div class="flex items-center justify-between mb-16px">
+            <span class="text-15px font-600 text-[var(--color-text-primary)]">进度详情</span>
+            <a class="text-13px text-[var(--color-primary)] cursor-pointer flex items-center gap-4px hover:opacity-80" @click="router.push(`/point/map?projectId=${route.params.id}`)">
+              <span class="i-material-symbols:map-outline-rounded text-14px"></span>
+              查看地图
+            </a>
           </div>
-          <div class="text-16px font-600 text-[var(--color-text-primary)]">
-            <ASkeleton v-if="loading" active :paragraph="false" style="width:180px;height:20px" />
-            <span v-else>{{ projectInfo?.startDate || '--' }} ~ {{ projectInfo?.endDate || '--' }}</span>
+          <div class="flex items-center gap-24px">
+            <!-- Ring Progress Chart -->
+            <div class="flex-shrink-0 relative" style="width:120px;height:120px">
+              <svg viewBox="0 0 120 120" class="w-full h-full" style="transform: rotate(-90deg)">
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#F0F2F5" stroke-width="10" />
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#1677FF" stroke-width="10"
+                  stroke-linecap="round"
+                  :stroke-dasharray="`${progressPercent * 3.14} ${314 - progressPercent * 3.14}`"
+                />
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="text-28px font-700 text-[var(--color-text-primary)]">{{ progressPercent }}%</span>
+                <span class="text-11px text-[var(--color-text-secondary)]">总完成度</span>
+              </div>
+            </div>
+            <!-- Stat Cards -->
+            <div class="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-12px">
+              <div class="stat-card">
+                <div class="text-24px font-700" style="color: #0052CC">{{ approvedCount }}</div>
+                <div class="text-12px text-[var(--color-text-secondary)] mt-4px">个点位已完成</div>
+              </div>
+              <div class="stat-card">
+                <div class="text-24px font-700" style="color: #FA8C16">{{ pendingCount }}</div>
+                <div class="text-12px text-[var(--color-text-secondary)] mt-4px">个点位待处理</div>
+              </div>
+              <div class="stat-card stat-card-alert">
+                <div class="flex items-center gap-4px">
+                  <span class="i-material-symbols:warning-outline-rounded text-14px text-white"></span>
+                  <span class="text-24px font-700 text-white">{{ errorCount }}</span>
+                </div>
+                <div class="text-12px text-white/80 mt-4px">项警报</div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- Total Points Card -->
-        <div class="glass-card rounded-8px p-20px" v-mouse-glow="{ color: '22,119,255', size: 250, intensity: 0.06 }">
-          <div class="flex items-center justify-between mb-12px">
-            <div class="flex items-center gap-10px">
-              <div class="w-28px h-28px rounded-6px flex items-center justify-center" style="background: rgba(22,119,255,0.1)">
-                <span class="i-material-symbols:location-on-outline-rounded text-16px text-[var(--color-primary)]"></span>
-              </div>
-              <span class="text-13px text-[var(--color-text-secondary)]">总点位数</span>
-            </div>
-            <span class="px-8px py-2px rounded-4px text-11px" style="background: rgba(22,119,255,0.1); color: var(--color-primary)">
-              全部
-            </span>
-          </div>
-          <div class="flex items-end justify-between">
-            <div class="text-28px font-700 text-[var(--color-text-primary)]" style="letter-spacing: -0.5px;">
-              <ASkeleton v-if="loading" active :paragraph="false" style="width:40px;height:32px" />
-              <span v-else>{{ totalCount }}</span>
-            </div>
-            <div class="flex items-center justify-center w-28px h-28px rounded-6px opacity-0 -translate-x-8px transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0"
-                 style="background: rgba(22,119,255,0.1)">
-              <span class="i-material-symbols:arrow-forward-rounded text-16px text-[var(--color-primary)]"></span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Approved Points Card -->
-        <div class="glass-card rounded-8px p-20px" v-mouse-glow="{ color: '0,180,42', size: 250, intensity: 0.06 }">
-          <div class="flex items-center justify-between mb-12px">
-            <div class="flex items-center gap-10px">
-              <div class="w-28px h-28px rounded-6px flex items-center justify-center" style="background: rgba(0,180,42,0.1)">
-                <span class="i-material-symbols:check-circle-outline-rounded text-16px text-[var(--color-success)]"></span>
-              </div>
-              <span class="text-13px text-[var(--color-text-secondary)]">已通过点位</span>
-            </div>
-            <span class="px-8px py-2px rounded-4px text-11px" style="background: rgba(0,180,42,0.1); color: var(--color-success)">
-              完成率 {{ progressPercent }}%
-            </span>
-          </div>
-          <div class="flex items-end justify-between">
-            <div class="text-28px font-700 text-[var(--color-text-primary)]" style="letter-spacing: -0.5px;">
-              <ASkeleton v-if="loading" active :paragraph="false" style="width:40px;height:32px" />
-              <span v-else>{{ approvedCount }}</span>
-            </div>
-            <div class="flex-1 ml-16px">
-              <div class="progress-bar-bg">
-                <div class="progress-bar-fill" :style="{ width: `${progressPercent}%` }"></div>
+        <!-- Right: Recent Activity (1/3 width) -->
+        <div class="info-card">
+          <div class="text-15px font-600 text-[var(--color-text-primary)] mb-16px">最近动态</div>
+          <div class="flex flex-col gap-0">
+            <div v-for="(act, idx) in recentActivities" :key="idx" class="activity-item" :class="{ 'border-b border-[var(--color-divider)] pb-12px mb-12px': idx < recentActivities.length - 1 }">
+              <div class="flex items-start gap-10px">
+                <div class="w-28px h-28px rounded-full flex items-center justify-center flex-shrink-0 mt-2px" :style="{ background: act.color + '15' }">
+                  <span :class="act.icon" class="text-14px" :style="{ color: act.color }"></span>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="text-13px text-[var(--color-text-primary)] leading-20px">{{ act.desc }}</div>
+                  <div class="text-11px text-[var(--color-text-placeholder)] mt-4px">{{ act.time }}</div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="flex justify-end gap-8px mb-24px">
-        <AButton class="btn-primary" @click="goManagePoints">
-          <span class="i-material-symbols:location-on-outline-rounded text-16px mr-6px"></span>
-          管理点位
-        </AButton>
-        <AButton class="btn-secondary" @click="editModalVisible = true">
-          <span class="i-material-symbols:edit-outline-rounded text-16px mr-6px"></span>
-          编辑项目
-        </AButton>
-      </div>
-
-      <!-- Content Card -->
-      <div class="glass-card rounded-8px overflow-hidden" v-mouse-glow="{ color: '22,119,255', size: 200, intensity: 0.04 }">
+      <!-- Content Card (Tabs) -->
+      <div class="info-card overflow-hidden">
         <!-- Tabs Header -->
         <div class="flex items-center justify-between px-24px py-16px header-divider">
           <div class="flex -mb-17px">
@@ -732,7 +1037,7 @@ onMounted(() => {
 
           <div v-if="sectionLoading" class="flex justify-center py-24px"><ASpin /></div>
           <div v-else-if="sectionList.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-16px">
-            <div v-for="sec in sectionList" :key="sec.id" class="glass-card rounded-12px p-16px flex flex-col justify-between border border-white/40 dark:border-white/10 hover:border-primary/30 transition-all duration-300">
+            <div v-for="sec in sectionList" :key="sec.id" class="info-card p-16px flex flex-col justify-between">
               <div>
                 <div class="flex justify-between items-start mb-8px">
                   <div class="flex items-center gap-8px">
@@ -960,132 +1265,66 @@ onMounted(() => {
 </template>
 
 <style scoped>
-/* Background Layer */
-.glass-bg-layer {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 0;
-  background: linear-gradient(135deg,
-    rgba(22, 119, 255, 0.06) 0%,
-    rgba(22, 119, 255, 0) 50%,
-    rgba(16, 185, 129, 0.04) 100%);
-  pointer-events: none;
-}
-
-.glass-bg-layer::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle at 30% 20%,
-    rgba(22, 119, 255, 0.08) 0%,
-    transparent 40%),
-    radial-gradient(circle at 80% 60%,
-    rgba(16, 185, 129, 0.06) 0%,
-    transparent 40%);
-  animation: float-bg 20s ease-in-out infinite;
-}
-
-@keyframes float-bg {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(-2%, -2%); }
-}
-
 /* Custom Scrollbar */
-.custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: var(--color-divider); border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--color-text-placeholder); }
 
-.custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--color-divider);
-  border-radius: 10px;
-  transition: background-color 0.2s ease;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-placeholder);
-}
-
-/* Page Header */
-.page-header {
-  cursor: default;
-  padding: 8px 12px;
-  margin: -8px -12px;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-}
-
-.page-header:hover {
-  background: rgba(22, 119, 255, 0.03);
-}
-
-.header-title {
-  position: relative;
+/* Project Code Pill */
+.project-code-pill {
   display: inline-block;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+  background: #6B5CE7;
 }
 
-.header-title::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--color-primary), transparent);
-  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+/* Status Dot */
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
 }
 
-.page-header:hover .header-title::after {
-  width: 100%;
+/* Info Card */
+.info-card {
+  background: #fff;
+  border: 1px solid var(--color-divider);
+  border-radius: 8px;
+  padding: 20px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.header-icon-wrapper {
-  background: rgba(22, 119, 255, 0.1);
-  transition: all 0.3s ease;
+.info-card:hover {
+  border-color: rgba(22, 119, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.page-header:hover .header-icon-wrapper {
-  background: rgba(22, 119, 255, 0.15);
-  transform: scale(1.05);
+/* Info Icon */
+.info-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-/* Glass Card */
-.glass-card {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+/* Stat Card */
+.stat-card {
+  background: #F7F8FA;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
 }
 
-.glass-card:hover {
-  border-color: rgba(22, 119, 255, 0.25);
-  box-shadow: 0 8px 32px rgba(22, 119, 255, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
-}
-
-/* Progress Bar */
-.progress-bar-bg {
-  height: 6px;
-  background: rgba(0, 180, 42, 0.1);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.progress-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--color-success), #00D42E);
-  border-radius: 3px;
-  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+.stat-card-alert {
+  background: #FF4D4F !important;
 }
 
 /* Buttons */
@@ -1104,19 +1343,73 @@ onMounted(() => {
   transform: translateY(-1px) !important;
 }
 
-.btn-secondary {
+/* Status Action Buttons */
+.status-action-btn {
+  height: 32px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  transition: all 0.2s ease !important;
+}
+.status-action-btn--primary {
+  background: var(--color-primary) !important;
+  color: white !important;
+  border: none !important;
+}
+.status-action-btn--primary:hover { opacity: 0.9 !important; }
+.status-action-btn--warning {
+  background: #FF7D00 !important;
+  color: white !important;
+  border: none !important;
+}
+.status-action-btn--warning:hover { opacity: 0.9 !important; }
+.status-action-btn--success {
+  background: #00B42A !important;
+  color: white !important;
+  border: none !important;
+}
+.status-action-btn--success:hover { opacity: 0.9 !important; }
+.status-action-btn--default {
+  background: #F2F3F5 !important;
+  color: var(--color-text-primary) !important;
+  border: 1px solid var(--color-divider) !important;
+}
+.status-action-btn--default:hover { background: #E8E9EB !important; }
+.status-action-btn--danger {
+  background: #F53F3F !important;
+  color: white !important;
+  border: none !important;
+}
+.status-action-btn--danger:hover { opacity: 0.9 !important; }
+
+.btn-outline {
   height: 32px !important;
   border-radius: 6px !important;
   font-size: 13px !important;
   background: transparent !important;
   color: var(--color-text-primary) !important;
-  border: 1px solid var(--color-border) !important;
+  border: 1px solid var(--color-divider) !important;
   transition: all 0.2s ease !important;
 }
-
-.btn-secondary:hover {
+.btn-outline:hover {
   border-color: var(--color-primary) !important;
   color: var(--color-primary) !important;
+}
+
+.btn-ghost {
+  height: 32px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  background: transparent !important;
+  color: var(--color-text-secondary) !important;
+  border: none !important;
+  transition: all 0.2s ease !important;
+}
+.btn-ghost:hover {
+  background: rgba(0,0,0,0.04) !important;
+  color: var(--color-text-primary) !important;
 }
 
 /* Tabs */
@@ -1200,13 +1493,8 @@ onMounted(() => {
   transition: all 0.2s ease;
 }
 
-.point-table-row:last-child {
-  border-bottom: none;
-}
-
-.point-table-row:hover {
-  background: rgba(22, 119, 255, 0.04);
-}
+.point-table-row:last-child { border-bottom: none; }
+.point-table-row:hover { background: rgba(22, 119, 255, 0.04); }
 
 .point-td {
   padding: 12px 16px;
@@ -1239,9 +1527,7 @@ onMounted(() => {
   max-width: 200px;
 }
 
-.point-code,
-.point-type,
-.point-coord {
+.point-code, .point-type, .point-coord {
   font-size: 12px;
   color: var(--color-text-secondary);
 }
@@ -1291,7 +1577,43 @@ onMounted(() => {
 }
 
 /* Skeleton */
-.skeleton-item {
-  background: rgba(247, 248, 250, 0.5);
+.skeleton-item { background: rgba(247, 248, 250, 0.5); }
+
+/* ===== 大屏适配 (2K+) ===== */
+@media (min-width: 1920px) {
+  .info-card {
+    padding: 20px 24px;
+  }
+  .stat-card .text-24px {
+    font-size: 28px;
+  }
+  .text-22px {
+    font-size: 24px;
+  }
+  .project-code-pill {
+    font-size: 13px;
+    padding: 3px 12px;
+  }
+  .status-action-btn {
+    height: 36px !important;
+    font-size: 14px !important;
+    padding: 0 18px !important;
+  }
+  .btn-outline, .btn-ghost {
+    height: 36px !important;
+    font-size: 14px !important;
+  }
+}
+
+@media (min-width: 2200px) {
+  .info-card {
+    padding: 24px 28px;
+  }
+  .stat-card .text-24px {
+    font-size: 32px;
+  }
+  .text-22px {
+    font-size: 26px;
+  }
 }
 </style>

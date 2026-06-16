@@ -60,6 +60,22 @@ export function fetchUpdateProjectStatus(projectId: string | number, status: num
   });
 }
 
+/** archive project */
+export function fetchArchiveProject(projectId: string | number) {
+  return request({
+    url: `/project/${projectId}/archive`,
+    method: 'put'
+  });
+}
+
+/** restore project (unarchive) */
+export function fetchRestoreProject(projectId: string | number) {
+  return request({
+    url: `/project/${projectId}/restore`,
+    method: 'put'
+  });
+}
+
 /** get section list by projectId */
 export function fetchGetSectionList(projectId: string | number) {
   return request<any[]>({

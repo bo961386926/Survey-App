@@ -107,6 +107,7 @@ export const generatedRoutes: GeneratedRoute[] = [
       title: 'home',
       i18nKey: 'route.home',
       icon: 'material-symbols:dashboard-outline-rounded',
+      hideInMenu: true,
       order: 1
     }
   },

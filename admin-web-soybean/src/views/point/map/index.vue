@@ -279,11 +279,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="h-full flex-col overflow-y-auto custom-scrollbar point-map-page">
+  <div class="h-full flex flex-col overflow-hidden point-map-page">
     <!-- 毛玻璃背景层 -->
     <div class="glass-bg-layer"></div>
 
-    <div class="p-24px relative z-1">
+    <div class="p-24px flex-1 flex flex-col overflow-hidden relative z-1">
       <!-- Page Header -->
       <div class="flex justify-between items-center page-header mb-24px">
         <div class="flex items-center gap-12px">
@@ -316,7 +316,7 @@ onMounted(() => {
       </div>
 
       <!-- Stats Bar -->
-      <div class="metrics-grid mb-24px">
+      <div class="metrics-grid mb-16px flex-shrink-0">
         <div
           v-for="item in metrics"
           :key="item.title"
@@ -335,7 +335,7 @@ onMounted(() => {
       </div>
 
       <!-- Content Area -->
-      <div class="content-area">
+      <div class="content-area flex-1 min-h-0">
         <!-- ==================== 列表模式 ==================== -->
         <div v-if="viewMode === 'list'" class="list-panel-wrapper glass-card" v-mouse-glow="{ color: '22,119,255', size: 300, intensity: 0.04 }">
           <!-- Filter Bar -->
@@ -625,6 +625,7 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   min-height: 60px;
+  max-width: 280px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -698,6 +699,7 @@ onMounted(() => {
   gap: 16px;
   min-height: 0;
   flex: 1;
+  overflow: hidden;
 }
 
 /* ===== 毛玻璃卡片 ===== */
@@ -924,14 +926,69 @@ onMounted(() => {
   gap: 16px;
   flex: 1;
   min-height: 0;
+  height: 100%;
 }
 
 /* ===== 左侧列表面板 ===== */
 .list-panel {
-  width: 340px;
+  width: 320px;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  position: relative;
+}
+
+/* ===== 大屏适配 (2K+) ===== */
+@media (min-width: 1920px) {
+  .list-panel {
+    width: 380px;
+  }
+  .metric-card {
+    padding: 10px 16px;
+    min-height: 68px;
+  }
+  .metric-value {
+    font-size: 24px;
+  }
+  .point-item {
+    padding: 14px 18px;
+  }
+  .point-item-name {
+    font-size: 14px;
+  }
+  .point-item-code {
+    font-size: 13px;
+  }
+  .panel-title {
+    font-size: 17px;
+  }
+  .map-title {
+    font-size: 15px;
+  }
+}
+
+@media (min-width: 2200px) {
+  .list-panel {
+    width: 420px;
+  }
+  .metric-card {
+    padding: 12px 20px;
+    min-height: 76px;
+  }
+  .metric-value {
+    font-size: 28px;
+  }
+  .metric-icon-wrapper {
+    width: 28px;
+    height: 28px;
+  }
+  .metric-icon {
+    font-size: 15px;
+  }
+  .switch-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
 }
 
 .panel-header {
@@ -1116,8 +1173,124 @@ onMounted(() => {
 
 .map-area {
   flex: 1;
-  min-height: 400px;
+  min-height: 300px;
   position: relative;
   background: #f0f0f0;
+}
+
+/* ===== 列表面板折叠按钮 ===== */
+.panel-toggle-btn {
+  position: absolute;
+  top: 12px;
+  right: -14px;
+  z-index: 10;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid var(--color-divider);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+}
+.panel-toggle-btn:hover {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+/* ===== 响应式适配 ===== */
+@media (max-width: 1400px) {
+  .metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1200px) {
+  .metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .list-panel {
+    width: 260px;
+  }
+}
+
+@media (max-width: 992px) {
+  .metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .filter-bar {
+    flex-wrap: wrap;
+  }
+  .project-select {
+    width: 100%;
+    max-width: 200px;
+  }
+  .search-input {
+    width: 100%;
+    max-width: 300px;
+    flex: 1;
+  }
+  .status-select {
+    width: 100%;
+    max-width: 160px;
+  }
+  .map-mode-wrapper {
+    flex-direction: column;
+  }
+  .list-panel {
+    width: 100%;
+    max-height: 260px;
+    flex-shrink: 0;
+  }
+  .map-panel {
+    min-height: 400px;
+  }
+}
+
+@media (max-width: 768px) {
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .view-switcher {
+    align-self: flex-stretch;
+  }
+  .filter-bar {
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    gap: 8px;
+  }
+  .project-select,
+  .search-input,
+  .status-select {
+    width: 100%;
+    max-width: none;
+  }
+  .list-panel {
+    max-height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .metrics-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .metric-card {
+    padding: 6px 10px;
+    min-height: 50px;
+  }
+  .metric-value {
+    font-size: 16px;
+  }
 }
 </style>

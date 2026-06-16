@@ -193,8 +193,8 @@ const getStatusClass = (status: number | string) => {
 const getStatusText = (status: number | string) => {
   const textMap: Record<number, string> = {
     0: '草稿',
-    1: '勘察中',
-    2: '待审核',
+    1: '进行中',
+    2: '已暂停',
     3: '已完成',
     4: '已归档'
   };
@@ -210,8 +210,8 @@ const metrics = computed(() => [
 
 const filterTabs = [
   { label: '全部', value: undefined as string | undefined },
-  { label: '勘察中', value: '1' },
-  { label: '待审核', value: '2' }
+  { label: '进行中', value: '1' },
+  { label: '已暂停', value: '2' }
 ];
 
 const handleAdvancedSearch = () => {

@@ -14,7 +14,18 @@
 - [TemplateStatus.java](file://admin-backend/src/main/java/com/qhiot/survey/common/enums/TemplateStatus.java)
 - [application.yml](file://admin-backend/src/main/resources/application.yml)
 - [dictionary_tables.sql](file://admin-backend/src/main/resources/db/dictionary_tables.sql)
+- [template.ts](file://admin-web-soybean/src/service/api/template.ts)
+- [design-id.vue](file://admin-web-soybean/src/views/template/design/[id].vue)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Added documentation for enhanced template design system features
+- Documented inline text groups functionality for creating horizontal field layouts
+- Added radio button and checkbox sub-field configurations for dynamic conditional inputs
+- Documented option-based sub-fields that appear when specific options are selected
+- Updated field types to include new inline_group type
+- Enhanced question types section with new dynamic form capabilities
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -22,11 +33,12 @@
 3. [Core Components](#core-components)
 4. [Architecture Overview](#architecture-overview)
 5. [Detailed Component Analysis](#detailed-component-analysis)
-6. [Dependency Analysis](#dependency-analysis)
-7. [Performance Considerations](#performance-considerations)
-8. [Troubleshooting Guide](#troubleshooting-guide)
-9. [Conclusion](#conclusion)
-10. [Appendices](#appendices)
+6. [Enhanced Template Design Features](#enhanced-template-design-features)
+7. [Dependency Analysis](#dependency-analysis)
+8. [Performance Considerations](#performance-considerations)
+9. [Troubleshooting Guide](#troubleshooting-guide)
+10. [Conclusion](#conclusion)
+11. [Appendices](#appendices)
 
 ## Introduction
 This document describes the dynamic form template system used to define, version, publish, and reuse questionnaire templates across survey points. It explains the template architecture built around three core entities:
@@ -36,12 +48,15 @@ This document describes the dynamic form template system used to define, version
 
 The system supports:
 - Template creation and drafting workflows
-- Question types via field definitions (text, numeric, date, image, dropdown)
+- Question types via field definitions (text, numeric, date, image, dropdown, inline_group)
+- Advanced dynamic features including inline text groups, radio button and checkbox sub-field configurations
 - Validation rules and conditional visibility/linkage rules
 - Publishing process with version numbering and caching
 - Backward compatibility through versioned rendering
 - Administrative controls for lifecycle management
 - Integration with survey point assignments via outlet-type bindings
+
+**Updated** Enhanced with advanced template design system featuring inline text groups, radio button and checkbox sub-field configurations, and option-based sub-fields for dynamic form elements.
 
 ## Project Structure
 The template system resides in the backend module under the admin-backend package. The structure follows a layered architecture:
@@ -50,6 +65,7 @@ The template system resides in the backend module under the admin-backend packag
 - Service layer: business logic and orchestration
 - Controller layer: REST endpoints for administration and preview
 - Configuration: application YAML and dictionary initialization SQL
+- Frontend design system: Vue-based template designer with advanced configuration options
 
 ```mermaid
 graph TB
@@ -63,6 +79,12 @@ E1["SurveyTemplate"]
 E2["SurveyTemplateVersion"]
 E3["SurveyPointTemplateBinding"]
 end
+subgraph "Frontend Design"
+F1["Template Designer UI"]
+F2["Field Configuration"]
+F3["Option Sub-Fields"]
+F4["Inline Groups"]
+end
 C --> S
 S --> M1
 S --> M2
@@ -70,6 +92,9 @@ S --> M3
 M1 --> E1
 M2 --> E2
 M3 --> E3
+F1 --> F2
+F2 --> F3
+F3 --> F4
 ```
 
 **Diagram sources**
@@ -81,6 +106,8 @@ M3 --> E3
 - [SurveyTemplate.java:1-61](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyTemplate.java#L1-L61)
 - [SurveyTemplateVersion.java:1-38](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyTemplateVersion.java#L1-L38)
 - [SurveyPointTemplateBinding.java:1-32](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyPointTemplateBinding.java#L1-L32)
+- [template.ts:1-60](file://admin-web-soybean/src/service/api/template.ts#L1-L60)
+- [design-id.vue:181-670](file://admin-web-soybean/src/views/template/design/[id].vue#L181-L670)
 
 **Section sources**
 - [SurveyTemplateController.java:1-194](file://admin-backend/src/main/java/com/qhiot/survey/controller/SurveyTemplateController.java#L1-L194)
@@ -259,7 +286,7 @@ Controller-->>Admin : Result<SurveyTemplate>
 - [SurveyTemplateServiceImpl.java:70-103](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/SurveyTemplateServiceImpl.java#L70-L103)
 
 ### Draft Saving and Version Management
-Drafts are saved against the template’s latest draft version or created as a new draft version. Published versions are immutable; drafts allow iterative editing before publishing.
+Drafts are saved against the template's latest draft version or created as a new draft version. Published versions are immutable; drafts allow iterative editing before publishing.
 
 ```mermaid
 flowchart TD
@@ -283,7 +310,7 @@ ThrowError --> Done
 - [SurveyTemplateServiceImpl.java:300-355](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/SurveyTemplateServiceImpl.java#L300-L355)
 
 ### Publishing and Version Control
-Publishing increments the version number, persists a new published version, updates the template’s currentVersionId, and marks the template as published. It also evicts template version cache entries.
+Publishing increments the version number, persists a new published version, updates the template's currentVersionId, and marks the template as published. It also evicts template version cache entries.
 
 ```mermaid
 sequenceDiagram
@@ -381,7 +408,7 @@ Example conceptual schema outline (descriptive):
 - fields: [
   {
     "key": "string",
-    "type": "text | numeric | date | image | dropdown",
+    "type": "text | numeric | date | image | dropdown | inline_group",
     "label": "string",
     "required": "boolean",
     "options": ["array of strings"] // for dropdown
@@ -408,6 +435,8 @@ Example conceptual schema outline (descriptive):
   }
 ]
 
+**Updated** Enhanced with new field types including inline_group for creating horizontal layouts and option-based sub-fields for dynamic conditional inputs.
+
 Note: These are conceptual outlines to guide understanding. Actual payloads are JSON strings stored in fieldsJson, rulesJson, and linkageRulesJson.
 
 **Section sources**
@@ -421,8 +450,11 @@ Supported question types are encoded in the fields array:
 - Date: date picker input
 - Image: image upload field
 - Dropdown: selection from predefined options
+- **inline_group**: horizontal layout container for combining multiple input elements
 
 Conditional logic is expressed via linkageRules that control visibility or enablement of fields based on the value of another field.
+
+**Updated** Added inline_group type for creating complex horizontal layouts and enhanced dropdown functionality with option-based sub-fields.
 
 **Section sources**
 - [SurveyTemplateVersion.java:20-30](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyTemplateVersion.java#L20-L30)
@@ -443,7 +475,7 @@ These rules are enforced during form submission and rendering.
 
 ### Template Publishing, Versioning, and Backward Compatibility
 - Publishing increments versionNo and sets status to published
-- The template’s currentVersionId points to the latest published version
+- The template's currentVersionId points to the latest published version
 - Rendering uses the published version to ensure backward compatibility
 - Cache annotations improve performance for published version retrieval
 
@@ -477,6 +509,75 @@ Access control is enforced via role-based annotations on endpoints.
 **Section sources**
 - [SurveyTemplateController.java:38-194](file://admin-backend/src/main/java/com/qhiot/survey/controller/SurveyTemplateController.java#L38-L194)
 
+## Enhanced Template Design Features
+
+### Inline Text Groups
+The enhanced template system now supports inline text groups (inline_group type) that allow combining multiple input elements horizontally. This feature enables creating compact, space-efficient form layouts.
+
+**Inline Group Configuration:**
+- **type**: "inline_group" - identifies the field as an inline container
+- **inlineItems**: array of inline elements (text, input, number)
+- **Layout flexibility**: Elements can be mixed and arranged horizontally
+
+**Inline Item Types:**
+- **text**: Static text content for labels or separators
+- **input**: Editable text input bound to form data
+- **number**: Numeric input with validation support
+- **Properties**: content, id, label, suffix, width for each item type
+
+**Section sources**
+- [template.ts:6-19](file://admin-web-soybean/src/service/api/template.ts#L6-L19)
+- [design-id.vue:203-217](file://admin-web-soybean/src/views/template/design/[id].vue#L203-L217)
+
+### Radio Button and Checkbox Sub-Field Configurations
+Advanced sub-field configurations allow radio buttons and checkboxes to dynamically show additional input fields when specific options are selected.
+
+**Sub-Field Configuration:**
+- **subFields**: array of dynamic input fields that appear conditionally
+- **Option-based triggers**: Each option can have its own set of sub-fields
+- **Dynamic visibility**: Sub-fields only appear when their parent option is selected
+
+**Sub-Field Types:**
+- **input**: Text input fields for additional details
+- **number**: Numeric inputs for quantitative data capture
+- **Properties**: id, label, type, placeholder, suffix for each sub-field
+
+**Section sources**
+- [template.ts:21-28](file://admin-web-soybean/src/service/api/template.ts#L21-L28)
+- [design-id.vue:186-201](file://admin-web-soybean/src/views/template/design/[id].vue#L186-L201)
+
+### Option-Based Sub-Fields
+Option-based sub-fields represent the most sophisticated enhancement, allowing complex conditional form logic where selecting specific options reveals additional input fields.
+
+**Implementation Details:**
+- **Toggle mechanism**: Expand/collapse functionality for option sub-fields
+- **Dynamic generation**: Sub-fields are generated programmatically based on selections
+- **Form binding**: Each sub-field maintains proper form data binding
+- **Validation support**: Sub-fields inherit validation rules from their parent context
+
+**Configuration Interface:**
+- **Add/remove options**: Dynamic option management
+- **Sub-field management**: CRUD operations for option-specific inputs
+- **Visual indicators**: Clear indication of which options have sub-fields configured
+- **Real-time updates**: Immediate visual feedback for configuration changes
+
+**Section sources**
+- [design-id.vue:187-191](file://admin-web-soybean/src/views/template/design/[id].vue#L187-L191)
+- [design-id.vue:634-649](file://admin-web-soybean/src/views/template/design/[id].vue#L634-L649)
+
+### Advanced Field Schema Enhancements
+The template system now supports enhanced field schemas with additional properties for complex form designs.
+
+**Enhanced Field Properties:**
+- **inlineItems**: Horizontal layout elements for inline groups
+- **optionSource**: Dynamic option sources (static or dictionary-driven)
+- **columns**: Multi-column layout support for complex forms
+- **subFields**: Option-specific dynamic input fields
+
+**Section sources**
+- [template.ts:67-99](file://admin-web-soybean/src/service/api/template.ts#L67-L99)
+- [design-id.vue:53-54](file://admin-web-soybean/src/views/template/design/[id].vue#L53-L54)
+
 ## Dependency Analysis
 The service layer orchestrates interactions among entities and mappers. Controllers depend on services, while services depend on mappers. Status values are governed by the TemplateStatus enum, and dictionary tables initialize system-wide status codes.
 
@@ -489,6 +590,8 @@ Service --> Mapper3["SurveyPointTemplateBindingMapper"]
 Service --> Enum["TemplateStatus"]
 Config["application.yml"] --> Service
 Dict["dictionary_tables.sql"] --> Enum
+Frontend["Template Designer"] --> API["Template API"]
+API --> Controller
 ```
 
 **Diagram sources**
@@ -500,6 +603,7 @@ Dict["dictionary_tables.sql"] --> Enum
 - [TemplateStatus.java:1-30](file://admin-backend/src/main/java/com/qhiot/survey/common/enums/TemplateStatus.java#L1-L30)
 - [application.yml:1-149](file://admin-backend/src/main/resources/application.yml#L1-L149)
 - [dictionary_tables.sql:65-69](file://admin-backend/src/main/resources/db/dictionary_tables.sql#L65-L69)
+- [template.ts:1-60](file://admin-web-soybean/src/service/api/template.ts#L1-L60)
 
 **Section sources**
 - [SurveyTemplateService.java:1-59](file://admin-backend/src/main/java/com/qhiot/survey/service/SurveyTemplateService.java#L1-L59)
@@ -513,6 +617,7 @@ Dict["dictionary_tables.sql"] --> Enum
 - Cache eviction: Operations that modify templates or versions trigger cache eviction to maintain consistency.
 - Pagination: Listing templates supports pagination to avoid heavy loads.
 - JSON parsing: Draft and publish endpoints serialize/deserialize JSON payloads; ensure payload sizes remain reasonable.
+- **Enhanced** Frontend optimization: Template designer implements efficient state management for complex nested configurations.
 
 **Section sources**
 - [SurveyTemplateService.java:32-41](file://admin-backend/src/main/java/com/qhiot/survey/service/SurveyTemplateService.java#L32-L41)
@@ -526,6 +631,8 @@ Common issues and resolutions:
 - Publishing errors: Verify that fieldsJson, rulesJson, and linkageRulesJson are valid JSON strings.
 - Cache inconsistencies: After publishing or editing, rely on automatic cache eviction or explicitly evict caches if needed.
 - Binding resolution: If no binding is returned, confirm whether a section-level binding exists; otherwise, project-level binding without sectionId applies.
+- **Enhanced** Sub-field configuration: Ensure option sub-fields are properly configured with unique IDs and appropriate validation rules.
+- **Enhanced** Inline group layout: Verify inline items have proper width settings and element combinations.
 
 **Section sources**
 - [SurveyTemplateServiceImpl.java:62-68](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/SurveyTemplateServiceImpl.java#L62-L68)
@@ -534,7 +641,9 @@ Common issues and resolutions:
 - [SurveyTemplateServiceImpl.java:248-267](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/SurveyTemplateServiceImpl.java#L248-L267)
 
 ## Conclusion
-The dynamic form template system provides a robust framework for designing, versioning, and deploying questionnaire templates. Its JSON-based field and rule definitions enable flexible question types and conditional logic, while versioning and caching ensure backward compatibility and performance. Administrative controls and outfall-type bindings integrate seamlessly with survey point assignments, supporting scalable and maintainable survey workflows.
+The dynamic form template system provides a robust framework for designing, versioning, and deploying questionnaire templates. Its JSON-based field and rule definitions enable flexible question types and conditional logic, while versioning and caching ensure backward compatibility and performance. The enhanced template design system now supports advanced features including inline text groups, radio button and checkbox sub-field configurations, and option-based sub-fields for creating highly dynamic and responsive forms. Administrative controls and outfall-type bindings integrate seamlessly with survey point assignments, supporting scalable and maintainable survey workflows.
+
+**Updated** The system now offers sophisticated form design capabilities with inline layouts, conditional sub-fields, and dynamic option-based inputs, significantly expanding the range of survey scenarios that can be effectively supported.
 
 ## Appendices
 
@@ -552,3 +661,10 @@ TemplateStatus enum defines the lifecycle states used across the system.
 
 **Section sources**
 - [application.yml:64-96](file://admin-backend/src/main/resources/application.yml#L64-L96)
+
+### Appendix C: Enhanced Field Type Definitions
+**Updated** New field types and configurations supported by the enhanced template system.
+
+**Section sources**
+- [template.ts:67-99](file://admin-web-soybean/src/service/api/template.ts#L67-L99)
+- [design-id.vue:654-670](file://admin-web-soybean/src/views/template/design/[id].vue#L654-L670)

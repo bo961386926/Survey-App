@@ -2,6 +2,9 @@
 
 <cite>
 **Referenced Files in This Document**
+- [index.vue](file://admin-web-soybean/src/views/system/collab/index.vue)
+- [collab.ts](file://admin-web-soybean/src/service/api/collab.ts)
+- [builtin.ts](file://admin-web-soybean/src/router/routes/builtin.ts)
 - [JwtAuthenticationFilter.java](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java)
 - [CollabSecurityService.java](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java)
 - [JwtUtil.java](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java)
@@ -20,11 +23,10 @@
 
 ## Update Summary
 **Changes Made**
-- Enhanced collaboration security service with comprehensive white-list based access control
-- Implemented detailed collaborative token support with dedicated ROLE_COLLAB role
-- Added comprehensive access logging system for third-party collaborator monitoring
-- Strengthened endpoint restrictions with explicit blacklist and whitelist policies
-- Expanded permission-based access control with object-level scope enforcement
+- Added frontend Vue component for collaboration token management interface
+- Integrated frontend API service for collaboration token operations
+- Added routing configuration for collaboration management UI
+- Enhanced collaboration access management with comprehensive frontend/backend integration
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -32,17 +34,18 @@
 3. [Core Components](#core-components)
 4. [Architecture Overview](#architecture-overview)
 5. [Detailed Component Analysis](#detailed-component-analysis)
-6. [Dependency Analysis](#dependency-analysis)
-7. [Performance Considerations](#performance-considerations)
-8. [Troubleshooting Guide](#troubleshooting-guide)
-9. [Conclusion](#conclusion)
-10. [Appendices](#appendices)
+6. [Frontend Integration](#frontend-integration)
+7. [Dependency Analysis](#dependency-analysis)
+8. [Performance Considerations](#performance-considerations)
+9. [Troubleshooting Guide](#troubleshooting-guide)
+10. [Conclusion](#conclusion)
+11. [Appendices](#appendices)
 
 ## Introduction
-This document explains the enhanced collaboration token system that enables controlled, cross-platform access to survey-related resources with comprehensive security policies. The system now features white-list based access control, collaborative token support, and detailed access logging for third-party collaborators. The architecture provides robust security controls with explicit endpoint restrictions, object-level scope enforcement, and comprehensive audit trails for monitoring collaboration activities across external platforms.
+This document explains the enhanced collaboration token system that enables controlled, cross-platform access to survey-related resources with comprehensive security policies. The system now features white-list based access control, collaborative token support, detailed access logging for third-party collaborators, and a complete frontend management interface. The architecture provides robust security controls with explicit endpoint restrictions, object-level scope enforcement, comprehensive audit trails, and user-friendly administration capabilities for monitoring collaboration activities across external platforms.
 
 ## Project Structure
-The collaboration token system spans security filters, services, controllers, persistence, and tests. The backend module organizes these concerns by package:
+The collaboration token system spans security filters, services, controllers, persistence, frontend components, and tests. The backend module organizes these concerns by package:
 - security: authentication filter and enhanced collaboration-specific security logic with white-list access control
 - service and impl: business logic for collaboration entries and token issuance with permission validation
 - controller: REST endpoints for managing collaboration entries and issuing tokens
@@ -51,25 +54,31 @@ The collaboration token system spans security filters, services, controllers, pe
 - common/constant: permission code definitions for granular access control
 - init-data: database schema initialization
 - resources: runtime configuration (JWT secrets and expiration)
+- frontend: Vue component with API service and routing for collaboration management
 
 ```mermaid
 graph TB
-subgraph "Security Layer"
+subgraph "Backend Security Layer"
 F["JwtAuthenticationFilter"]
 S["CollabSecurityService"]
 U["JwtUtil"]
 P["Permissions"]
 end
-subgraph "Service Layer"
+subgraph "Backend Service Layer"
 CEC["CollabEntryController"]
 CES["CollabEntryService"]
 CEI["CollabEntryServiceImpl"]
 end
-subgraph "Persistence"
+subgraph "Backend Persistence"
 M1["CollabEntryMapper"]
 M2["CollabAccessLogMapper"]
 E1["CollabEntry"]
 E2["CollabAccessLog"]
+end
+subgraph "Frontend Interface"
+VC["Vue Collaboration Component"]
+VA["Collaboration API Service"]
+VR["Route Configuration"]
 end
 subgraph "Runtime Config"
 CFG["application.yml"]
@@ -85,25 +94,28 @@ CEI --> U
 S --> M1
 S --> M2
 CFG --> U
+VC --> VA
+VA --> CEC
+VR --> VC
 ```
 
 **Diagram sources**
-- [JwtAuthenticationFilter.java:39-41](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java#L39-L41)
-- [CollabSecurityService.java:38-45](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L38-L45)
-- [JwtUtil.java:22-29](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java#L22-L29)
-- [Permissions.java:9-114](file://admin-backend/src/main/java/com/qhiot/survey/common/constant/Permissions.java#L9-L114)
-- [CollabEntryController.java:24-25](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java#L24-L25)
-- [CollabEntryServiceImpl.java:28-32](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java#L28-L32)
-- [CollabEntryMapper.java:1-9](file://admin-backend/src/main/java/com/qhiot/survey/mapper/CollabEntryMapper.java#L1-L9)
-- [CollabAccessLogMapper.java:1-12](file://admin-backend/src/main/java/com/qhiot/survey/mapper/CollabAccessLogMapper.java#L1-L12)
-- [application.yml:9-13](file://admin-backend/src/main/resources/application.yml#L9-L13)
+- [index.vue](file://admin-web-soybean/src/views/system/collab/index.vue)
+- [collab.ts](file://admin-web-soybean/src/service/api/collab.ts)
+- [builtin.ts](file://admin-web-soybean/src/router/routes/builtin.ts)
+- [JwtAuthenticationFilter.java](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java)
+- [CollabSecurityService.java](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java)
+- [JwtUtil.java](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java)
+- [CollabEntryController.java](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java)
+- [CollabEntryServiceImpl.java](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java)
 
 **Section sources**
-- [JwtAuthenticationFilter.java:39-41](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java#L39-L41)
-- [CollabEntryController.java:24-25](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java#L24-L25)
-- [CollabEntryServiceImpl.java:28-32](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java#L28-L32)
-- [01-init.sql:212-229](file://admin-backend/init-data/01-init.sql#L212-L229)
-- [application.yml:9-13](file://admin-backend/src/main/resources/application.yml#L9-L13)
+- [index.vue](file://admin-web-soybean/src/views/system/collab/index.vue)
+- [collab.ts](file://admin-web-soybean/src/service/api/collab.ts)
+- [builtin.ts](file://admin-web-soybean/src/router/routes/builtin.ts)
+- [JwtAuthenticationFilter.java](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java)
+- [CollabEntryController.java](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java)
+- [CollabEntryServiceImpl.java](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java)
 
 ## Core Components
 - **JwtAuthenticationFilter**: Central filter that detects collaboration tokens (loginType=collab), validates the associated entry, applies white-list/blacklist access control with object-level scope enforcement, sets a dedicated ROLE_COLLAB, and writes comprehensive access logs.
@@ -113,68 +125,80 @@ CFG --> U
 - **JwtUtil**: Generates collaboration tokens embedding collabEntryId and loginType=collab, and extracts claims for validation.
 - **Permissions**: Defines granular permission codes (project:view, point:view, audit:view, etc.) for fine-grained access control.
 - **Persistence**: CollabEntry and CollabAccessLog entities backed by CollabEntryMapper and CollabAccessLogMapper with enhanced indexing for performance.
+- **Vue Collaboration Component**: Frontend interface for managing collaboration tokens with real-time data binding, form validation, and responsive design.
+- **Collaboration API Service**: Frontend service layer handling HTTP requests to collaboration endpoints with error handling and data transformation.
+- **Route Configuration**: Navigation setup for collaboration management interface with proper authentication guards.
 - **Tests**: CollabTokenSecurityTest validates access policy enforcement, object-level scope restrictions, and comprehensive filter behavior under various scenarios.
 
 **Section sources**
-- [JwtAuthenticationFilter.java:45-130](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java#L45-L130)
-- [CollabSecurityService.java:47-117](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L47-L117)
-- [CollabEntryController.java:19-89](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java#L19-L89)
-- [CollabEntryService.java:9-53](file://admin-backend/src/main/java/com/qhiot/survey/service/CollabEntryService.java#L9-L53)
-- [CollabEntryServiceImpl.java:25-142](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java#L25-L142)
-- [JwtUtil.java:57-68](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java#L57-L68)
-- [Permissions.java:16-112](file://admin-backend/src/main/java/com/qhiot/survey/common/constant/Permissions.java#L16-L112)
-- [CollabEntry.java:10-59](file://admin-backend/src/main/java/com/qhiot/survey/entity/CollabEntry.java#L10-L59)
-- [CollabAccessLog.java:11-43](file://admin-backend/src/main/java/com/qhiot/survey/entity/CollabAccessLog.java#L11-L43)
-- [CollabTokenSecurityTest.java:34-294](file://admin-backend/src/test/java/com/qhiot/survey/security/CollabTokenSecurityTest.java#L34-L294)
+- [JwtAuthenticationFilter.java](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java)
+- [CollabSecurityService.java](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java)
+- [CollabEntryController.java](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java)
+- [CollabEntryService.java](file://admin-backend/src/main/java/com/qhiot/survey/service/CollabEntryService.java)
+- [CollabEntryServiceImpl.java](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java)
+- [JwtUtil.java](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java)
+- [Permissions.java](file://admin-backend/src/main/java/com/qhiot/survey/common/constant/Permissions.java)
+- [index.vue](file://admin-web-soybean/src/views/system/collab/index.vue)
+- [collab.ts](file://admin-web-soybean/src/service/api/collab.ts)
+- [builtin.ts](file://admin-web-soybean/src/router/routes/builtin.ts)
 
 ## Architecture Overview
-The enhanced collaboration token architecture now features comprehensive security policies with white-list based access control for third-party integrations, including object-level scope enforcement and detailed audit logging.
+The enhanced collaboration token architecture now features comprehensive security policies with white-list based access control for third-party integrations, including object-level scope enforcement, detailed audit logging, and a complete frontend management interface.
 
 ```mermaid
 sequenceDiagram
-participant Ext as "External Platform"
-participant API as "CollabEntryController"
+participant Admin as "Administrator"
+participant UI as "Vue Collaboration Component"
+participant API as "Collaboration API Service"
+participant Ctl as "CollabEntryController"
 participant Svc as "CollabEntryServiceImpl"
 participant Util as "JwtUtil"
 participant Sec as "CollabSecurityService"
 participant Filt as "JwtAuthenticationFilter"
-Ext->>API : "POST /api/v1/collab/{id}/issue-token"
-API->>Svc : "issueCollabToken(entryId)"
-Svc->>Svc : "validate entry status, TTL, and permissions"
-Svc->>Util : "generateCollabToken(entryId, entryName, ttl)"
-Util-->>Svc : "collab JWT"
-Svc-->>API : "JWT string"
-API-->>Ext : "JWT string"
-note over Ext,Filt : "Subsequent requests include Authorization : Bearer <JWT>"
-Ext->>Filt : "HTTP Request with JWT"
-Filt->>Util : "getLoginType(token)"
-Util-->>Filt : "loginType=collab"
-Filt->>Sec : "loadValidEntry(entryId)"
-Sec-->>Filt : "entry or null"
-alt "Invalid entry"
-Filt->>Sec : "logAccess(entryId, token, request, 401)"
-Filt-->>Ext : "401 Unauthorized"
-else "Valid entry"
-Filt->>Sec : "isAccessAllowed(entry, request)"
-Sec->>Sec : "check blacklist + whitelist + object scope"
-Sec-->>Filt : "true/false"
-alt "Allowed"
-Filt->>Filt : "set ROLE_COLLAB + granted permissions"
-Filt->>Filt : "proceed to handler"
-Filt->>Sec : "logAccess(entryId, token, request, response.status)"
-else "Denied"
-Filt->>Sec : "logAccess(entryId, token, request, 403)"
-Filt-->>Ext : "403 Forbidden"
-end
-end
+Admin->>UI : "Open Collaboration Management"
+UI->>API : "GET /api/v1/collab/list"
+API->>Ctl : "List collaboration entries"
+Ctl->>Svc : "getEntries()"
+Svc-->>Ctl : "List of entries"
+Ctl-->>API : "JSON response"
+API-->>UI : "Render entries table"
+Admin->>UI : "Create new collaboration entry"
+UI->>API : "POST /api/v1/collab"
+API->>Ctl : "createCollabEntry(entryData)"
+Ctl->>Svc : "createEntry(entryData)"
+Svc->>Svc : "validate permissions and scope"
+Svc->>Util : "generateCollabToken(entryId)"
+Util-->>Svc : "JWT token"
+Svc-->>Ctl : "Entry with token"
+Ctl-->>API : "Created entry"
+API-->>UI : "Refresh list"
+note over Admin,Filt : "External platform uses issued token"
+Admin->>UI : "Issue token for entry"
+UI->>API : "POST /api/v1/collab/{id}/issue-token"
+API->>Ctl : "issueCollabToken(entryId)"
+Ctl->>Svc : "issueCollabToken(entryId)"
+Svc->>Util : "generateCollabToken(entryId)"
+Util-->>Svc : "JWT"
+Svc-->>Ctl : "JWT string"
+Ctl-->>API : "JWT"
+API-->>UI : "Display token"
+Admin->>UI : "Reset token"
+UI->>API : "PUT /api/v1/collab/{id}/reset-token"
+API->>Ctl : "resetToken(entryId)"
+Ctl->>Svc : "resetToken(entryId)"
+Svc->>Util : "generate new token"
+Util-->>Svc : "New JWT"
+Svc-->>Ctl : "New token"
+Ctl-->>API : "New token"
+API-->>UI : "Confirm reset"
 ```
 
 **Diagram sources**
-- [CollabEntryController.java:83-88](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java#L83-L88)
-- [CollabEntryServiceImpl.java:121-141](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java#L121-L141)
-- [JwtUtil.java:57-68](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java#L57-L68)
-- [JwtAuthenticationFilter.java:88-130](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java#L88-L130)
-- [CollabSecurityService.java:77-117](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L77-L117)
+- [index.vue](file://admin-web-soybean/src/views/system/collab/index.vue)
+- [collab.ts](file://admin-web-soybean/src/service/api/collab.ts)
+- [CollabEntryController.java](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java)
+- [CollabEntryServiceImpl.java](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java)
+- [JwtUtil.java](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java)
 
 ## Detailed Component Analysis
 
@@ -215,14 +239,12 @@ Allowed --> |Yes| SetAuth["Set ROLE_COLLAB + granted permissions"] --> Next["Pro
 ```
 
 **Diagram sources**
-- [JwtAuthenticationFilter.java:88-130](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java#L88-L130)
-- [CollabSecurityService.java:77-171](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L77-L171)
-- [CollabSecurityService.java:257-271](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L257-L271)
+- [JwtAuthenticationFilter.java](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java)
+- [CollabSecurityService.java](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java)
 
 **Section sources**
-- [CollabSecurityService.java:77-171](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L77-L171)
-- [JwtAuthenticationFilter.java:88-130](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java#L88-L130)
-- [CollabTokenSecurityTest.java:107-166](file://admin-backend/src/test/java/com/qhiot/survey/security/CollabTokenSecurityTest.java#L107-L166)
+- [CollabSecurityService.java](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java)
+- [JwtAuthenticationFilter.java](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java)
 
 ### Token Lifecycle: Enhanced Creation to Expiration
 The token lifecycle now includes enhanced validation and permission management:
@@ -235,42 +257,55 @@ The token lifecycle now includes enhanced validation and permission management:
 
 ```mermaid
 sequenceDiagram
-participant Admin as "Admin"
+participant Admin as "Administrator"
+participant UI as "Vue Collaboration Component"
+participant API as "Collaboration API Service"
 participant Ctl as "CollabEntryController"
 participant Svc as "CollabEntryServiceImpl"
 participant Util as "JwtUtil"
-participant DB as "CollabEntryMapper"
-Admin->>Ctl : "POST /api/v1/collab (createEntry with permissions)"
-Ctl->>Svc : "createEntry(entry with projectIds, pointIds, permissions)"
+Admin->>UI : "Create collaboration entry"
+UI->>API : "POST /api/v1/collab"
+API->>Ctl : "createCollabEntry(entryData)"
+Ctl->>Svc : "createEntry(entryData)"
 Svc->>Svc : "set token, status=1, validate permissions"
-Svc->>DB : "save(entry with enhanced permissions)"
-Svc-->>Ctl : "entry with token and permissions"
-Ctl-->>Admin : "entry with comprehensive permissions"
-Admin->>Ctl : "POST /api/v1/collab/{id}/issue-token"
-Ctl->>Svc : "issueCollabToken(id)"
+Svc->>Util : "generateCollabToken(entryId)"
+Util-->>Svc : "JWT token"
+Svc-->>Ctl : "Entry with token"
+Ctl-->>API : "Created entry"
+API-->>UI : "Entry with token"
+Admin->>UI : "Issue token for entry"
+UI->>API : "POST /api/v1/collab/{id}/issue-token"
+API->>Ctl : "issueCollabToken(entryId)"
+Ctl->>Svc : "issueCollabToken(entryId)"
 Svc->>Svc : "validate entry, TTL, and permission scope"
 Svc->>Util : "generateCollabToken(entryId, entryName, ttl)"
 Util-->>Svc : "JWT with enhanced claims"
 Svc-->>Ctl : "JWT"
-Ctl-->>Admin : "JWT"
-Admin->>Ctl : "PUT /api/v1/collab/{id}/reset-token"
-Ctl->>Svc : "resetToken(id)"
+Ctl-->>API : "JWT"
+API-->>UI : "Display token"
+Admin->>UI : "Reset token"
+UI->>API : "PUT /api/v1/collab/{id}/reset-token"
+API->>Ctl : "resetToken(entryId)"
+Ctl->>Svc : "resetToken(entryId)"
 Svc->>Svc : "generate new token with updated permissions"
-Svc->>DB : "update token"
-Svc-->>Ctl : "new token"
-Ctl-->>Admin : "new token"
+Svc->>Util : "generate new token"
+Util-->>Svc : "New JWT"
+Svc-->>Ctl : "New token"
+Ctl-->>API : "New token"
+API-->>UI : "Confirm reset"
 ```
 
 **Diagram sources**
-- [CollabEntryController.java:42-88](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java#L42-L88)
-- [CollabEntryServiceImpl.java:44-141](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java#L44-L141)
-- [JwtUtil.java:57-68](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java#L57-L68)
-- [CollabEntryMapper.java:1-9](file://admin-backend/src/main/java/com/qhiot/survey/mapper/CollabEntryMapper.java#L1-L9)
+- [index.vue](file://admin-web-soybean/src/views/system/collab/index.vue)
+- [collab.ts](file://admin-web-soybean/src/service/api/collab.ts)
+- [CollabEntryController.java](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java)
+- [CollabEntryServiceImpl.java](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java)
+- [JwtUtil.java](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java)
 
 **Section sources**
-- [CollabEntryServiceImpl.java:44-141](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java#L44-L141)
-- [CollabEntryController.java:42-88](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java#L42-L88)
-- [JwtUtil.java:57-68](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java#L57-L68)
+- [CollabEntryServiceImpl.java](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java)
+- [CollabEntryController.java](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java)
+- [JwtUtil.java](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java)
 
 ### Comprehensive Access Logging and Advanced Auditing
 The access logging system now provides detailed audit trails with enhanced information capture:
@@ -306,14 +341,13 @@ CollabSecurityService --> CollabAccessLogMapper : "persists comprehensive logs"
 ```
 
 **Diagram sources**
-- [CollabAccessLog.java:11-43](file://admin-backend/src/main/java/com/qhiot/survey/entity/CollabAccessLog.java#L11-L43)
-- [CollabAccessLogMapper.java:1-12](file://admin-backend/src/main/java/com/qhiot/survey/mapper/CollabAccessLogMapper.java#L1-L12)
-- [CollabSecurityService.java:257-271](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L257-L271)
+- [CollabAccessLog.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/CollabAccessLog.java)
+- [CollabAccessLogMapper.java](file://admin-backend/src/main/java/com/qhiot/survey/mapper/CollabAccessLogMapper.java)
+- [CollabSecurityService.java](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java)
 
 **Section sources**
-- [CollabSecurityService.java:257-271](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L257-L271)
-- [CollabEntryServiceImpl.java:110-119](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java#L110-L119)
-- [01-init.sql:398-410](file://admin-backend/init-data/01-init.sql#L398-L410)
+- [CollabSecurityService.java](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java)
+- [CollabEntryServiceImpl.java](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java)
 
 ### Security Implications vs Internal Tokens
 The enhanced collaboration token system provides significantly stronger security controls compared to internal tokens:
@@ -328,15 +362,14 @@ The enhanced collaboration token system provides significantly stronger security
 - **Enhanced endpoint restrictions**: Collaboration tokens are denied access to all administrative operations, exports, user/role/system management, dictionaries, health actuator endpoints, and any write operations.
 
 **Section sources**
-- [JwtAuthenticationFilter.java:26-34](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java#L26-L34)
-- [CollabSecurityService.java:77-117](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L77-L117)
-- [CollabTokenSecurityTest.java:126-144](file://admin-backend/src/test/java/com/qhiot/survey/security/CollabTokenSecurityTest.java#L126-L144)
+- [JwtAuthenticationFilter.java](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java)
+- [CollabSecurityService.java](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java)
 
 ### Examples and Enhanced Workflows
 
 - **Example**: Generate an enhanced collaboration token with comprehensive permissions
-  - Admin creates collaboration entry with projectIds="[100,101]", pointIds="[200,201]", and permissions='["project:view","point:view","audit:view"]'
-  - Admin calls POST /api/v1/collab/{id}/issue-token to obtain JWT with loginType=collab and embedded collabEntryId
+  - Administrator creates collaboration entry with projectIds="[100,101]", pointIds="[200,201]", and permissions='["project:view","point:view","audit:view"]'
+  - Administrator uses Vue interface to issue token, which calls POST /api/v1/collab/{id}/issue-token to obtain JWT with loginType=collab and embedded collabEntryId
   - Token's TTL derived from entry's expireTime or defaults to 7 days with enhanced permission validation
 
 - **Example**: Validate collaboration token with object-level scope enforcement
@@ -352,18 +385,17 @@ The enhanced collaboration token system provides significantly stronger security
   - Filter denies access (403) due to method restriction, logs the attempt with policy decision details
 
 - **Example**: Entry revocation with immediate effect
-  - Admin revokes collaboration entry (status=3)
+  - Administrator revokes collaboration entry (status=3)
   - Any subsequent access attempts with tokens tied to that entry return 401 with detailed revocation logging
 
 - **Example**: Token reset with updated permissions
-  - Admin resets token for entry with updated project scope
+  - Administrator resets token for entry with updated project scope
   - Old token becomes invalid immediately; new token reflects updated permissions for future use
 
 **Section sources**
-- [CollabEntryController.java:56-88](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java#L56-L88)
-- [CollabEntryServiceImpl.java:66-89](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java#L66-L89)
-- [JwtAuthenticationFilter.java:88-130](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java#L88-L130)
-- [CollabTokenSecurityTest.java:172-276](file://admin-backend/src/test/java/com/qhiot/survey/security/CollabTokenSecurityTest.java#L172-L276)
+- [CollabEntryController.java](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java)
+- [CollabEntryServiceImpl.java](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java)
+- [JwtAuthenticationFilter.java](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java)
 
 ### Integration Patterns and Advanced Collaborative Workflow Management
 The enhanced collaboration system supports sophisticated integration patterns with comprehensive security controls:
@@ -374,11 +406,48 @@ The enhanced collaboration system supports sophisticated integration patterns wi
 - **Administrators** manage collaboration entries with detailed permission configurations, set expirations, revoke access, and reset tokens as needed
 - **Advanced monitoring** through comprehensive access logs enables security monitoring, compliance reporting, and incident response by correlating entryId, IP, request paths, and authorization outcomes
 - **Audit compliance** with detailed logging of permission validations, scope enforcement, and access decisions for regulatory requirements
+- **Frontend management** through Vue component provides intuitive interface for creating, managing, and monitoring collaboration tokens with real-time feedback
 
 **Section sources**
-- [CollabEntryController.java:19-89](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java#L19-L89)
-- [CollabEntryServiceImpl.java:110-119](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java#L110-L119)
-- [01-init.sql:212-229](file://admin-backend/init-data/01-init.sql#L212-L229)
+- [CollabEntryController.java](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java)
+- [CollabEntryServiceImpl.java](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java)
+- [index.vue](file://admin-web-soybean/src/views/system/collab/index.vue)
+
+## Frontend Integration
+
+### Vue Collaboration Component
+The new Vue component provides a comprehensive interface for managing collaboration tokens with modern web development practices:
+
+- **Real-time data binding**: Reactive forms for creating and editing collaboration entries with automatic validation
+- **Responsive design**: Mobile-first layout supporting various screen sizes and devices
+- **Form validation**: Client-side validation for required fields, permission formats, and scope constraints
+- **Error handling**: Comprehensive error messages and user feedback for failed operations
+- **Loading states**: Progress indicators and disabled states during API operations
+- **Table interface**: Grid view for displaying collaboration entries with sorting, filtering, and pagination
+- **Action buttons**: Create, edit, delete, issue token, and reset token actions with appropriate permissions
+
+### Collaboration API Service
+The frontend service layer handles all communication with the backend collaboration endpoints:
+
+- **HTTP client integration**: Axios-based service with proper error handling and response transformation
+- **Endpoint abstraction**: Clean API methods for all collaboration operations (list, create, update, delete, issue token, reset token)
+- **Data transformation**: Converts between frontend data structures and backend API formats
+- **Authentication integration**: Automatically includes JWT tokens in requests when available
+- **Error propagation**: Proper error handling and user-friendly error messages
+- **Loading state management**: Tracks request status for UI feedback
+
+### Route Configuration
+The routing system provides seamless navigation to the collaboration management interface:
+
+- **Protected routes**: Authentication guards prevent access without proper credentials
+- **Navigation integration**: Menu items and breadcrumbs for easy access to collaboration management
+- **Lazy loading**: Component lazy loading for improved performance
+- **Route parameters**: Support for viewing specific collaboration entries and their associated tokens
+
+**Section sources**
+- [index.vue](file://admin-web-soybean/src/views/system/collab/index.vue)
+- [collab.ts](file://admin-web-soybean/src/service/api/collab.ts)
+- [builtin.ts](file://admin-web-soybean/src/router/routes/builtin.ts)
 
 ## Dependency Analysis
 The enhanced collaboration token system maintains low coupling with improved separation of concerns:
@@ -386,6 +455,9 @@ The enhanced collaboration token system maintains low coupling with improved sep
 - CollabSecurityService depends on CollabEntryMapper and CollabAccessLogMapper for enhanced persistence with detailed audit logging.
 - CollabEntryServiceImpl orchestrates business logic, enhanced token generation with permission validation, and comprehensive access log retrieval.
 - Controllers expose management APIs for collaboration entries with enhanced validation and token issuance.
+- Vue Collaboration Component integrates with Collaboration API Service for frontend-backend communication.
+- Collaboration API Service depends on HTTP client configuration and authentication state management.
+- Route configuration manages navigation and access control for the collaboration management interface.
 
 ```mermaid
 graph LR
@@ -399,19 +471,28 @@ CES --> CEI["CollabEntryServiceImpl"]
 CEI --> M1
 CEI --> M2
 CEI --> U
+VC["Vue Collaboration Component"] --> VA["Collaboration API Service"]
+VA --> CEC
+VR["Route Configuration"] --> VC
 ```
 
 **Diagram sources**
-- [JwtAuthenticationFilter.java:41-43](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java#L41-L43)
-- [CollabSecurityService.java:43-45](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L43-L45)
-- [CollabEntryServiceImpl.java:28-32](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java#L28-L32)
-- [CollabEntryController.java:24-25](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java#L24-L25)
+- [JwtAuthenticationFilter.java](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java)
+- [CollabSecurityService.java](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java)
+- [CollabEntryServiceImpl.java](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java)
+- [CollabEntryController.java](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java)
+- [index.vue](file://admin-web-soybean/src/views/system/collab/index.vue)
+- [collab.ts](file://admin-web-soybean/src/service/api/collab.ts)
+- [builtin.ts](file://admin-web-soybean/src/router/routes/builtin.ts)
 
 **Section sources**
-- [JwtAuthenticationFilter.java:41-43](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java#L41-L43)
-- [CollabSecurityService.java:43-45](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L43-L45)
-- [CollabEntryServiceImpl.java:28-32](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java#L28-L32)
-- [CollabEntryController.java:24-25](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java#L24-L25)
+- [JwtAuthenticationFilter.java](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java)
+- [CollabSecurityService.java](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java)
+- [CollabEntryServiceImpl.java](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/CollabEntryServiceImpl.java)
+- [CollabEntryController.java](file://admin-backend/src/main/java/com/qhiot/survey/controller/CollabEntryController.java)
+- [index.vue](file://admin-web-soybean/src/views/system/collab/index.vue)
+- [collab.ts](file://admin-web-soybean/src/service/api/collab.ts)
+- [builtin.ts](file://admin-web-soybean/src/router/routes/builtin.ts)
 
 ## Performance Considerations
 The enhanced collaboration token system maintains optimal performance with additional security features:
@@ -419,11 +500,13 @@ The enhanced collaboration token system maintains optimal performance with addit
 - Access log writes are best-effort with enhanced error handling and wrapped in try/catch blocks to avoid impacting request processing latency.
 - Enhanced indexing on collab_entry.token, collab_access_log entry_id, and collab_access_log authorization_scope improves query performance for lookups, audits, and scope validation.
 - Permission validation occurs efficiently using JSON-based permission storage with optimized lookup algorithms.
+- Frontend component optimization through lazy loading, efficient rendering, and minimal re-renders for improved user experience.
+- API service caching strategies for frequently accessed collaboration data to reduce server load.
 
 **Section sources**
-- [CollabSecurityService.java:257-271](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L257-L271)
-- [01-init.sql:227-228](file://admin-backend/init-data/01-init.sql#L227-L228)
-- [01-init.sql:408-409](file://admin-backend/init-data/01-init.sql#L408-L409)
+- [CollabSecurityService.java](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java)
+- [index.vue](file://admin-web-soybean/src/views/system/collab/index.vue)
+- [collab.ts](file://admin-web-soybean/src/service/api/collab.ts)
 
 ## Troubleshooting Guide
 Enhanced troubleshooting guidance for the improved collaboration token system:
@@ -440,14 +523,22 @@ Enhanced troubleshooting guidance for the improved collaboration token system:
   - Verify collaboration entry contains proper JSON-encoded permissions array, check projectIds and pointIds arrays match expected formats, ensure permission strings follow required format.
 - **Scope enforcement issues**:
   - Confirm object-level scope arrays (projectIds, pointIds) contain correct identifiers, verify parameter-based scope validation for list endpoints, check URI pattern matching for scope enforcement.
+- **Frontend component not loading**:
+  - Check Vue component compilation, verify API service connectivity, ensure proper route configuration, confirm authentication state.
+- **API service errors**:
+  - Verify backend endpoint availability, check network connectivity, ensure proper error handling, confirm JWT token validity.
+- **Route access issues**:
+  - Check authentication guards, verify user permissions, ensure proper route configuration, confirm navigation setup.
 
 **Section sources**
-- [JwtAuthenticationFilter.java:88-130](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java#L88-L130)
-- [CollabSecurityService.java:257-271](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L257-L271)
-- [CollabTokenSecurityTest.java:172-276](file://admin-backend/src/test/java/com/qhiot/survey/security/CollabTokenSecurityTest.java#L172-L276)
+- [JwtAuthenticationFilter.java](file://admin-backend/src/main/java/com/qhiot/survey/security/JwtAuthenticationFilter.java)
+- [CollabSecurityService.java](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java)
+- [index.vue](file://admin-web-soybean/src/views/system/collab/index.vue)
+- [collab.ts](file://admin-web-soybean/src/service/api/collab.ts)
+- [builtin.ts](file://admin-web-soybean/src/router/routes/builtin.ts)
 
 ## Conclusion
-The enhanced collaboration token system provides a robust, auditable mechanism for granting controlled access to specific survey resources across platforms. With comprehensive white-list based access control policies, object-level scope restrictions, and detailed audit logging, the system significantly strengthens security while enabling flexible integrations. The enhanced permission model allows fine-grained control over read operations, administrators retain full control over lifecycle events with comprehensive logging, and the advanced audit capabilities support ongoing monitoring, compliance, and security incident response.
+The enhanced collaboration token system provides a robust, auditable mechanism for granting controlled access to specific survey resources across platforms. With comprehensive white-list based access control policies, object-level scope restrictions, detailed audit logging, and a complete frontend management interface, the system significantly strengthens security while enabling flexible integrations. The enhanced permission model allows fine-grained control over read operations, administrators retain full control over lifecycle events with comprehensive logging, the advanced audit capabilities support ongoing monitoring, compliance, and security incident response, and the frontend Vue component provides an intuitive user experience for managing collaboration tokens effectively.
 
 ## Appendices
 
@@ -456,14 +547,16 @@ The enhanced collaboration token system provides a robust, auditable mechanism f
 - **collab_access_log**: records detailed access attempts with authorization scope validation and permission decision logs for comprehensive auditing.
 
 **Section sources**
-- [01-init.sql:212-229](file://admin-backend/init-data/01-init.sql#L212-L229)
-- [01-init.sql:398-410](file://admin-backend/init-data/01-init.sql#L398-L410)
+- [01-init.sql](file://admin-backend/init-data/01-init.sql)
+- [01-init.sql](file://admin-backend/init-data/01-init.sql)
 
 ### Runtime Configuration
 - JWT secret and expiration configured via application.yml and injected into JwtUtil for enhanced token generation.
 - Enhanced security policies configured through CollabSecurityService with comprehensive access control rules.
+- Frontend API service configuration supports environment-specific backend URLs and authentication handling.
 
 **Section sources**
-- [application.yml:9-13](file://admin-backend/src/main/resources/application.yml#L9-L13)
-- [JwtUtil.java:22-29](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java#L22-L29)
-- [CollabSecurityService.java:38-45](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java#L38-L45)
+- [application.yml](file://admin-backend/src/main/resources/application.yml)
+- [JwtUtil.java](file://admin-backend/src/main/java/com/qhiot/survey/common/util/JwtUtil.java)
+- [CollabSecurityService.java](file://admin-backend/src/main/java/com/qhiot/survey/security/CollabSecurityService.java)
+- [collab.ts](file://admin-web-soybean/src/service/api/collab.ts)
