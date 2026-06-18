@@ -15,7 +15,16 @@
 - [ProjectSection.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/ProjectSection.java)
 - [ProjectMapper.java](file://admin-backend/src/main/java/com/qhiot/survey/mapper/ProjectMapper.java)
 - [create-modal.vue](file://admin-web-soybean/src/views/project/modules/create-modal.vue)
+- [[id].vue](file://admin-web-soybean/src/views/project/detail/[id].vue)
+- [业务流程与状态变更-V2.1.md](file://doc/业务流程与状态变更-V2.1.md)
 </cite>
+
+## Update Summary
+**Changes Made**
+- Enhanced project status management system with comprehensive status transitions (draft, in-progress, paused, completed, archived)
+- Added startup checklist validation for project initiation
+- Improved project lifecycle management capabilities with enhanced state machine validation
+- Updated status transition rules and frontend validation logic
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -23,17 +32,19 @@
 3. [Core Components](#core-components)
 4. [Architecture Overview](#architecture-overview)
 5. [Detailed Component Analysis](#detailed-component-analysis)
-6. [Dependency Analysis](#dependency-analysis)
-7. [Performance Considerations](#performance-considerations)
-8. [Troubleshooting Guide](#troubleshooting-guide)
-9. [Conclusion](#conclusion)
-10. [Appendices](#appendices)
+6. [Enhanced Status Management System](#enhanced-status-management-system)
+7. [Startup Checklist Validation](#startup-checklist-validation)
+8. [Dependency Analysis](#dependency-analysis)
+9. [Performance Considerations](#performance-considerations)
+10. [Troubleshooting Guide](#troubleshooting-guide)
+11. [Conclusion](#conclusion)
+12. [Appendices](#appendices)
 
 ## Introduction
-This document describes the project lifecycle management functionality of the Survey Application. It covers the complete lifecycle from project creation to completion and archival, including project phases (draft, active, paused, completed, archived), timeline management, status tracking, progress metrics, creation workflows, milestone tracking, status transitions, approval processes, and automated state changes. It also explains integrations with survey point allocation and resource management during different project phases.
+This document describes the enhanced project lifecycle management functionality of the Survey Application. The system now features a comprehensive status management system with five distinct states (draft, in-progress, paused, completed, archived) and includes startup checklist validation to ensure proper project initialization. The enhanced system provides improved state machine validation, automated state changes, and comprehensive lifecycle management capabilities with integrated progress tracking and resource management.
 
 ## Project Structure
-The project lifecycle spans backend domain entities and services, a REST controller for API exposure, and a frontend modal for project creation/editing. The backend uses Spring Boot with MyBatis-Plus for persistence, and the frontend uses Vue 3 with Ant Design Vue for forms and modals.
+The project lifecycle spans backend domain entities and services, a REST controller for API exposure, and enhanced frontend components for project creation, editing, and status management. The backend uses Spring Boot with MyBatis-Plus for persistence, and the frontend uses Vue 3 with Ant Design Vue for forms, modals, and interactive status management interfaces.
 
 ```mermaid
 graph TB
@@ -48,10 +59,13 @@ PSE["ProjectSection Entity"]
 PMS["ProjectMemberService<br/>ProjectMemberServiceImpl"]
 PME["ProjectMember Entity"]
 end
-subgraph "Frontend"
-CM["create-modal.vue"]
+subgraph "Frontend Enhanced"
+CD["create-modal.vue"]
+PD["project detail [id].vue"]
+SC["Startup Checklist Validation"]
 end
-CM --> PC
+CD --> PC
+PD --> SC
 PC --> PS
 PS --> PM
 PM --> PE
@@ -75,6 +89,7 @@ PMS --> PME
 - [ProjectMemberServiceImpl.java:23-131](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectMemberServiceImpl.java#L23-L131)
 - [ProjectMember.java:15-44](file://admin-backend/src/main/java/com/qhiot/survey/entity/ProjectMember.java#L15-L44)
 - [create-modal.vue:1-316](file://admin-web-soybean/src/views/project/modules/create-modal.vue#L1-L316)
+- [[id].vue](file://admin-web-soybean/src/views/project/detail/[id].vue#L98-L163)
 
 **Section sources**
 - [ProjectController.java:23-144](file://admin-backend/src/main/java/com/qhiot/survey/controller/ProjectController.java#L23-L144)
@@ -88,13 +103,14 @@ PMS --> PME
 - [ProjectMemberServiceImpl.java:23-131](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectMemberServiceImpl.java#L23-L131)
 - [ProjectMember.java:15-44](file://admin-backend/src/main/java/com/qhiot/survey/entity/ProjectMember.java#L15-L44)
 - [create-modal.vue:1-316](file://admin-web-soybean/src/views/project/modules/create-modal.vue#L1-L316)
+- [[id].vue](file://admin-web-soybean/src/views/project/detail/[id].vue#L98-L163)
 
 ## Core Components
-- Project entity encapsulates project metadata, timeline (start/end dates), status, and progress counters (templateCount, pointCount, completedCount, pendingAuditCount).
-- ProjectService defines lifecycle operations: creation, updates, status changes, archiving, restoration, and statistics retrieval.
-- ProjectServiceImpl implements lifecycle rules, including state machine validation, progress computation, and constraints (e.g., preventing edits on archived projects).
-- ProjectController exposes REST endpoints for CRUD, status transitions, statistics, and archive/restore operations.
-- Frontend create-modal.vue provides a form for project creation/editing with validation and submission to backend APIs.
+- **Enhanced Project Entity**: Encapsulates project metadata, timeline (start/end dates), comprehensive status management (draft, in-progress, paused, completed, archived), and progress counters (templateCount, pointCount, completedCount, pendingAuditCount).
+- **ProjectService Interface**: Defines lifecycle operations including creation, updates, status changes, archiving, restoration, and statistics retrieval with enhanced validation.
+- **ProjectServiceImpl**: Implements comprehensive lifecycle rules with state machine validation, progress computation, constraint enforcement, and startup checklist validation.
+- **ProjectController**: Exposes REST endpoints for CRUD operations, enhanced status transitions, statistics retrieval, and archive/restore operations with validation.
+- **Enhanced Frontend Components**: Provide comprehensive forms for project creation/editing with validation, interactive status management, and startup checklist validation.
 
 **Section sources**
 - [Project.java:18-84](file://admin-backend/src/main/java/com/qhiot/survey/entity/Project.java#L18-L84)
@@ -102,15 +118,17 @@ PMS --> PME
 - [ProjectServiceImpl.java:26-263](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L26-L263)
 - [ProjectController.java:23-144](file://admin-backend/src/main/java/com/qhiot/survey/controller/ProjectController.java#L23-L144)
 - [create-modal.vue:1-316](file://admin-web-soybean/src/views/project/modules/create-modal.vue#L1-L316)
+- [[id].vue](file://admin-web-soybean/src/views/project/detail/[id].vue#L98-L163)
 
 ## Architecture Overview
-The lifecycle is orchestrated via a REST controller that delegates to a service layer implementing business rules. Persistence is handled by MyBatis-Plus mappers. Entities model the project, survey points/results, sections, and project members. The frontend provides a modal-driven UX for project creation and editing.
+The enhanced lifecycle management is orchestrated via a REST controller that delegates to a service layer implementing comprehensive business rules with state machine validation. Persistence is handled by MyBatis-Plus mappers. Entities model the project, survey points/results, sections, and project members with enhanced status tracking. The frontend provides enhanced modal-driven UX for project creation, editing, and interactive status management with startup checklist validation.
 
 ```mermaid
 sequenceDiagram
-participant UI as "create-modal.vue"
+participant UI as "Enhanced Frontend UI"
 participant API as "ProjectController"
 participant SVC as "ProjectServiceImpl"
+participant VALID as "Startup Checklist Validator"
 participant MAP as "ProjectMapper"
 participant DB as "Database"
 UI->>API : "POST /api/v1/project"
@@ -119,6 +137,11 @@ SVC->>DB : "INSERT Project (status=draft)"
 DB-->>SVC : "OK"
 SVC-->>API : "true"
 API-->>UI : "200 OK"
+Note over UI,SVC : Startup Checklist Validation
+UI->>VALID : "validateStartupChecklist()"
+VALID->>SVC : "checkProjectRequirements()"
+SVC-->>VALID : "validation results"
+VALID-->>UI : "ready status"
 ```
 
 **Diagram sources**
@@ -126,12 +149,14 @@ API-->>UI : "200 OK"
 - [ProjectController.java:52-68](file://admin-backend/src/main/java/com/qhiot/survey/controller/ProjectController.java#L52-L68)
 - [ProjectServiceImpl.java:77-98](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L77-L98)
 - [ProjectMapper.java:7-9](file://admin-backend/src/main/java/com/qhiot/survey/mapper/ProjectMapper.java#L7-L9)
+- [[id].vue](file://admin-web-soybean/src/views/project/detail/[id].vue#L101-L110)
 
 ## Detailed Component Analysis
 
-### Project Entity and Timeline Management
-- Fields include identifiers, project metadata, region, timeline (startDate, endDate), status, clientName, description, and progress counters.
-- Progress metrics include templateCount, pointCount, completedCount, and pendingAuditCount. Completion rate is computed in statistics.
+### Enhanced Project Entity and Timeline Management
+- **Comprehensive Status Field**: The project entity now includes an enhanced status field supporting five states: draft (0), in-progress (1), paused (2), completed (3), and archived (4).
+- **Progress Metrics**: Includes templateCount, pointCount, completedCount, and pendingAuditCount for comprehensive progress tracking.
+- **Timeline Management**: Supports project metadata, region assignment, timeline (startDate, endDate), and detailed progress computation.
 
 ```mermaid
 classDiagram
@@ -161,19 +186,23 @@ class Project {
 **Section sources**
 - [Project.java:18-84](file://admin-backend/src/main/java/com/qhiot/survey/entity/Project.java#L18-L84)
 
-### Project Creation Workflow
-- The frontend modal collects project details and submits to the backend.
-- The backend creates a project with status set to draft and initializes counters to zero.
+### Enhanced Project Creation Workflow
+- **Frontend Enhancement**: The create-modal.vue provides comprehensive project creation with validation and submission to backend APIs.
+- **Backend Implementation**: The backend creates projects with status set to draft (0) and initializes all counters to zero.
+- **Startup Checklist Integration**: Enhanced validation ensures projects meet minimum requirements before initiation.
 
 ```mermaid
 sequenceDiagram
-participant FE as "create-modal.vue"
+participant FE as "Enhanced create-modal.vue"
 participant CTRL as "ProjectController"
 participant SVC as "ProjectServiceImpl"
+participant VALID as "Startup Validator"
 participant MAP as "ProjectMapper"
 FE->>CTRL : "POST /api/v1/project"
 CTRL->>SVC : "createProject(request)"
 SVC->>SVC : "set status=draft, counters=0"
+SVC->>VALID : "validateStartupChecklist()"
+VALID-->>SVC : "validation results"
 SVC->>MAP : "save(project)"
 MAP-->>SVC : "saved"
 SVC-->>CTRL : "true"
@@ -185,172 +214,117 @@ CTRL-->>FE : "success"
 - [ProjectController.java:52-68](file://admin-backend/src/main/java/com/qhiot/survey/controller/ProjectController.java#L52-L68)
 - [ProjectServiceImpl.java:77-98](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L77-L98)
 - [ProjectMapper.java:7-9](file://admin-backend/src/main/java/com/qhiot/survey/mapper/ProjectMapper.java#L7-L9)
+- [[id].vue](file://admin-web-soybean/src/views/project/detail/[id].vue#L101-L110)
 
 **Section sources**
 - [create-modal.vue:133-164](file://admin-web-soybean/src/views/project/modules/create-modal.vue#L133-L164)
 - [ProjectController.java:52-68](file://admin-backend/src/main/java/com/qhiot/survey/controller/ProjectController.java#L52-L68)
 - [ProjectServiceImpl.java:77-98](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L77-L98)
 
-### Status Transitions and Approval Processes
-- Allowed transitions are enforced by a state machine:
-  - Draft → Active
-  - Active → Paused or Completed
-  - Paused → Active
-  - Completed → Archived
-- Additional constraints:
-  - Archived projects cannot be modified or deleted.
-  - Projects in progress cannot be deleted; pause or complete first.
-  - Archive requires completed status; Restore sets status back to completed.
+## Enhanced Status Management System
+
+### Comprehensive Status Transitions
+The enhanced system implements a strict state machine with comprehensive validation for all status transitions:
 
 ```mermaid
 stateDiagram-v2
-[*] --> Draft
-Draft --> Active : "changeStatus(1)"
-Active --> Paused : "changeStatus(2)"
-Active --> Completed : "changeStatus(3)"
-Paused --> Active : "changeStatus(1)"
-Completed --> Archived : "archiveProject()"
-Archived --> Completed : "restoreProject()"
+[*] --> Draft : Initial State
+Draft --> In_Progress : Start Project
+In_Progress --> Paused : Pause Project
+In_Progress --> Completed : Complete Project
+Paused --> In_Progress : Resume Project
+Completed --> Archived : Archive Project
+Archived --> Completed : Restore Project
 ```
 
 **Diagram sources**
-- [ProjectServiceImpl.java:189-197](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L189-L197)
-- [ProjectServiceImpl.java:228-243](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L228-L243)
-- [ProjectServiceImpl.java:247-262](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L247-L262)
+- [ProjectServiceImpl.java:213-221](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L213-L221)
+- [ProjectServiceImpl.java:182-202](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L182-L202)
+
+### Enhanced Status Transition Rules
+- **Draft (0) → In Progress (1)**: Only allowed for project initiation with startup checklist validation
+- **In Progress (1) → Paused (2)**: Allows temporary suspension of field operations
+- **In Progress (1) → Completed (3)**: Marks project completion with full point coverage
+- **Paused (2) → In Progress (1)**: Resumes suspended field operations
+- **Completed (3) → Archived (4)**: Final archival with read-only access
+
+### Advanced Constraint Enforcement
+- **Archived Projects**: Cannot be modified, deleted, or have status changes
+- **In Progress Projects**: Cannot be deleted; must be paused or completed first
+- **Archive Requirements**: Only completed projects can be archived
+- **Restore Process**: Archived projects can be restored to completed status
 
 **Section sources**
-- [ProjectServiceImpl.java:189-197](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L189-L197)
-- [ProjectServiceImpl.java:228-243](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L228-L243)
-- [ProjectServiceImpl.java:247-262](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L247-L262)
+- [ProjectServiceImpl.java:182-202](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L182-L202)
+- [ProjectServiceImpl.java:213-221](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L213-L221)
+- [ProjectServiceImpl.java:251-262](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L251-L262)
+- [ProjectServiceImpl.java:159-167](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L159-L167)
 
-### Automated State Changes and Progress Metrics
-- Progress metrics are computed in statistics:
-  - Completion rate = completedCount / pointCount * 100
-  - Returns project name, code, status, counts, and completion rate.
-- Survey point and result entities support progress tracking:
-  - SurveyPoint tracks point-level status and assignments.
-  - SurveyResult tracks result status and audit status.
+## Startup Checklist Validation
+
+### Enhanced Project Initiation Process
+The system now includes comprehensive startup checklist validation to ensure proper project initialization:
 
 ```mermaid
 flowchart TD
-Start(["Get Project Statistics"]) --> Load["Load Project by ID"]
-Load --> HasPoints{"pointCount > 0?"}
-HasPoints --> |Yes| Calc["completionRate = completedCount/pointCount*100"]
-HasPoints --> |No| Zero["completionRate = 0.00%"]
-Calc --> Return["Return stats"]
-Zero --> Return
+Start(["Project Start Request"]) --> CheckList["Startup Checklist Validation"]
+CheckList --> Section{"Section Created?"}
+CheckList --> Points{"Points Imported?"}
+CheckList --> Members{"Members Assigned?"}
+CheckList --> Templates{"Templates Configured?"}
+Section --> |No| Block["Block Start - Create Sections First"]
+Points --> |No| Block
+Members --> |No| Block
+Templates --> |No| Block
+Section --> |Yes| Proceed["Proceed to Start"]
+Points --> |Yes| Proceed
+Members --> |Yes| Proceed
+Templates --> |Yes| Proceed
+Proceed --> Validate["Final Validation"]
+Validate --> Ready["Project Ready to Start"]
+Block --> Alert["Show Validation Alert"]
+Alert --> CheckList
 ```
 
 **Diagram sources**
-- [ProjectServiceImpl.java:200-224](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L200-L224)
-- [SurveyPoint.java:66-68](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyPoint.java#L66-L68)
-- [SurveyResult.java:45-52](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyResult.java#L45-L52)
+- [[id].vue](file://admin-web-soybean/src/views/project/detail/[id].vue#L101-L110)
+- [[id].vue](file://admin-web-soybean/src/views/project/detail/[id].vue#L144-L163)
+
+### Startup Checklist Criteria
+The enhanced validation includes four critical criteria:
+
+1. **Section Creation**: Project must have at least one section defined
+2. **Point Import**: Project must contain at least one survey point
+3. **Member Assignment**: Project must have at least one assigned team member
+4. **Template Configuration**: Project must have at least one template bound or configured
+
+### Frontend Interactive Validation
+The enhanced frontend provides real-time validation feedback with visual indicators:
+
+- **Color-coded Status**: Green checkmarks for satisfied criteria, red X marks for unsatisfied
+- **Progress Indication**: Overall readiness percentage calculation
+- **Detailed Feedback**: Specific guidance for each unsatisfied criterion
+- **Confirmation Dialog**: Prevents project start until all criteria are met
 
 **Section sources**
-- [ProjectServiceImpl.java:200-224](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L200-L224)
-- [SurveyPoint.java:66-68](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyPoint.java#L66-L68)
-- [SurveyResult.java:45-52](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyResult.java#L45-L52)
-
-### Integration with Survey Point Allocation and Resource Management
-- ProjectMemberService manages team composition and roles (admin, collector, auditor, viewer) per project.
-- ProjectSection supports subdivision of projects into sections with managers and statuses.
-- SurveyPoint and SurveyResult integrate with project lifecycle:
-  - Points are associated to projects and sections.
-  - Results track submission and audit status, impacting project-level pendingAuditCount.
-
-```mermaid
-classDiagram
-class ProjectMember {
-+Long id
-+Long projectId
-+Long userId
-+String role
-+Integer status
-+LocalDateTime createTime
-+LocalDateTime updateTime
-}
-class ProjectSection {
-+Long id
-+Long projectId
-+String sectionName
-+String sectionCode
-+Long managerId
-+String description
-+Integer status
-+Integer isKeyArea
-+LocalDateTime createTime
-+LocalDateTime updateTime
-}
-class SurveyPoint {
-+Long id
-+String pointCode
-+String pointName
-+Long projectId
-+Long sectionId
-+Integer status
-+LocalDateTime createTime
-+LocalDateTime updateTime
-}
-class SurveyResult {
-+Long id
-+Long pointId
-+Integer versionNo
-+Long templateVersionId
-+Integer resultStatus
-+Integer auditStatus
-+LocalDateTime submitTime
-+LocalDateTime auditTime
-+Long auditorId
-+LocalDateTime createTime
-+LocalDateTime updateTime
-}
-ProjectMember --> Project : "belongs to"
-ProjectSection --> Project : "belongs to"
-SurveyPoint --> Project : "belongs to"
-SurveyResult --> SurveyPoint : "relates to"
-```
-
-**Diagram sources**
-- [ProjectMember.java:15-44](file://admin-backend/src/main/java/com/qhiot/survey/entity/ProjectMember.java#L15-L44)
-- [ProjectSection.java:15-39](file://admin-backend/src/main/java/com/qhiot/survey/entity/ProjectSection.java#L15-L39)
-- [SurveyPoint.java:19-84](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyPoint.java#L19-L84)
-- [SurveyResult.java:16-93](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyResult.java#L16-L93)
-
-**Section sources**
-- [ProjectMemberService.java:11-70](file://admin-backend/src/main/java/com/qhiot/survey/service/ProjectMemberService.java#L11-L70)
-- [ProjectMemberServiceImpl.java:23-131](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectMemberServiceImpl.java#L23-L131)
-- [ProjectSection.java:15-39](file://admin-backend/src/main/java/com/qhiot/survey/entity/ProjectSection.java#L15-L39)
-- [SurveyPoint.java:19-84](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyPoint.java#L19-L84)
-- [SurveyResult.java:16-93](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyResult.java#L16-L93)
-
-### Example Procedures
-- Project Initialization
-  - Create a project via the frontend modal; backend persists with status draft and zero counters.
-- Phase Progression
-  - Transition from draft to active, then to paused or completed based on operational needs.
-- Completion and Archival
-  - Complete the project, then archive it to make data read-only; restore to resume work.
-
-**Section sources**
-- [create-modal.vue:133-164](file://admin-web-soybean/src/views/project/modules/create-modal.vue#L133-L164)
-- [ProjectController.java:108-143](file://admin-backend/src/main/java/com/qhiot/survey/controller/ProjectController.java#L108-L143)
-- [ProjectServiceImpl.java:77-98](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L77-L98)
-- [ProjectServiceImpl.java:189-197](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L189-L197)
-- [ProjectServiceImpl.java:228-243](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L228-L243)
-- [ProjectServiceImpl.java:247-262](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L247-L262)
+- [[id].vue](file://admin-web-soybean/src/views/project/detail/[id].vue#L101-L110)
+- [[id].vue](file://admin-web-soybean/src/views/project/detail/[id].vue#L144-L163)
+- [业务流程与状态变更-V2.1.md:218-226](file://doc/业务流程与状态变更-V2.1.md#L218-L226)
 
 ## Dependency Analysis
-- Controller depends on ProjectService for business operations.
-- ProjectService extends MyBatis-Plus ServiceImpl and uses ProjectMapper for persistence.
-- Entities are mapped to database tables and interconnected via foreign keys (e.g., SurveyPoint.projectId).
-- Frontend modal integrates with backend APIs for create/update operations.
+- **Controller Enhancement**: ProjectController depends on enhanced ProjectService for comprehensive business operations with validation.
+- **Service Layer Expansion**: ProjectService extends MyBatis-Plus ServiceImpl with enhanced validation and state machine enforcement.
+- **Entity Integration**: Entities are mapped to database tables with enhanced status tracking and interconnected via foreign keys.
+- **Frontend Enhancement**: Enhanced modal and detail components integrate with backend APIs for comprehensive create/update operations with validation.
 
 ```mermaid
 graph LR
-FE["create-modal.vue"] --> CTRL["ProjectController"]
-CTRL --> SVC["ProjectServiceImpl"]
+FE["Enhanced create-modal.vue"] --> CTRL["ProjectController"]
+FE2["Enhanced [id].vue"] --> CTRL
+CTRL --> SVC["Enhanced ProjectServiceImpl"]
 SVC --> MAP["ProjectMapper"]
-MAP --> ENT["Project Entity"]
+MAP --> ENT["Enhanced Project Entity"]
+SVC --> VALID["Startup Checklist Validator"]
 SVC --> SP["SurveyPoint Entity"]
 SVC --> SR["SurveyResult Entity"]
 SVC --> PS["ProjectSection Entity"]
@@ -360,15 +334,11 @@ PM --> PME["ProjectMember Entity"]
 
 **Diagram sources**
 - [create-modal.vue:1-316](file://admin-web-soybean/src/views/project/modules/create-modal.vue#L1-L316)
+- [[id].vue](file://admin-web-soybean/src/views/project/detail/[id].vue#L98-L163)
 - [ProjectController.java:23-144](file://admin-backend/src/main/java/com/qhiot/survey/controller/ProjectController.java#L23-L144)
 - [ProjectServiceImpl.java:26-263](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L26-L263)
 - [ProjectMapper.java:7-9](file://admin-backend/src/main/java/com/qhiot/survey/mapper/ProjectMapper.java#L7-L9)
 - [Project.java:18-84](file://admin-backend/src/main/java/com/qhiot/survey/entity/Project.java#L18-L84)
-- [SurveyPoint.java:19-84](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyPoint.java#L19-L84)
-- [SurveyResult.java:16-93](file://admin-backend/src/main/java/com/qhiot/survey/entity/SurveyResult.java#L16-L93)
-- [ProjectSection.java:15-39](file://admin-backend/src/main/java/com/qhiot/survey/entity/ProjectSection.java#L15-L39)
-- [ProjectMemberService.java:11-70](file://admin-backend/src/main/java/com/qhiot/survey/service/ProjectMemberService.java#L11-L70)
-- [ProjectMember.java:15-44](file://admin-backend/src/main/java/com/qhiot/survey/entity/ProjectMember.java#L15-L44)
 
 **Section sources**
 - [ProjectController.java:23-144](file://admin-backend/src/main/java/com/qhiot/survey/controller/ProjectController.java#L23-L144)
@@ -381,30 +351,33 @@ PM --> PME["ProjectMember Entity"]
 - [ProjectMemberService.java:11-70](file://admin-backend/src/main/java/com/qhiot/survey/service/ProjectMemberService.java#L11-L70)
 - [ProjectMember.java:15-44](file://admin-backend/src/main/java/com/qhiot/survey/entity/ProjectMember.java#L15-L44)
 - [create-modal.vue:1-316](file://admin-web-soybean/src/views/project/modules/create-modal.vue#L1-L316)
+- [[id].vue](file://admin-web-soybean/src/views/project/detail/[id].vue#L98-L163)
 
 ## Performance Considerations
-- Use pagination and filtering in project queries to avoid large result sets.
-- Keep progress counters updated efficiently; consider batch updates for bulk operations.
-- Avoid frequent status transitions that trigger unnecessary audits or notifications.
-- Index database columns frequently queried (e.g., status, region, projectCode) to improve query performance.
+- **Enhanced State Machine Validation**: Optimized state transition checking with minimal computational overhead
+- **Startup Checklist Caching**: Frontend caching of validation results to reduce server requests
+- **Progress Counter Optimization**: Efficient batch updates for bulk operations on progress metrics
+- **Database Indexing**: Strategic indexing on status fields, project codes, and timestamps for optimal query performance
+- **Validation Caching**: Server-side caching of project requirement validation results
 
 ## Troubleshooting Guide
-- Invalid state transition errors indicate an attempted transition outside the allowed state machine. Verify current project status and target status.
-- Editing or deleting archived projects fails; restore the project first.
-- Deleting an in-progress project is blocked; pause or complete the project before deletion.
-- Statistics computation returns zero percent when pointCount is zero; ensure pointCount is populated.
+- **Invalid State Transition Errors**: Enhanced error messages specify exact current and target states with validation failure reasons
+- **Startup Checklist Failures**: Detailed feedback on which specific criteria are not met with actionable guidance
+- **Archived Project Operations**: Clear error messages explaining why operations are blocked on archived projects
+- **In Progress Deletion Blocks**: Specific guidance on pausing or completing projects before deletion
+- **Enhanced Statistics Computation**: Improved error handling for edge cases with zero point counts and null values
 
 **Section sources**
-- [ProjectServiceImpl.java:169-172](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L169-L172)
-- [ProjectServiceImpl.java:108-111](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L108-L111)
-- [ProjectServiceImpl.java:134-142](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L134-L142)
-- [ProjectServiceImpl.java:215-221](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L215-L221)
+- [ProjectServiceImpl.java:194-196](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L194-L196)
+- [ProjectServiceImpl.java:141-143](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L141-143)
+- [ProjectServiceImpl.java:261-262](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L261-L262)
+- [ProjectServiceImpl.java:130-132](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/ProjectServiceImpl.java#L130-L132)
 
 ## Conclusion
-The project lifecycle management system provides a robust, state-machine-driven workflow from creation to archival, with integrated progress tracking and resource management. The backend enforces lifecycle rules and computes meaningful metrics, while the frontend offers a streamlined UX for project creation and editing. Integrations with survey points and members enable efficient coordination across project phases.
+The enhanced project lifecycle management system provides a robust, state-machine-driven workflow with comprehensive status transitions and startup checklist validation. The system now supports five distinct states (draft, in-progress, paused, completed, archived) with strict validation rules and enhanced user experience. The integration of startup checklist validation ensures proper project initialization, while the enhanced state machine prevents invalid operations and maintains data integrity. The backend enforces comprehensive lifecycle rules with meaningful metrics, while the frontend offers streamlined UX for project creation, editing, and interactive status management.
 
 ## Appendices
-- API Endpoints
+- **Enhanced API Endpoints**
   - GET /api/v1/project/page
   - GET /api/v1/project/{id}
   - POST /api/v1/project
@@ -414,6 +387,8 @@ The project lifecycle management system provides a robust, state-machine-driven 
   - GET /api/v1/project/{id}/statistics
   - PUT /api/v1/project/{id}/archive
   - PUT /api/v1/project/{id}/restore
+  - POST /api/v1/project/{id}/startup-checklist
 
 **Section sources**
 - [ProjectController.java:32-143](file://admin-backend/src/main/java/com/qhiot/survey/controller/ProjectController.java#L32-L143)
+- [业务流程与状态变更-V2.1.md:183-250](file://doc/业务流程与状态变更-V2.1.md#L183-L250)

@@ -14,15 +14,22 @@
 - [EmailServiceImpl.java](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/EmailServiceImpl.java)
 - [SmsService.java](file://admin-backend/src/main/java/com/qhiot/survey/service/SmsService.java)
 - [SmsServiceImpl.java](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/SmsServiceImpl.java)
+- [AnnouncementController.java](file://admin-backend/src/main/java/com/qhiot/survey/controller/AnnouncementController.java)
+- [AnnouncementService.java](file://admin-backend/src/main/java/com/qhiot/survey/service/AnnouncementService.java)
+- [AnnouncementServiceImpl.java](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/AnnouncementServiceImpl.java)
+- [Announcement.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/Announcement.java)
+- [AnnouncementMapper.java](file://admin-backend/src/main/java/com/qhiot/survey/mapper/AnnouncementMapper.java)
+- [06-announcement.sql](file://admin-backend/init-data/06-announcement.sql)
+- [init.sql](file://init-sql/init.sql)
 </cite>
 
 ## Update Summary
 **Changes Made**
-- Enhanced notification system architecture with new EmailService and SmsService implementations
-- Updated PasswordNotificationService with comprehensive fallback mechanisms
-- Added detailed service layer documentation with concrete implementations
-- Expanded notification channels section with specific service implementations
-- Updated system architecture diagrams to reflect new service implementations
+- Added comprehensive announcement system with database schema for system notifications, work specifications, and maintenance reminders
+- Integrated multi-tenant support with tenant_id field in announcement table
+- Added scheduling capabilities with publish_time and status management
+- Enhanced notification system architecture with new AnnouncementService and controllers
+- Updated system architecture diagrams to reflect new announcement components
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -31,20 +38,21 @@
 4. [Message Center System](#message-center-system)
 5. [Password Notification System](#password-notification-system)
 6. [Enhanced Notification Channels](#enhanced-notification-channels)
-7. [Data Model](#data-model)
-8. [API Endpoints](#api-endpoints)
-9. [Error Handling](#error-handling)
-10. [Performance Considerations](#performance-considerations)
-11. [Troubleshooting Guide](#troubleshooting-guide)
-12. [Conclusion](#conclusion)
+7. [Announcement System](#announcement-system)
+8. [Data Model](#data-model)
+9. [API Endpoints](#api-endpoints)
+10. [Error Handling](#error-handling)
+11. [Performance Considerations](#performance-considerations)
+12. [Troubleshooting Guide](#troubleshooting-guide)
+13. [Conclusion](#conclusion)
 
 ## Introduction
 
-The Notification System is a comprehensive messaging infrastructure designed to handle various types of notifications and alerts within the Survey-App platform. The system consists of two primary notification mechanisms: the Message Center for internal messaging and the Password Notification Service for secure password delivery.
+The Notification System is a comprehensive messaging infrastructure designed to handle various types of notifications and alerts within the Survey-App platform. The system consists of three primary notification mechanisms: the Message Center for internal messaging, the Password Notification Service for secure password delivery, and the newly added Announcement System for system-wide notifications.
 
 The system supports multiple notification channels including SMS, email, and internal system messages. It implements robust error handling with fallback mechanisms, ensuring reliable communication even when primary channels fail. The architecture emphasizes asynchronous processing to maintain system responsiveness while guaranteeing message delivery.
 
-**Updated** Enhanced with new EmailService and SmsService implementations providing more robust and flexible notification capabilities.
+**Updated** Enhanced with new Announcement System featuring comprehensive database schema, multi-tenant support, and scheduling capabilities for system notifications, work specifications, and maintenance reminders.
 
 ## System Architecture
 
@@ -54,22 +62,26 @@ The notification system follows a layered architecture pattern with clear separa
 graph TB
 subgraph "Presentation Layer"
 Controllers[MessageCenterController]
+AnnouncementController[AnnouncementController]
 end
 subgraph "Service Layer"
 MessageService[MessageCenterService]
 PasswordService[PasswordNotificationService]
+AnnouncementService[AnnouncementService]
 EmailService[EmailService]
 SmsService[SmsService]
 end
 subgraph "Implementation Layer"
 MessageImpl[MessageCenterServiceImpl]
 PasswordImpl[PasswordNotificationServiceImpl]
+AnnouncementImpl[AnnouncementServiceImpl]
 EmailImpl[EmailServiceImpl]
 SmsImpl[SmsServiceImpl]
 end
 subgraph "Data Access Layer"
-Mapper[MessageCenterMapper]
-Entity[MessageCenter Entity]
+MessageMapper[MessageCenterMapper]
+AnnouncementMapper[AnnouncementMapper]
+Entity[Entities]
 end
 subgraph "External Services"
 SMSClients[AWS SES / Twilio]
@@ -81,9 +93,14 @@ Database[(MySQL Database)]
 Cache[(Redis Cache)]
 end
 Controllers --> MessageService
+Controllers --> AnnouncementService
 MessageService --> MessageImpl
-MessageImpl --> Mapper
-Mapper --> Entity
+AnnouncementService --> AnnouncementImpl
+PasswordService --> PasswordImpl
+MessageImpl --> MessageMapper
+AnnouncementImpl --> AnnouncementMapper
+MessageMapper --> Entity
+AnnouncementMapper --> Entity
 Entity --> Database
 PasswordService --> PasswordImpl
 PasswordImpl --> EmailImpl
@@ -96,7 +113,9 @@ SmsImpl --> RateLimiter
 
 **Diagram sources**
 - [MessageCenterController.java:29-74](file://admin-backend/src/main/java/com/qhiot/survey/controller/MessageCenterController.java#L29-L74)
+- [AnnouncementController.java:21-84](file://admin-backend/src/main/java/com/qhiot/survey/controller/AnnouncementController.java#L21-L84)
 - [MessageCenterService.java:12-58](file://admin-backend/src/main/java/com/qhiot/survey/service/MessageCenterService.java#L12-L58)
+- [AnnouncementService.java:9-21](file://admin-backend/src/main/java/com/qhiot/survey/service/AnnouncementService.java#L9-L21)
 - [PasswordNotificationService.java:10-20](file://admin-backend/src/main/java/com/qhiot/survey/service/PasswordNotificationService.java#L10-L20)
 - [EmailService.java:6-15](file://admin-backend/src/main/java/com/qhiot/survey/service/EmailService.java#L6-L15)
 - [SmsService.java:9-18](file://admin-backend/src/main/java/com/qhiot/survey/service/SmsService.java#L9-L18)
@@ -113,12 +132,23 @@ The Password Notification Service handles secure delivery of password reset noti
 
 **Updated** Enhanced with concrete EmailServiceImpl and SmsServiceImpl implementations for robust notification delivery.
 
+### Announcement System
+
+**New** The Announcement System provides comprehensive system-wide notification management with multi-tenant support and scheduling capabilities. It supports three distinct announcement types: system notifications, work specifications, and maintenance reminders.
+
+Key features include:
+- Multi-tenant architecture with tenant_id field for isolated notification scopes
+- Scheduling system with publish_time and status management (draft, scheduled, published, recalled)
+- Flexible target scope targeting (all users, administrators, or operators)
+- Comprehensive CRUD operations with validation and audit trails
+
 ### Enhanced Notification Channel Management
 
 The system now manages multiple notification channels with intelligent routing and fallback logic, utilizing dedicated service implementations for each channel type.
 
 **Section sources**
 - [MessageCenterService.java:12-58](file://admin-backend/src/main/java/com/qhiot/survey/service/MessageCenterService.java#L12-L58)
+- [AnnouncementService.java:9-21](file://admin-backend/src/main/java/com/qhiot/survey/service/AnnouncementService.java#L9-L21)
 - [PasswordNotificationService.java:10-20](file://admin-backend/src/main/java/com/qhiot/survey/service/PasswordNotificationService.java#L10-L20)
 - [EmailService.java:6-15](file://admin-backend/src/main/java/com/qhiot/survey/service/EmailService.java#L6-L15)
 - [SmsService.java:9-18](file://admin-backend/src/main/java/com/qhiot/survey/service/SmsService.java#L9-L18)
@@ -287,6 +317,107 @@ Both notification channels implement sophisticated rate limiting to prevent abus
 - [SmsServiceImpl.java:22-60](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/SmsServiceImpl.java#L22-L60)
 - [PasswordNotificationServiceTest.java:160-177](file://admin-backend/src/test/java/com/qhiot/survey/service/PasswordNotificationServiceTest.java#L160-L177)
 
+## Announcement System
+
+### System Architecture and Components
+
+The Announcement System provides comprehensive notification management with multi-tenant support and scheduling capabilities:
+
+```mermaid
+classDiagram
+class AnnouncementService {
+<<interface>>
++listByPage(keyword, type, status, pageNum, pageSize) Page~Announcement~
++createAnnouncement(announcement) Announcement
++updateAnnouncement(id, announcement) Announcement
++publishAnnouncement(id) void
++recallAnnouncement(id) void
++deleteAnnouncement(id) void
+}
+class AnnouncementServiceImpl {
+-private announcementMapper AnnouncementMapper
++listByPage(keyword, type, status, pageNum, pageSize) Page~Announcement~
++createAnnouncement(announcement) Announcement
++updateAnnouncement(id, announcement) Announcement
++publishAnnouncement(id) void
++recallAnnouncement(id) void
++deleteAnnouncement(id) void
+}
+class AnnouncementController {
+-private announcementService AnnouncementService
++listByPage(keyword, type, status, pageNum, pageSize) Result~Page~Announcement~~
++getById(id) Result~Announcement~
++create(announcement) Result~Announcement~
++update(id, announcement) Result~Announcement~
++publish(id) Result~Void~
++recall(id) Result~Void~
++delete(id) Result~Void~
+}
+class Announcement {
+-private id Long
+-private title String
+-private type String
+-private content String
+-private publisherId Long
+-private status Integer
+-private publishTime Date
+-private targetScope String
+-private tenantId Long
+-private createTime Date
+-private updateTime Date
+}
+AnnouncementService <|.. AnnouncementServiceImpl
+AnnouncementController --> AnnouncementService : uses
+AnnouncementServiceImpl --> AnnouncementService : implements
+AnnouncementServiceImpl --> Announcement : manages
+```
+
+**Diagram sources**
+- [AnnouncementService.java:9-21](file://admin-backend/src/main/java/com/qhiot/survey/service/AnnouncementService.java#L9-L21)
+- [AnnouncementServiceImpl.java:1-100](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/AnnouncementServiceImpl.java#L1-L100)
+- [AnnouncementController.java:21-84](file://admin-backend/src/main/java/com/qhiot/survey/controller/AnnouncementController.java#L21-L84)
+- [Announcement.java:14-50](file://admin-backend/src/main/java/com/qhiot/survey/entity/Announcement.java#L14-L50)
+
+### Announcement Types and Management
+
+The system supports three distinct announcement types with specific management capabilities:
+
+1. **System Notifications**: General system-wide announcements and updates
+2. **Work Specifications**: Detailed work instructions and operational guidelines
+3. **Maintenance Reminders**: Scheduled maintenance notices and system downtime warnings
+
+### Multi-Tenant Support
+
+The announcement system implements comprehensive multi-tenant architecture:
+
+- **Tenant Isolation**: Each announcement includes tenant_id for tenant-specific visibility
+- **Scoped Publishing**: Targeted announcements for specific tenants or all tenants
+- **Data Partitioning**: Database-level separation of tenant data
+- **Access Control**: Tenant-aware query filtering and validation
+
+### Scheduling and Status Management
+
+Advanced scheduling capabilities with four status states:
+
+- **Draft (0)**: Unpublished, editable content
+- **Scheduled (1)**: Set for future publication with publish_time
+- **Published (2)**: Active and visible to target audience
+- **Recalled (3)**: Previously published but withdrawn
+
+### Target Scope Management
+
+Flexible audience targeting with three scope options:
+
+- **All Users (all)**: Visible to all system users
+- **Administrators (admin)**: Restricted to administrative users
+- **Operators (operator)**: Limited to field operators and technicians
+
+**Section sources**
+- [AnnouncementService.java:9-21](file://admin-backend/src/main/java/com/qhiot/survey/service/AnnouncementService.java#L9-L21)
+- [AnnouncementServiceImpl.java:1-100](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/AnnouncementServiceImpl.java#L1-L100)
+- [AnnouncementController.java:21-84](file://admin-backend/src/main/java/com/qhiot/survey/controller/AnnouncementController.java#L21-L84)
+- [Announcement.java:14-50](file://admin-backend/src/main/java/com/qhiot/survey/entity/Announcement.java#L14-L50)
+
 ## Data Model
 
 ### Message Center Entity Structure
@@ -336,18 +467,51 @@ SYS_ROLE ||--o{ SYS_USER_ROLE : "has_many"
 - [MessageCenter.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/MessageCenter.java)
 - [MessageCenterServiceImpl.java:31-32](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/MessageCenterServiceImpl.java#L31-L32)
 
+### Announcement System Database Schema
+
+**New** The announcement system introduces a comprehensive database schema with multi-tenant support and scheduling capabilities:
+
+```mermaid
+erDiagram
+ANNOUNCEMENT {
+bigint id PK
+string title
+string type
+text content
+bigint publisher_id
+tinyint status
+datetime publish_time
+string target_scope
+bigint tenant_id
+datetime create_time
+datetime update_time
+}
+ANNOUNCEMENT {
+index idx_status
+index idx_tenant
+index idx_type
+}
+```
+
+**Diagram sources**
+- [06-announcement.sql:9-24](file://admin-backend/init-data/06-announcement.sql#L9-L24)
+- [init.sql:520-533](file://init-sql/init.sql#L520-L533)
+
 ### Database Schema Design
 
 The database schema is optimized for notification performance:
 
-- **Indexing Strategy**: Composite indexes on frequently queried columns
+- **Indexing Strategy**: Composite indexes on frequently queried columns (status, tenant_id, type)
 - **Partitioning Considerations**: Horizontal partitioning for large-scale deployments
 - **Archival Strategy**: Automatic archiving of old notifications
 - **Audit Trail**: Complete transaction history for compliance
+- **Multi-Tenant Isolation**: Tenant-specific data separation with foreign key constraints
 
 **Section sources**
 - [MessageCenter.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/MessageCenter.java)
 - [MessageCenterMapper.java](file://admin-backend/src/main/java/com/qhiot/survey/mapper/MessageCenterMapper.java)
+- [Announcement.java](file://admin-backend/src/main/java/com/qhiot/survey/entity/Announcement.java)
+- [AnnouncementMapper.java](file://admin-backend/src/main/java/com/qhiot/survey/mapper/AnnouncementMapper.java)
 
 ## API Endpoints
 
@@ -362,6 +526,20 @@ The system exposes comprehensive REST endpoints for message management:
 | `/api/message/{messageId}/read` | PUT | Mark specific message as read | Required |
 | `/api/message/read-all` | PUT | Mark all user messages as read | Required |
 | `/api/message/{id}` | GET | Get message details by ID | Required |
+
+### Announcement System REST API
+
+**New** The announcement system provides comprehensive CRUD operations with scheduling and status management:
+
+| Endpoint | Method | Description | Authentication |
+|----------|--------|-------------|----------------|
+| `/api/announcement/page` | GET | Paginate announcements with filtering by keyword, type, and status | Required |
+| `/api/announcement/{id}` | GET | Get announcement details by ID | Required |
+| `/api/announcement` | POST | Create new announcement with validation | Required |
+| `/api/announcement/{id}` | PUT | Update existing announcement | Required |
+| `/api/announcement/{id}/publish` | PUT | Publish scheduled announcement immediately | Required |
+| `/api/announcement/{id}/recall` | PUT | Recall published announcement | Required |
+| `/api/announcement/{id}` | DELETE | Delete announcement permanently | Required |
 
 ### Enhanced Notification API Endpoints
 
@@ -388,6 +566,7 @@ All API responses follow a consistent format:
 
 **Section sources**
 - [MessageCenterController.java:35-74](file://admin-backend/src/main/java/com/qhiot/survey/controller/MessageCenterController.java#L35-L74)
+- [AnnouncementController.java:29-84](file://admin-backend/src/main/java/com/qhiot/survey/controller/AnnouncementController.java#L29-L84)
 
 ## Error Handling
 
@@ -424,9 +603,20 @@ LogError --> Complete
 **Diagram sources**
 - [PasswordNotificationServiceTest.java:160-177](file://admin-backend/src/test/java/com/qhiot/survey/service/PasswordNotificationServiceTest.java#L160-L177)
 
+### Announcement System Error Handling
+
+**New** The announcement system implements comprehensive error handling for multi-tenant scenarios:
+
+- **Tenant Validation**: Ensures announcements are created and accessed within correct tenant scope
+- **Status Transition Validation**: Prevents invalid status changes (e.g., recalling non-published announcements)
+- **Publish Time Validation**: Ensures scheduled publications are in the future
+- **Target Scope Validation**: Validates audience targeting combinations
+- **Content Validation**: Enforces minimum length and format requirements
+
 **Section sources**
 - [PasswordNotificationServiceImpl.java:27-45](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/PasswordNotificationServiceImpl.java#L27-L45)
 - [PasswordNotificationServiceTest.java:92-117](file://admin-backend/src/test/java/com/qhiot/survey/service/PasswordNotificationServiceTest.java#L92-L117)
+- [AnnouncementServiceImpl.java:1-100](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/AnnouncementServiceImpl.java#L1-L100)
 
 ## Performance Considerations
 
@@ -447,6 +637,7 @@ The system implements intelligent caching for frequently accessed data:
 - **Role Permission Cache**: Optimized role-based message filtering
 - **Configuration Cache**: Centralized configuration management
 - **Template Cache**: Cached email and SMS templates for faster rendering
+- **Announcement Cache**: Frequently accessed announcements cached by tenant
 
 ### Scalability Features
 
@@ -454,6 +645,7 @@ The system implements intelligent caching for frequently accessed data:
 - **Database Optimization**: Connection pooling and query optimization
 - **CDN Integration**: Static content delivery for notification templates
 - **Service Discovery**: Dynamic discovery of notification service instances
+- **Multi-Tenant Partitioning**: Database partitioning strategies for tenant isolation
 
 ## Troubleshooting Guide
 
@@ -524,15 +716,35 @@ The system implements intelligent caching for frequently accessed data:
 3. Validate template syntax and variables
 4. Check rate limiting thresholds and reset intervals
 
+#### Announcement System Issues
+
+**New** Troubleshooting guidance for announcement system:
+
+**Symptoms**: Announcements not appearing or incorrect scheduling
+**Causes**:
+- Tenant isolation issues
+- Status transition errors
+- Publish time validation failures
+- Target scope configuration problems
+- Database indexing issues
+
+**Solutions**:
+1. Verify tenant_id matches user's tenant
+2. Check status transition validity (draft → scheduled → published)
+3. Ensure publish_time is in future for scheduled announcements
+4. Validate target_scope values (all, admin, operator)
+5. Check database indexes on status, tenant_id, and type fields
+
 **Section sources**
 - [PasswordNotificationServiceTest.java:134-145](file://admin-backend/src/test/java/com/qhiot/survey/service/PasswordNotificationServiceTest.java#L134-L145)
 - [MessageCenterServiceImpl.java:65-86](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/MessageCenterServiceImpl.java#L65-L86)
+- [AnnouncementServiceImpl.java:1-100](file://admin-backend/src/main/java/com/qhiot/survey/service/impl/AnnouncementServiceImpl.java#L1-L100)
 
 ## Conclusion
 
 The Notification System provides a robust, scalable, and fault-tolerant infrastructure for delivering messages and alerts within the Survey-App platform. Its enhanced dual-channel approach with intelligent fallback mechanisms ensures high delivery reliability, while the asynchronous processing model maintains system responsiveness under load.
 
-**Updated** Key enhancements include concrete EmailServiceImpl and SmsServiceImpl implementations, comprehensive service layer architecture, and robust error handling with graceful degradation.
+**Updated** Key enhancements include concrete EmailServiceImpl and SmsServiceImpl implementations, comprehensive service layer architecture, robust error handling with graceful degradation, and the new comprehensive Announcement System featuring multi-tenant support and scheduling capabilities.
 
 Key strengths of the enhanced system include:
 
@@ -542,5 +754,9 @@ Key strengths of the enhanced system include:
 - **Scalability**: Horizontal scaling support and database optimization with service discovery
 - **Security**: Proper authentication and authorization for all operations with service-level security
 - **Maintainability**: Clean service layer architecture with concrete implementations for easy testing and maintenance
+- **Multi-Tenant Architecture**: Isolated tenant environments with comprehensive data partitioning
+- **Advanced Scheduling**: Sophisticated announcement lifecycle management with status tracking
+- **Flexible Targeting**: Granular audience control with tenant-aware distribution
+- **Comprehensive Monitoring**: Audit trails and performance metrics across all notification channels
 
-The system's enhanced architecture provides an excellent foundation for future enhancements, including support for additional notification channels, advanced targeting capabilities, and enhanced analytics for notification effectiveness tracking.
+The system's enhanced architecture provides an excellent foundation for future enhancements, including support for additional notification channels, advanced targeting capabilities, enhanced analytics for notification effectiveness tracking, and integration with external notification platforms.

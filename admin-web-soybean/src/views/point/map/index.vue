@@ -169,7 +169,6 @@ const updateProjectOptions = () => {
     value: name,
     label: name
   }));
-  console.log('Project options:', projectOptions.value);
 };
 
 // Load point data
@@ -177,8 +176,6 @@ const loadData = async () => {
   loading.value = true;
   try {
     const response = await fetchGetPointList({ current: 1, size: 1000 });
-    console.log('Point list response:', response);
-
     if (response.data) {
       const records = response.data.records || [];
       // 标准化数据
@@ -265,12 +262,12 @@ const handleMarkerClick = (point: any) => {
   message.info(`点位: ${point.name}`);
 };
 
-const handleMapClick = (lnglat: { lng: number; lat: number }) => {
-  console.log('Map clicked at:', lnglat);
+const handleMapClick = (_lnglat: { lng: number; lat: number }) => {
+  // reserved for future map click handling
 };
 
 const handleMapReady = (_map: any) => {
-  console.log('AMap is ready');
+  // reserved for future map ready handling
 };
 
 onMounted(() => {
